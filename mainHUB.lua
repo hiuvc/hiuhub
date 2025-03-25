@@ -1,6 +1,6 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/hiucode.txt')))()
 local Tab = Window:MakeTab({
-	Name = "Scripts Free Mới",
+	Name = "MOD",
 	Icon = "rbxassetid://4483345998",
 	PremiumOnly = false
 })

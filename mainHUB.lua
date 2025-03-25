@@ -1,11 +1,8 @@
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/hiucode.txt')))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
+local Window = OrionLib:MakeWindow({Name = "Hiunocry x Hub", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 local Tab = Window:MakeTab({
-	Name = "MOD",
+	Name = "Test",
 	Icon = "rbxassetid://4483345998",
 	PremiumOnly = false
 })
-local Tab2 = Window:MakeTab({
-	Name = "Mod Client",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
-})
+OrionLib:Init()

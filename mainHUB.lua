@@ -13,10 +13,47 @@ local Tab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Hàm đảm bảo game đã load
-local function waitForGameLoad()
-    if not game:IsLoaded() then
-        game.Loaded:Wait()
+-- Hàm kiểm tra kết nối mạng
+local function isInternetAvailable()
+    local success = pcall(function()
+        game:HttpGet("http://www.google.com", false)
+    end)
+    return success
+end
+
+-- Hàm tải script an toàn
+local function safeLoadScript(url, name)
+    OrionLib:MakeNotification({
+        Name = "Đang tải " .. name,
+        Content = "Vui lòng chờ...",
+        Time = 3
+    })
+
+    if not isInternetAvailable() then
+        OrionLib:MakeNotification({
+            Name = "Lỗi!",
+            Content = "Không có kết nối mạng!",
+            Time = 5
+        })
+        return
+    end
+
+    local success, err = pcall(function()
+        loadstring(game:HttpGet(url, true))()
+    end)
+
+    if not success then
+        OrionLib:MakeNotification({
+            Name = "Lỗi!",
+            Content = "Không thể tải " .. name .. ": " .. err,
+            Time = 5
+        })
+    else
+        OrionLib:MakeNotification({
+            Name = "Thành công!",
+            Content = name .. " đã tải thành công!",
+            Time = 5
+        })
     end
 end
 
@@ -24,36 +61,15 @@ end
 Tab:AddButton({
     Name = "Keyboard",
     Callback = function()
-        print("Keyboard button clicked!") -- Debug
-        waitForGameLoad()
-        print("Game loaded!") -- Debug
-
-        local success, err = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/advxzivhsjjdhxhsidifvsh/mobkeyboard/main/main.txt", true))()
-        end)
-
-        if not success then
-            warn("Error loading Keyboard script: " .. err)
-        else
-            print("Keyboard script loaded successfully!")
-        end
+        safeLoadScript("https://raw.githubusercontent.com/advxzivhsjjdhxhsidifvsh/mobkeyboard/main/main.txt", "Keyboard")
     end
 })
 
 -- Nút kích hoạt Infinite Yield
 Tab:AddButton({
-    Name = "Infiniteyield",
+    Name = "Infinite Yield",
     Callback = function()
-        print("InfiniteYield button clicked!") -- Debug
-        local success, err = pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
-        end)
-
-        if not success then
-            warn("Error loading InfiniteYield script: " .. err)
-        else
-            print("InfiniteYield script loaded successfully!")
-        end
+        safeLoadScript("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source", "Infinite Yield")
     end
 })
 

@@ -89,12 +89,20 @@ Tab:AddButton({
     end
 })
 
+Tab:AddButton({
+    Name = "Chim bay",
+    Callback = function()
+        print("Bay cao nào! :))") -- Debug
+        safeLoadScript("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/hiufly.lua")
+    end
+})
+
 -- Kiểm tra OrionLib có hiển thị không
 OrionLib:MakeNotification({
     Name = "Khởi động!",
-    Content = "OrionLib đã load thành công!",
+    Content = "Made by Hiunocry",
     Time = 5
 })
 
 OrionLib:Init()
-print("OrionLib Initialized!") -- Debug
+print("Tải thư viện thành công") -- Debug

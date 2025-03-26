@@ -1,5 +1,10 @@
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/jensonhirst/Orion/main/source')))()
 
+if not OrionLib then
+    warn("Không thể tải OrionLib!")
+    return
+end
+
 local Window = OrionLib:MakeWindow({
     Name = "Hiunocry x Hub",
     HidePremium = false,
@@ -13,16 +18,17 @@ local Tab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Hàm kiểm tra kết nối mạng
+-- Kiểm tra kết nối Internet
 local function isInternetAvailable()
-    local success = pcall(function()
-        game:HttpGet("http://www.google.com", false)
+    local success, response = pcall(function()
+        return game:HttpGet("http://www.google.com", false)
     end)
-    return success
+    return success and response ~= nil
 end
 
 -- Hàm tải script an toàn
 local function safeLoadScript(url, name)
+    print("Trying to load: " .. name) -- Debug Log
     OrionLib:MakeNotification({
         Name = "Đang tải " .. name,
         Content = "Vui lòng chờ...",
@@ -39,13 +45,15 @@ local function safeLoadScript(url, name)
     end
 
     local success, err = pcall(function()
-        loadstring(game:HttpGet(url, true))()
+        local scriptContent = game:HttpGet(url, true)
+        assert(scriptContent, "Script không có dữ liệu!")
+        loadstring(scriptContent)()
     end)
 
     if not success then
         OrionLib:MakeNotification({
             Name = "Lỗi!",
-            Content = "Không thể tải " .. name .. ": " .. err,
+            Content = "Không thể tải " .. name .. ": " .. tostring(err),
             Time = 5
         })
     else
@@ -57,10 +65,17 @@ local function safeLoadScript(url, name)
     end
 end
 
+-- Kiểm tra OrionLib có hoạt động không
+if not Tab then
+    warn("Không thể tạo Tab!")
+    return
+end
+
 -- Nút kích hoạt Keyboard
 Tab:AddButton({
     Name = "Keyboard",
     Callback = function()
+        print("Keyboard button clicked!") -- Debug
         safeLoadScript("https://raw.githubusercontent.com/advxzivhsjjdhxhsidifvsh/mobkeyboard/main/main.txt", "Keyboard")
     end
 })
@@ -69,9 +84,17 @@ Tab:AddButton({
 Tab:AddButton({
     Name = "Infinite Yield",
     Callback = function()
+        print("Infinite Yield button clicked!") -- Debug
         safeLoadScript("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source", "Infinite Yield")
     end
 })
 
--- Khởi chạy OrionLib
+-- Kiểm tra OrionLib có hiển thị không
+OrionLib:MakeNotification({
+    Name = "Khởi động!",
+    Content = "OrionLib đã load thành công!",
+    Time = 5
+})
+
 OrionLib:Init()
+print("OrionLib Initialized!") -- Debug

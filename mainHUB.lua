@@ -93,7 +93,7 @@ Tab:AddButton({
     Name = "Chim bay",
     Callback = function()
         print("Bay cao nào! :))") -- Debug
-        safeLoadScript("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/hiufly.lua")
+        safeLoadScript("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt")
     end
 })
 

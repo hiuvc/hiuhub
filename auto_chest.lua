@@ -1,6 +1,8 @@
+
+
 spawn(function()
     while wait() do
-        if _G.AutoChest then
+        if _G.AutoCollectChest then
             local Players = game:GetService("Players")
             local LocalPlayer = Players.LocalPlayer
             local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()

@@ -1,4 +1,4 @@
-_G.AutoCollectChest = nil
+
 
 spawn(function()
     while wait() do

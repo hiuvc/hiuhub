@@ -2046,7 +2046,7 @@ end)
         _G.AutoLevel = v237;
         if Value == false then
             wait()
-            toTarget(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
+            Tween(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame);
             wait()
         end
     end)

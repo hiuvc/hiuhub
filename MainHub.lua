@@ -23,10 +23,7 @@ if table.find(allowedUserIds, playerId) then
         -- Nếu game không hợp lệ, kick người chơi
         game.Players.LocalPlayer:kick("NOT SUPPORT!")
     end
-    if allowedUserIds[Id] then
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Royal.lua"))()
-    else 
-        game.Players.LocalPlayer:kick("You are not authorized to run this script.")
-    end
-    
-        
+else
+    -- Nếu người chơi không có ID hợp lệ, kick người chơi
+    game.Players.LocalPlayer:kick("You are not authorized to run this script.")
+end

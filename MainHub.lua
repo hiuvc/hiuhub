@@ -1,7 +1,7 @@
 local playerId = game.Players.LocalPlayer.UserId
 local allowedUserIds = {
     988512137, -- Thay thế bằng ID người chơi hợp lệ
-    987654321, -- Thêm các ID người chơi khác nếu cần
+    8115119076, -- Thêm các ID người chơi khác nếu cần
 }
 
 -- Kiểm tra nếu người chơi có ID hợp lệ

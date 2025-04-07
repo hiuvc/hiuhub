@@ -27,5 +27,6 @@ if table.find(allowedUserIds, playerId) then
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Royal.lua"))()
     else 
         game.Players.LocalPlayer:kick("You are not authorized to run this script.")
+    end
     
         

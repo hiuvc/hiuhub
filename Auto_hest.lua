@@ -1,48 +1,96 @@
-
+-- Cấu hình
+--_G.Team = "Pirates" -- hoặc "Marine"
+--_G.Noclip = true
+--_G.AutoCollectChest = true
+--_G.CollectedChestCount = 0
+--_G.ChestLimit = 10 -- Số rương cần nhặt trước khi chuyển server
+--_G.Speed =  180
 -- Chọn team
-if _G.Team == "Marine" then
+local player = game.Players.LocalPlayer
+local currentTeam = player.Team and player.Team.Name
+
+if _G.Team == "Marine" and currentTeam ~= "Marines" then
     game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Marines")
-elseif _G.Team == "Pirates" then
+elseif _G.Team == "Pirates" and currentTeam ~= "Pirates" then
     game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
-else
-    game.Players.LocalPlayer:Kick("=))???")
+elseif _G.Team ~= "Marine" and _G.Team ~= "Pirates" then
+    player:Kick("=))???")
 end
 
--- Hàm Tween
-function Tween2(targetCFrame)
-    local player = game.Players.LocalPlayer
-    local root = player.Character:WaitForChild("HumanoidRootPart")
-    local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
-    local distance = (targetCFrame.Position - root.Position).Magnitude
-    local tweenTime = distance / _G.SpeedTween
+spawn(function()
+    while _G.Noclip do
+        task.wait()
+        local char = game.Players.LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide == true then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
 
+-- Tween giữ đứng yên
+function Tween2(P1)
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local HRP = char:WaitForChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChild("Humanoid")
+    local Distance = (P1.Position - HRP.Position).Magnitude
+
+    -- Giữ đứng yên
     if humanoid then
-        humanoid:ChangeState(Enum.HumanoidStateType.PlatformStanding)
-        humanoid.AutoRotate = false
+        humanoid.WalkSpeed = 0
+        humanoid.JumpPower = 0
     end
 
-    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
-    local tween = game:GetService("TweenService"):Create(root, tweenInfo, { CFrame = targetCFrame })
+    local bv = Instance.new("BodyVelocity")
+    bv.Velocity = Vector3.new(0, 0, 0)
+    bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    bv.Name = "ChestBodyVel"
+    bv.Parent = HRP
+
+    -- Tween
+    local tween = game:GetService("TweenService"):Create(
+        HRP,
+        TweenInfo.new(Distance / _G.Speed, Enum.EasingStyle.Linear),
+        { CFrame = P1 }
+    )
     tween:Play()
     tween.Completed:Wait()
 
-    if humanoid then
-        humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-        humanoid.AutoRotate = true
+    -- Gỡ các giới hạn sau tween
+    if HRP:FindFirstChild("ChestBodyVel") then
+        HRP.ChestBodyVel:Destroy()
     end
-
-    task.wait(0.1)
+    if humanoid then
+        humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+    end
 end
 
--- Hop server
+-- Hop server kèm thông báo
 function Hop()
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "AUTO CHEST",
+            Text = "Đang chuyển server mới...",
+            Duration = 5,
+        })
+    end)
+
+    task.wait(2)
+
     local placeId = game.PlaceId
     local triedServers = {}
     local cursor = ""
 
     local function GetServers()
         local url = "https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?sortOrder=Asc&limit=100"
-        if cursor ~= "" then url = url .. "&cursor=" .. cursor end
+        if cursor ~= "" then
+            url = url .. "&cursor=" .. cursor
+        end
         local success, response = pcall(function()
             return game.HttpService:JSONDecode(game:HttpGet(url))
         end)
@@ -59,14 +107,7 @@ function Hop()
             for _, server in ipairs(data.data) do
                 if server.playing < server.maxPlayers and not table.find(triedServers, server.id) then
                     table.insert(triedServers, server.id)
-
-                    game:GetService("StarterGui"):SetCore("SendNotification", {
-                        Title = "Auto Chest",
-                        Text = "🌍 Đang chuyển server...",
-                        Duration = 5
-                    })
-
-                    task.wait(1)
+                    task.wait()
                     pcall(function()
                         game:GetService("TeleportService"):TeleportToPlaceInstance(placeId, server.id, game.Players.LocalPlayer)
                     end)
@@ -74,14 +115,14 @@ function Hop()
                 end
             end
 
-            if cursor == "" then break end
+            if cursor == nil or cursor == "" then break end
         end
     end
 
     TeleportToNewServer()
 end
 
--- Auto nhặt rương
+-- Auto collect chest
 spawn(function()
     while task.wait() do
         if _G.AutoCollectChest then
@@ -103,7 +144,7 @@ spawn(function()
                 local chestCF = CFrame.new(nearestChest:GetPivot().Position)
                 Tween2(chestCF)
 
-                -- Đợi chest bị nhặt
+                -- Đợi chest bị disable (đã nhặt xong)
                 local timeout = 3
                 repeat
                     task.wait(0.2)
@@ -122,14 +163,14 @@ spawn(function()
                         break
                     end
                 else
-                    print("⚠️ Rương không phản hồi, thử lại...")
+                    print("⚠️ Bỏ qua rương không phản hồi.")
                 end
             end
         end
     end
 end)
 game:GetService("StarterGui"):SetCore("SendNotification", {
-                        Title = "Auto Chest",
-                        Text = "Made by Hiuvc",
-                        Duration = 3
-                    })
+    Title = "AUTO CHEST",
+    Text = "Made by Hiuvc \n version: 1.0",
+    Duration = 4,
+})

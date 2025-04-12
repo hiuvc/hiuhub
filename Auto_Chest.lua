@@ -140,6 +140,7 @@ spawn(function()
                 end
             end
 
+            -- Nếu có rương gần nhất
             if nearestChest then
                 local chestCF = CFrame.new(nearestChest:GetPivot().Position)
                 Tween2(chestCF)
@@ -160,15 +161,19 @@ spawn(function()
                         _G.AutoCollectChest = false
                         _G.CollectedChestCount = 0
                         Hop()
-                        break
+                        return -- dừng toàn bộ thread sau khi hop
                     end
                 else
                     print("⚠️ Bỏ qua rương không phản hồi.")
+                    -- không làm gì thêm => tiếp tục vòng while
                 end
+            else
+                print("⛔ Không tìm thấy rương nào.")
             end
         end
     end
 end)
+
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "AUTO CHEST",
     Text = "Made by Hiuvc \n version: 1.0",

@@ -124,6 +124,8 @@ end
 
 -- Auto collect chest
 spawn(function()
+    local failCount = 0 -- Số rương bị lỗi liên tiếp
+
     while task.wait() do
         if _G.AutoCollectChest then
             local player = game:GetService("Players").LocalPlayer
@@ -140,7 +142,6 @@ spawn(function()
                 end
             end
 
-            -- Nếu có rương gần nhất
             if nearestChest then
                 local chestCF = CFrame.new(nearestChest:GetPivot().Position)
                 Tween2(chestCF)
@@ -154,6 +155,7 @@ spawn(function()
 
                 if nearestChest:GetAttribute("IsDisabled") == true then
                     _G.CollectedChestCount = _G.CollectedChestCount + 1
+                    failCount = 0 -- Reset số lần fail liên tiếp
                     print("✅ Đã nhặt: " .. _G.CollectedChestCount .. " rương")
 
                     if _G.CollectedChestCount >= _G.ChestLimit then
@@ -161,18 +163,38 @@ spawn(function()
                         _G.AutoCollectChest = false
                         _G.CollectedChestCount = 0
                         Hop()
-                        return -- dừng toàn bộ thread sau khi hop
+                        return
                     end
                 else
-                    print("⚠️ Bỏ qua rương không phản hồi.")
-                    -- không làm gì thêm => tiếp tục vòng while
+                    failCount = failCount + 1
+                    print("⚠️ Bỏ qua rương không phản hồi. (" .. failCount .. "/3)")
+
+                    -- Nếu quá 3 lần fail liên tiếp thì hop server
+                    if failCount >= 3 then
+                        print("🚨 Gặp quá nhiều rương lỗi! Đang chuyển server...")
+                        _G.AutoCollectChest = false
+                        _G.CollectedChestCount = 0
+                        Hop()
+                        return
+                    end
                 end
             else
                 print("⛔ Không tìm thấy rương nào.")
+                failCount = failCount + 1
+                task.wait(1)
+
+                if failCount >= 3 then
+                    print("🚨 Không có rương trong map hoặc lỗi! Đang chuyển server...")
+                    _G.AutoCollectChest = false
+                    _G.CollectedChestCount = 0
+                    Hop()
+                    return
+                end
             end
         end
     end
 end)
+
 
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "AUTO CHEST",

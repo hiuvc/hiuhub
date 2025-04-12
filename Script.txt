@@ -1,0 +1,14 @@
+--Auto Chest
+
+_G.Team = "Pirates" -- hoặc "Marine"
+_G.Noclip = true
+_G.AutoCollectChest = true
+_G.CollectedChestCount = 0
+_G.ChestLimit = 10 -- Số rương cần nhặt trước khi chuyển server
+_G.Speed = 180
+
+repeat task.wait() until pcall(function()
+    return game:IsLoaded() and game.Players.LocalPlayer
+end)
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Main_Chest.lua"))()

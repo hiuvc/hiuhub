@@ -1,11 +1,4 @@
--- Cấu hình
---_G.Team = "Pirates" -- hoặc "Marine"
---_G.Noclip = true
---_G.AutoCollectChest = true
---_G.CollectedChestCount = 0
---_G.ChestLimit = 10 -- Số rương cần nhặt trước khi chuyển server
---_G.Speed =  180
--- Chọn team
+
 local player = game.Players.LocalPlayer
 local currentTeam = player.Team and player.Team.Name
 
@@ -121,6 +114,7 @@ function Hop()
 
     TeleportToNewServer()
 end
+
 
 -- Auto collect chest
 spawn(function()

@@ -1,7 +1,12 @@
-
 local player = game.Players.LocalPlayer
 local currentTeam = player.Team and player.Team.Name
 
+
+-- Chọn team
+local player = game.Players.LocalPlayer
+local currentTeam = player.Team and player.Team.Name
+
+-- Đảm bảo là team đã được thay đổi xong trước khi bật tính năng auto chest
 if _G.Team == "Marine" and currentTeam ~= "Marines" then
     game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Marines")
 elseif _G.Team == "Pirates" and currentTeam ~= "Pirates" then
@@ -9,7 +14,75 @@ elseif _G.Team == "Pirates" and currentTeam ~= "Pirates" then
 elseif _G.Team ~= "Marine" and _G.Team ~= "Pirates" then
     player:Kick("=))???")
 end
+_G.Noclip = true
+_G.CollectedChestCount = 0
+-- Trì hoãn việc bật AutoCollectChest một chút để đảm bảo team đã được thay đổi hoàn tất
+task.wait(5)  -- Thời gian trì hoãn 2 giây
 
+-- Bật tính năng AutoCollectChest sau khi đã chắc chắn rằng team đã thay đổi
+_G.AutoCollectChest = true
+
+----------------------------------------------------------------------------------------------------------------------------------
+-- Anti-Cheat / Anti-Ban
+local AdminUserIds = {17884881, 120173604, 912348, 3095250}
+
+-- Hàm chống ban (xoá script nghi ngờ)
+function AntiBan()
+    -- Xoá LocalScript đáng ngờ trong nhân vật
+    for _, v in pairs(game:GetService("Players").LocalPlayer.Character:GetDescendants()) do
+        if v:IsA("LocalScript") and table.find({"General", "Shiftlock", "FallDamage", "4444", "CamBob", "JumpCD", "Looking", "Run"}, v.Name) then
+            v:Destroy()
+        end
+    end
+
+    -- Xoá LocalScript đáng ngờ trong PlayerScripts
+    for _, v in pairs(game:GetService("Players").LocalPlayer.PlayerScripts:GetDescendants()) do
+        if v:IsA("LocalScript") and table.find({"RobloxMotor6DBugFix", "Clans", "Codes", "CustomForceField", "MenuBloodSp", "PlayerList"}, v.Name) then
+            v:Destroy()
+        end
+    end
+end
+
+-- Gọi lần đầu
+AntiBan()
+
+-- Theo dõi admin và tự hop
+spawn(function()
+    while task.wait(2) do
+        for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+            if table.find(AdminUserIds, player.UserId) then
+                -- Gửi thông báo
+                pcall(function()
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "⚠️ ANTI BAN",
+                        Text = "Admin/Dev detected in the server!\nHop to a new server...",
+                        Duration = 5,
+                    })
+                end)
+
+                -- Gọi hàm Hop nếu có
+                if typeof(Hop) == "function" then
+                    Hop()
+                else
+                    -- Nếu chưa có hàm Hop, kick tạm thời
+                    game.Players.LocalPlayer:Kick("Admin/Dev Detected")
+                end
+                break
+            end
+        end
+    end
+end)
+
+-- Anti-Afk
+game:GetService("Players").LocalPlayer.Idled:connect(function()
+    game:GetService("VirtualUser"):Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    wait(1)
+    game:GetService("VirtualUser"):Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+end)
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+-- Noclip
 spawn(function()
     while _G.Noclip do
         task.wait()
@@ -32,7 +105,6 @@ function Tween2(P1)
     local humanoid = char:FindFirstChild("Humanoid")
     local Distance = (P1.Position - HRP.Position).Magnitude
 
-    -- Giữ đứng yên
     if humanoid then
         humanoid.WalkSpeed = 0
         humanoid.JumpPower = 0
@@ -44,7 +116,6 @@ function Tween2(P1)
     bv.Name = "ChestBodyVel"
     bv.Parent = HRP
 
-    -- Tween
     local tween = game:GetService("TweenService"):Create(
         HRP,
         TweenInfo.new(Distance / _G.Speed, Enum.EasingStyle.Linear),
@@ -53,7 +124,6 @@ function Tween2(P1)
     tween:Play()
     tween.Completed:Wait()
 
-    -- Gỡ các giới hạn sau tween
     if HRP:FindFirstChild("ChestBodyVel") then
         HRP.ChestBodyVel:Destroy()
     end
@@ -63,12 +133,12 @@ function Tween2(P1)
     end
 end
 
--- Hop server kèm thông báo
+-- Hop server
 function Hop()
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "AUTO CHEST",
-            Text = "Đang chuyển server mới...",
+            Text = "HOP SERVER...",
             Duration = 5,
         })
     end)
@@ -115,13 +185,36 @@ function Hop()
     TeleportToNewServer()
 end
 
-
 -- Auto collect chest
 spawn(function()
-    local failCount = 0 -- Số rương bị lỗi liên tiếp
+    local failCount = 0
 
     while task.wait() do
         if _G.AutoCollectChest then
+            -- Kiểm tra item hiếm
+            local backpack = game:GetService("Players").LocalPlayer:FindFirstChild("Backpack")
+            if backpack then
+                local chalice = backpack:FindFirstChild("God's Chalice")
+                local fist = backpack:FindFirstChild("Fist of Darkness")
+
+                if chalice or fist then
+                    _G.AutoCollectChest = false
+                    local foundItem = chalice and "God's Chalice" or "Fist of Darkness"
+                    print("💎 Đã tìm thấy " .. foundItem)
+
+                    pcall(function()
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "AUTO CHEST",
+                            Text = "💎 Đã tìm thấy " .. foundItem .. ", dừng nhặt chest!",
+                            Duration = 6
+                        })
+                    end)
+
+                    return
+                end
+            end
+
+            -- Tìm chest gần nhất
             local player = game:GetService("Players").LocalPlayer
             local char = player.Character or player.CharacterAdded:Wait()
             local pos = char:GetPivot().Position
@@ -140,7 +233,6 @@ spawn(function()
                 local chestCF = CFrame.new(nearestChest:GetPivot().Position)
                 Tween2(chestCF)
 
-                -- Đợi chest bị disable (đã nhặt xong)
                 local timeout = 3
                 repeat
                     task.wait(0.2)
@@ -149,7 +241,7 @@ spawn(function()
 
                 if nearestChest:GetAttribute("IsDisabled") == true then
                     _G.CollectedChestCount = _G.CollectedChestCount + 1
-                    failCount = 0 -- Reset số lần fail liên tiếp
+                    failCount = 0
                     print("✅ Đã nhặt: " .. _G.CollectedChestCount .. " rương")
 
                     if _G.CollectedChestCount >= _G.ChestLimit then
@@ -163,7 +255,6 @@ spawn(function()
                     failCount = failCount + 1
                     print("⚠️ Bỏ qua rương không phản hồi. (" .. failCount .. "/3)")
 
-                    -- Nếu quá 3 lần fail liên tiếp thì hop server
                     if failCount >= 3 then
                         print("🚨 Gặp quá nhiều rương lỗi! Đang chuyển server...")
                         _G.AutoCollectChest = false
@@ -189,9 +280,15 @@ spawn(function()
     end
 end)
 
+-- Thông báo khởi động
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "AUTO CHEST",
+    Text = "Made By Hiuvc \n Version: 1.0",
+    Duration = 4,
+})
 
 game:GetService("StarterGui"):SetCore("SendNotification", {
     Title = "AUTO CHEST",
-    Text = "Made by Hiuvc \n version: 1.0",
+    Text = "SỐ CHEST CẦN NHẶT: ".._G.ChestLimit,
     Duration = 4,
 })

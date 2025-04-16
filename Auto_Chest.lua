@@ -26,26 +26,6 @@ _G.AutoCollectChest = true
 -- Anti-Cheat / Anti-Ban
 local AdminUserIds = {17884881, 120173604, 912348, 3095250}
 
--- Hàm chống ban (xoá script nghi ngờ)
-function AntiBan()
-    -- Xoá LocalScript đáng ngờ trong nhân vật
-    for _, v in pairs(game:GetService("Players").LocalPlayer.Character:GetDescendants()) do
-        if v:IsA("LocalScript") and table.find({"General", "Shiftlock", "FallDamage", "4444", "CamBob", "JumpCD", "Looking", "Run"}, v.Name) then
-            v:Destroy()
-        end
-    end
-
-    -- Xoá LocalScript đáng ngờ trong PlayerScripts
-    for _, v in pairs(game:GetService("Players").LocalPlayer.PlayerScripts:GetDescendants()) do
-        if v:IsA("LocalScript") and table.find({"RobloxMotor6DBugFix", "Clans", "Codes", "CustomForceField", "MenuBloodSp", "PlayerList"}, v.Name) then
-            v:Destroy()
-        end
-    end
-end
-
--- Gọi lần đầu
-AntiBan()
-
 -- Theo dõi admin và tự hop
 spawn(function()
     while task.wait(2) do

@@ -1,5 +1,3 @@
-local player = game.Players.LocalPlayer
-local currentTeam = player.Team and player.Team.Name
 
 
 -- Chọn team

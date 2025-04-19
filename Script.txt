@@ -1,14 +1,10 @@
---Auto Chest
-
+-- Cấu hình
 _G.Team = "Pirates" -- hoặc "Marine"
-_G.Noclip = true
-_G.AutoCollectChest = true
-_G.CollectedChestCount = 0
-_G.ChestLimit = 10 -- Số rương cần nhặt trước khi chuyển server
-_G.Speed = 180
-
+_G.ChestLimit = 40 -- Số rương cần nhặt trước khi chuyển server
+_G.Speed =  180
+_G.AutoKen = true 
+_G.Webhook = "https://discord.com/api/webhooks/1321075707442499615/ZMHMIbuXcZveWDn4cVdIxdC3F-2p0t3hbUz_Po2HlaSSJs5YMDLNvXagvPAVtmK0Yc34"
 repeat task.wait() until pcall(function()
     return game:IsLoaded() and game.Players.LocalPlayer
 end)
-
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Main_Chest.lua"))()

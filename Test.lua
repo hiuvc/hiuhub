@@ -100,26 +100,44 @@ end
 
 -- Hệ thống di chuyển
 function TweenToPosition(targetCFrame)
-    if not player.Character then return end
+    local char = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = char:WaitForChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChild("Humanoid")
+    local distance = (targetCFrame.Position - humanoidRootPart.Position).Magnitude
 
-    local root = player.Character:WaitForChild("HumanoidRootPart")
-    local humanoid = player.Character:FindFirstChild("Humanoid")
-    local distance = (targetCFrame.Position - root.Position).Magnitude
-
+    -- Dừng di chuyển tự do và nhảy nhẹ để reset state
     if humanoid then
         humanoid.WalkSpeed = 0
         humanoid.JumpPower = 50
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 
+    -- Tạo BodyVelocity để giữ vị trí nhân vật không bị rung lắc khi tween
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    bodyVelocity.Name = "ChestBodyVel"
+    bodyVelocity.Parent = humanoidRootPart
+
+    -- Tween di chuyển đến mục tiêu
     local tweenInfo = TweenInfo.new(distance / _G.Speed, Enum.EasingStyle.Linear)
-    local tween = game:GetService("TweenService"):Create(root, tweenInfo, {CFrame = targetCFrame})
+    local tween = game:GetService("TweenService"):Create(humanoidRootPart, tweenInfo, { CFrame = targetCFrame })
     tween:Play()
     tween.Completed:Wait()
 
+    -- Xoá BodyVelocity sau khi hoàn thành Tween
+    if humanoidRootPart:FindFirstChild("ChestBodyVel") then 
+        humanoidRootPart.ChestBodyVel:Destroy() 
+    end
+
+    -- Khôi phục tốc độ và trạng thái nhảy
     if humanoid then
         humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end
+
 
 -- Hệ thống chọn và trang bị vũ khí
 task.spawn(function()

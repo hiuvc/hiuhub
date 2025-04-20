@@ -1,53 +1,65 @@
--- Cấu hình chính
-_G.AutoNear = true           -- Bật/tắt auto farm
-_G.BringMob = false          -- Bật/tắt kéo mob
-_G.Speed = 180               -- Tốc độ di chuyển
-_G.FastAttackStrix_Mode = "Super Fast Attack"  -- Chế độ tấn công
-_G.Fast_Delay = 1e-9         -- Độ trễ tấn công
+-- Cấu hình
+_G.AutoRauDen = false
+_G.AutoNear = true -- Mặc định tắt, bật sau khi spawn Darkbeard
+_G.Fast_Delay = 0.15
+_G.Speed = 250
+FarmMode = "Stand"
+Pos = CFrame.new(0, 40, 0)
+Type = 0
 
--- Tùy chọn người dùng
-local FarmMode = "Dodge"     -- "Stand" hoặc "Dodge"
-local ChooseWeapon = "Melee" -- "Melee", "Sword", hoặc "Blox Fruit"
-
--- Biến hệ thống
 local player = game.Players.LocalPlayer
-local bringmob = false
-local MonFarm = ""
-local FarmPos = CFrame.new()
-local SelectWeapon = "Superhuman"
-local Type = 1
-local Pos = CFrame.new(0, 40, 0)
+local RauDenPos = CFrame.new(3677.08203125, 62.751937866211, -3144.8332519531)
+local SpawnDarkbeardPos = CFrame.new(3777.04785, 14.6759768, -3499.86719)
 
--- Hàm tiện ích
-function EquipTool(toolName)
-    local backpack = player.Backpack
-    local tool = backpack:FindFirstChild(toolName)
-    if tool then
-        player.Character.Humanoid:EquipTool(tool)
-        print("Đã trang bị vũ khí: " .. toolName)
-    else
-        print("Không tìm thấy vũ khí: " .. toolName)
-    end
+-- Luân chuyển vị trí khi farm
+task.spawn(function()
+	while task.wait(5) do
+		if FarmMode == "Stand" then
+			Pos = CFrame.new(0, 40, 0)
+		elseif FarmMode == "Dodge" then
+			Type = Type % 5 + 1
+			if Type == 1 then Pos = CFrame.new(0, 40, 0)
+			elseif Type == 2 then Pos = CFrame.new(-40, 40, 0)
+			elseif Type == 3 then Pos = CFrame.new(40, 40, 0)
+			elseif Type == 4 then Pos = CFrame.new(0, 40, 40)
+			elseif Type == 5 then Pos = CFrame.new(0, 40, -40) end
+		end
+	end
+end)
+
+-- Tween mượt
+function TweenToPosition(targetCFrame)
+	local char = player.Character or player.CharacterAdded:Wait()
+	local root = char:WaitForChild("HumanoidRootPart")
+	local humanoid = char:FindFirstChild("Humanoid")
+	local distance = (targetCFrame.Position - root.Position).Magnitude
+
+	if humanoid then
+		humanoid.WalkSpeed = 0
+		humanoid.JumpPower = 50
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+
+	local bv = Instance.new("BodyVelocity")
+	bv.Velocity = Vector3.new(0, 0, 0)
+	bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+	bv.Name = "ChestBodyVel"
+	bv.Parent = root
+
+	local tween = game:GetService("TweenService"):Create(root, TweenInfo.new(distance / _G.Speed, Enum.EasingStyle.Linear), { CFrame = targetCFrame })
+	tween:Play()
+	tween.Completed:Wait()
+
+	if root:FindFirstChild("ChestBodyVel") then root.ChestBodyVel:Destroy() end
+
+	if humanoid then
+		humanoid.WalkSpeed = 16
+		humanoid.JumpPower = 50
+		humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
 end
 
-function AutoHaki()
-    if not player.Character then return end
-    if not player.Character:FindFirstChild("HasBuso") then
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
-    end
-end
-
-function GetEquippedTool()
-    if not player.Character then return nil end
-    for _, item in ipairs(player.Character:GetChildren()) do
-        if item:IsA("Tool") then
-            return item
-        end
-    end
-    return nil
-end
-
--- Hệ thống tìm mục tiêu
+-- Tìm mục tiêu trong phạm vi
 function FindEnemiesInRange()
     if not player.Character then return nil, {} end
     
@@ -98,146 +110,46 @@ function AttackNoCoolDown()
     end)
 end
 
--- Hệ thống di chuyển
-function TweenToPosition(targetCFrame)
-    local char = player.Character or player.CharacterAdded:Wait()
-    local humanoidRootPart = char:WaitForChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("Humanoid")
-    local distance = (targetCFrame.Position - humanoidRootPart.Position).Magnitude
-
-    -- Dừng di chuyển tự do và nhảy nhẹ để reset state
-    if humanoid then
-        humanoid.WalkSpeed = 0
-        humanoid.JumpPower = 50
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end
-
-    -- Tạo BodyVelocity để giữ vị trí nhân vật không bị rung lắc khi tween
-    local bodyVelocity = Instance.new("BodyVelocity")
-    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-    bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    bodyVelocity.Name = "ChestBodyVel"
-    bodyVelocity.Parent = humanoidRootPart
-
-    -- Tween di chuyển đến mục tiêu
-    local tweenInfo = TweenInfo.new(distance / _G.Speed, Enum.EasingStyle.Linear)
-    local tween = game:GetService("TweenService"):Create(humanoidRootPart, tweenInfo, { CFrame = targetCFrame })
-    tween:Play()
-    tween.Completed:Wait()
-
-    -- Xoá BodyVelocity sau khi hoàn thành Tween
-    if humanoidRootPart:FindFirstChild("ChestBodyVel") then 
-        humanoidRootPart.ChestBodyVel:Destroy() 
-    end
-
-    -- Khôi phục tốc độ và trạng thái nhảy
-    if humanoid then
-        humanoid.WalkSpeed = 16
-        humanoid.JumpPower = 50
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end
-end
-
-
--- Hệ thống chọn và trang bị vũ khí
+-- Main Auto Darkbeard
 task.spawn(function()
-    while task.wait(1) do
-        if not player.Backpack then continue end
-        
-        for _, item in pairs(player.Backpack:GetChildren()) do
-            if item:FindFirstChild("ToolTip") then
-                if ChooseWeapon == "Melee" and item.ToolTip == "Melee" then
-                    SelectWeapon = item.Name
-                    EquipTool(SelectWeapon)
-                    break
-                elseif ChooseWeapon == "Sword" and item.ToolTip == "Sword" then
-                    SelectWeapon = item.Name
-                    EquipTool(SelectWeapon)
-                    break
-                elseif ChooseWeapon == "Blox Fruit" and item.ToolTip == "Blox Fruit" then
-                    SelectWeapon = item.Name
-                    EquipTool(SelectWeapon)
-                    break
-                end
-            end
-        end
-    end
+	while task.wait() do
+		if _G.AutoRauDen then
+			local darkbeard = workspace.Enemies:FindFirstChild("Darkbeard")
+			if darkbeard and darkbeard:FindFirstChild("Humanoid") and darkbeard.Humanoid.Health > 0 then
+				MonFarm = "Darkbeard"
+				FarmPos = darkbeard.HumanoidRootPart.CFrame
+				bringmob = true
+				repeat
+					task.wait(_G.Fast_Delay)
+					pcall(function()
+						AutoHaki()
+						EquipTool(SelectWeapon)
+						AttackNoCoolDown()  -- Tấn công
+						darkbeard.HumanoidRootPart.CanCollide = false
+						darkbeard.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+						TweenToPosition(darkbeard.HumanoidRootPart.CFrame * Pos)
+					end)
+				until not _G.AutoRauDen or darkbeard.Humanoid.Health <= 0 or not darkbeard.Parent
+				bringmob = false
+			else
+				TweenToPosition(RauDenPos)
+
+				local fist = player.Backpack:FindFirstChild("Fist of Darkness") or player.Character:FindFirstChild("Fist of Darkness")
+				if fist then
+					repeat
+						task.wait()
+						TweenToPosition(SpawnDarkbeardPos)
+						EquipTool("Fist of Darkness")
+					until workspace.Enemies:FindFirstChild("Darkbeard")
+					
+					-- Bỏ Fist sau khi dùng
+					UnEquipWeapon("Fist of Darkness")
+					
+					-- ✅ Bật AutoNear sau khi spawn Darkbeard
+					task.wait(0.5)
+					_G.AutoNear = true
+				end
+			end
+		end
+	end
 end)
-
--- Đổi vị trí khi farm (né hoặc đứng yên)
-task.spawn(function()
-    while task.wait(5) do
-        if FarmMode == "Stand" then
-            Pos = CFrame.new(0, 40, 0)
-        elseif FarmMode == "Dodge" then
-            Type = Type % 5 + 1
-            if Type == 1 then Pos = CFrame.new(0, 40, 0)
-            elseif Type == 2 then Pos = CFrame.new(-40, 40, 0)
-            elseif Type == 3 then Pos = CFrame.new(40, 40, 0)
-            elseif Type == 4 then Pos = CFrame.new(0, 40, 40)
-            elseif Type == 5 then Pos = CFrame.new(0, 40, -40) end
-        end
-    end
-end)
-
--- Hệ thống kéo mob
-task.spawn(function()
-    while task.wait(0.1) do
-        if not _G.BringMob or not bringmob then continue end
-
-        for _, enemy in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-            if enemy.Name == MonFarm and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
-                if (enemy.HumanoidRootPart.Position - FarmPos.Position).Magnitude <= 1000 then
-                    enemy.HumanoidRootPart.CFrame = FarmPos
-                    enemy.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
-                    enemy.HumanoidRootPart.Transparency = 1
-                    enemy.Humanoid.JumpPower = 0
-                    enemy.Humanoid.WalkSpeed = 0
-                    enemy.HumanoidRootPart.CanCollide = false
-                    enemy.Head.CanCollide = false
-                    if enemy.Humanoid:FindFirstChild("Animator") then
-                        enemy.Humanoid.Animator:Destroy()
-                    end
-                    sethiddenproperty(player, "SimulationRadius", math.huge)
-                end
-            end
-        end
-    end
-end)
-
--- Hệ thống Auto Farm chính
-task.spawn(function()
-    while task.wait(0.1) do
-        if not _G.AutoNear then continue end
-
-        for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
-            if enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
-                local distance = (player.Character.HumanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
-                
-                if distance <= 5000 then
-                    bringmob = true
-                    MonFarm = enemy.Name
-                    FarmPos = enemy.HumanoidRootPart.CFrame
-                    
-                    repeat
-                        task.wait(_G.Fast_Delay)
-                        AutoHaki()
-                        EquipTool(SelectWeapon)
-                        AttackNoCoolDown()
-                        TweenToPosition(enemy.HumanoidRootPart.CFrame * Pos)
-
-                        enemy.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
-                        enemy.HumanoidRootPart.Transparency = 1
-                        enemy.Humanoid.JumpPower = 0
-                        enemy.Humanoid.WalkSpeed = 0
-                        enemy.HumanoidRootPart.CanCollide = false
-                    until not _G.AutoNear or not enemy.Parent or enemy.Humanoid.Health <= 0 or not game.Workspace.Enemies:FindFirstChild(enemy.Name)
-                    
-                    bringmob = false
-                end
-            end
-        end
-    end
-end)
-
-print("✅ Auto Farm đã được kích hoạt thành công!")

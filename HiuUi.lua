@@ -1,17 +1,18 @@
--- ⚙️ CONFIG: Người dùng đổi tên script hub tại đây
-_G.ScriptHubName = _G.ScriptHubName or "🔥 My Script Hub 🔥"
-
---// UI HUB SCRIPT
+--// Hiu Script Hub UI
 
 local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
--- Tạo ScreenGui
-local ui = Instance.new("ScreenGui")
-ui.Name = _G.ScriptHubName
-ui.Parent = game.CoreGui
+-- Tên script hub (cho phép tùy chỉnh ngoài file)
+local hubName = _G.ScriptHubName or "📜 Hiu Script Hub"
 
--- Tạo Frame chính
+-- Tạo UI
+local ui = Instance.new("ScreenGui")
+ui.Name = "HiuScriptHubUI"
+ui.ResetOnSpawn = false
+ui.Parent = game:GetService("CoreGui")
+
+-- Main Frame
 local main = Instance.new("Frame")
 main.Name = "Main"
 main.Size = UDim2.new(0, 250, 0, 300)
@@ -25,23 +26,23 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = main
 
--- Tiêu đề
+-- Title
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 30)
 title.BackgroundTransparency = 1
-title.Text = _G.ScriptHubName
+title.Text = hubName
 title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 22
 title.Parent = main
 
--- Nút Ẩn/Hiện UI
+-- Toggle UI button
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(0, 100, 0, 25)
 toggleBtn.Position = UDim2.new(0.5, -50, 1, -30)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 toggleBtn.Text = "Ẩn UI"
-toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 toggleBtn.Font = Enum.Font.SourceSans
 toggleBtn.TextSize = 15
 toggleBtn.Parent = main
@@ -50,7 +51,7 @@ local corner2 = Instance.new("UICorner")
 corner2.CornerRadius = UDim.new(0, 8)
 corner2.Parent = toggleBtn
 
--- Khung chứa các phần tử
+-- Toggle container
 local toggleFrame = Instance.new("Frame")
 toggleFrame.Size = UDim2.new(1, -20, 1, -60)
 toggleFrame.Position = UDim2.new(0, 10, 0, 40)
@@ -61,39 +62,25 @@ local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 5)
 layout.Parent = toggleFrame
 
+-- Toggle UI animation
 local uiVisible = true
-
-local TweenService = game:GetService("TweenService")
-local sizeShown = UDim2.new(0, 250, 0, 300)
-local sizeHidden = UDim2.new(0, 250, 0, 60)
-
-local function tweenSize(frame, newSize)
-    local tween = TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = newSize})
-    tween:Play()
-end
-
 toggleBtn.MouseButton1Click:Connect(function()
     uiVisible = not uiVisible
+    toggleBtn.Text = uiVisible and "Ẩn UI" or "Hiện UI"
     if uiVisible then
-        toggleBtn.Text = "Ẩn UI"
-        tweenSize(main, sizeShown)
-        task.wait(0.25)
+        main:TweenSize(UDim2.new(0, 250, 0, 300), "Out", "Sine", 0.25, true)
         for _, child in ipairs(toggleFrame:GetChildren()) do
-            if child:IsA("GuiObject") then
-                child.Visible = true
-            end
+            if child:IsA("GuiObject") then child.Visible = true end
         end
     else
-        toggleBtn.Text = "Hiện UI"
         for _, child in ipairs(toggleFrame:GetChildren()) do
-            if child:IsA("GuiObject") then
-                child.Visible = false
-            end
+            if child:IsA("GuiObject") then child.Visible = false end
         end
-        tweenSize(main, sizeHidden)
+        main:TweenSize(UDim2.new(0, 250, 0, 60), "Out", "Sine", 0.25, true)
     end
 end)
 
+-- Hàm addToggle
 function addToggle(text, callback)
     local toggle = Instance.new("TextButton")
     toggle.Size = UDim2.new(1, 0, 0, 30)
@@ -109,16 +96,14 @@ function addToggle(text, callback)
     corner.Parent = toggle
 
     local state = false
-
     toggle.MouseButton1Click:Connect(function()
         state = not state
         toggle.Text = text .. ": " .. (state and "ON" or "OFF")
-        if callback then
-            callback(state)
-        end
+        if callback then callback(state) end
     end)
 end
 
+-- Hàm addTextBox
 function addTextBox(placeholderText, callback)
     local textBox = Instance.new("TextBox")
     textBox.Size = UDim2.new(1, 0, 0, 30)
@@ -141,6 +126,7 @@ function addTextBox(placeholderText, callback)
     end)
 end
 
+-- Hàm addDropdown
 function addDropdown(options, callback)
     local dropdown = Instance.new("TextButton")
     dropdown.Size = UDim2.new(1, 0, 0, 30)
@@ -156,7 +142,7 @@ function addDropdown(options, callback)
     corner.Parent = dropdown
 
     local menu = Instance.new("Frame")
-    menu.Size = UDim2.new(1, 0, 0, #options * 30)
+    menu.Size = UDim2.new(1, 0, 0, 0)
     menu.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     menu.Visible = false
     menu.Parent = dropdown
@@ -165,25 +151,23 @@ function addDropdown(options, callback)
     listLayout.Parent = menu
 
     for _, option in ipairs(options) do
-        local optionButton = Instance.new("TextButton")
-        optionButton.Size = UDim2.new(1, 0, 0, 30)
-        optionButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        optionButton.TextColor3 = Color3.new(1, 1, 1)
-        optionButton.Font = Enum.Font.SourceSans
-        optionButton.TextSize = 18
-        optionButton.Text = option
-        optionButton.Parent = menu
+        local optionBtn = Instance.new("TextButton")
+        optionBtn.Size = UDim2.new(1, 0, 0, 30)
+        optionBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        optionBtn.TextColor3 = Color3.new(1, 1, 1)
+        optionBtn.Font = Enum.Font.SourceSans
+        optionBtn.TextSize = 18
+        optionBtn.Text = option
+        optionBtn.Parent = menu
 
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 8)
-        corner.Parent = optionButton
+        corner.Parent = optionBtn
 
-        optionButton.MouseButton1Click:Connect(function()
+        optionBtn.MouseButton1Click:Connect(function()
             dropdown.Text = "Chọn: " .. option
             menu.Visible = false
-            if callback then
-                callback(option)
-            end
+            if callback then callback(option) end
         end)
     end
 
@@ -192,14 +176,21 @@ function addDropdown(options, callback)
     end)
 end
 
+-- Hàm addParagraph
 function addParagraph(text)
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, 0, 0, 30)
     label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextWrapped = true
     label.TextColor3 = Color3.fromRGB(200, 200, 200)
     label.Font = Enum.Font.SourceSansItalic
-    label.TextSize = 16
+    label.TextSize = 18
+    label.TextWrapped = true
+    label.Text = text
     label.Parent = toggleFrame
 end
+
+-- Export ra bên ngoài
+getgenv().addToggle = addToggle
+getgenv().addTextBox = addTextBox
+getgenv().addDropdown = addDropdown
+getgenv().addParagraph = addParagraph

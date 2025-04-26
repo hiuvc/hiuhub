@@ -85,10 +85,44 @@ function addDropdown(list, callback)
     Dropdown.TextSize = 20
     Dropdown.Parent = Main
 
+    -- Tạo một frame để chứa các tùy chọn Dropdown
+    local OptionsFrame = Instance.new("Frame")
+    OptionsFrame.Size = UDim2.new(1, 0, 0, 0)
+    OptionsFrame.Position = UDim2.new(0, 10, 0, 40)
+    OptionsFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    OptionsFrame.Visible = false
+    OptionsFrame.Parent = Dropdown
+
+    -- Thêm các tùy chọn vào Dropdown
+    for _, option in ipairs(list) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Size = UDim2.new(1, 0, 0, 40)
+        OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        OptionButton.Text = option
+        OptionButton.Font = Enum.Font.SourceSans
+        OptionButton.TextSize = 18
+        OptionButton.Parent = OptionsFrame
+
+        -- Hiệu ứng hover cho từng tùy chọn
+        OptionButton.MouseEnter:Connect(function()
+            OptionButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        end)
+        OptionButton.MouseLeave:Connect(function()
+            OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        end)
+
+        -- Khi người dùng chọn một tùy chọn
+        OptionButton.MouseButton1Click:Connect(function()
+            Dropdown.Text = option
+            OptionsFrame.Visible = false
+            callback(option)
+        end)
+    end
+
+    -- Hiển thị/ẩn các tùy chọn khi nhấn vào Dropdown
     Dropdown.MouseButton1Click:Connect(function()
-        local selected = list[math.random(1, #list)]
-        Dropdown.Text = selected
-        callback(selected)
+        OptionsFrame.Visible = not OptionsFrame.Visible
     end)
 end
 

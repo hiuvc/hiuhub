@@ -1,8 +1,8 @@
 
 local v14 = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))();
 local v15 = v14:CreateWindow({
-    Title = "Royal Hub",
-    SubTitle = "By hiulofi",
+    Title = "Binini Hub",
+    SubTitle = "By hiuvc",
     TabWidth = 160,
     Theme = "Dark",
     Acrylic = True,
@@ -10,41 +10,47 @@ local v15 = v14:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 });
 local v16 = {
-    Main = v15:AddTab({
-        Title = "Tab Framing"
-    }),
-    Sea = v15:AddTab({
-        Title = "Tab Sea Events"
-    }),
-    ITM = v15:AddTab({
-        Title = "Tab Item"
-    }),
-    Setting = v15:AddTab({
-        Title = "Tab Setting"
+    Server_Status = v15:AddTab({
+        Title = "Server-Status"
     }),
     Status = v15:AddTab({
-        Title = "Tab Server"
+        Title = "Server"
+    }),
+    Main = v15:AddTab({
+        Title = "Framing"
+    }),
+    Sea = v15:AddTab({
+        Title = "Sea Events"
+    }),
+    ITM = v15:AddTab({
+        Title = "Item"
+    }),
+    Setting = v15:AddTab({
+        Title = "Settings"
     }),
     Stats = v15:AddTab({
-        Title = "Tab stats"
+        Title = "Stats"
     }),
     Player = v15:AddTab({
-        Title = "Tab Player"
+        Title = "Player"
     }),
     Teleport = v15:AddTab({
-        Title = "Tab Teleport"
+        Title = "Teleport"
     }),
     Fruit = v15:AddTab({
-        Title = "Tab Fruit"
+        Title = "Fruit"
     }),
     Raid = v15:AddTab({
-        Title = "Tab Raid"
+        Title = "Raid"
     }),
     Race = v15:AddTab({
-        Title = "Tab Race"
+        Title = "Race"
     }),
     Shop = v15:AddTab({
-        Title = "Tab Shop"
+        Title = "Shop"
+    }),
+    EPS = v15:AddTab({
+        Title = "EPS"
     }),
     Misc = v15:AddTab({
         Title = "Mic"
@@ -191,7 +197,7 @@ function CheckLevel()
             QuestLv = 2;
             NameMon = "Gladiator";
             CFrameQ = CFrame.new(- 1577.7890625, 7.4151420593262, - 2984.4838867188);
-            CFrameMon = CFrame.new(- 1521.3740234375, 81.203170776367, - 3066.3139648438);
+            CFrameMon = CFrame.new(-1328.474, 45.6500092, -3231.90405, 0.186027944);
         elseif ((v197 == 300) or (v197 <= 324) or (SelectMonster == "Military Soldier")) then
             Ms = "Military Soldier";
             NameQuest = "MagmaQuest";
@@ -708,7 +714,7 @@ function CheckLevel()
             NameMon = "Serpent Hunter";
             CFrameQ = CFrame.new(- 16665.19140625, 104.59640502929688, 1579.6943359375);
             CFrameMon = CFrame.new(- 16621.4140625, 121.40631103515625, 1290.6881103515625);
-        elseif ((v197 == 2575) or (v197 <= 2599) or (SelectMonster == "Skull Slayer") or (v197 == 2600)) then
+        elseif ((v197 >= 2575 and v197 <= 2650) or (SelectMonster == "Skull Slayer")) then
             Ms = "Skull Slayer";
             NameQuest = "TikiQuest3";
             QuestLv = 2;
@@ -1103,6 +1109,10 @@ function CheckBossQuest()
             BossMon = "rip_indra True Form";
             NameBoss = "rip_indra True Form";
             CFrameBoss = CFrame.new(- 5415.3920898438, 505.74133300781, - 2814.0166015625);
+        elseif (SelectBoss == "Tyrant of the  Skies") then
+            BossMon = "Tyrant of the Skies"
+            NameBoss = "Tyrant of the Skies"
+            CFrameBoss = CFrame.new(-16263.4854, 150.167999, 1393.90002);
         end
     end
 end
@@ -2028,29 +2038,36 @@ function BTPZ(v209)
     task.wait();
     game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v209;
 end
-TweenSpeed = 350;
-function Tween(v211)
-    local v212 = (v211.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude;
-    local v213 = TweenSpeed;
-    if (v212 >= 350) then
-        v213 = TweenSpeed;
-    end
-    local v214 = TweenInfo.new(v212 / v213, Enum.EasingStyle.Linear);
-    local v215 = game:GetService("TweenService"):Create(game.Players.LocalPlayer.Character.HumanoidRootPart, v214, {
-        CFrame = v211
-    });
-    v215:Play();
+_G.TweenSpeed = 180
+
+function Tween(targetCFrame)
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    local distance = (targetCFrame.Position - char.HumanoidRootPart.Position).Magnitude
+    local speed = _G.TweenSpeed or 180
+    local tweenTime = distance / speed
+
+    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear)
+    local tween = game:GetService("TweenService"):Create(char.HumanoidRootPart, tweenInfo, {
+        CFrame = targetCFrame
+    })
+
+    tween:Play()
+
     if _G.StopTween then
-        v215:Cancel();
+        tween:Cancel()
     end
 end
-function CancelTween(v216)
-    if not v216 then
-        _G.StopTween = true;
-        wait();
-        Tween(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame);
-        wait();
-        _G.StopTween = false;
+
+function CancelTween(doCancel)
+    if not doCancel then
+        _G.StopTween = true
+        wait()
+        -- Không tween lại vị trí hiện tại nữa
+        wait()
+        _G.StopTween = false
     end
 end
 function EquipTool(v217)
@@ -2243,19 +2260,19 @@ spawn(function()
     while wait() do
         if FarmMode == "Stand" then
             -- Chế độ đứng yên, giữ vị trí cố định
-            Pos = CFrame.new(0, 40, 0);
+            Pos = CFrame.new(0, 20, 0);
         elseif FarmMode == "Dodge" then
             -- Chế độ né skill, thay đổi vị trí linh hoạt
             if Type == 1 then
-                Pos = CFrame.new(0, 40, 0);
+                Pos = CFrame.new(0, 20, 0);
             elseif Type == 2 then
-                Pos = CFrame.new(-40, 40, 0);
+                Pos = CFrame.new(-20, 20, 0);
             elseif Type == 3 then
-                Pos = CFrame.new(40, 40, 0);
+                Pos = CFrame.new(20, 20, 0);
             elseif Type == 4 then
-                Pos = CFrame.new(0, 40, 40);
+                Pos = CFrame.new(0, 20, 20);
             elseif Type == 5 then
-                Pos = CFrame.new(0, 40, -40);
+                Pos = CFrame.new(0, 20, -20);
             end
         end
     end
@@ -2266,15 +2283,15 @@ spawn(function()
     while wait() do
         if FarmMode == "Dodge" then
             Type = 1;
-            wait(0.2);
+            wait(0.5);
             Type = 2;
-            wait(0.2);
+            wait(0.5);
             Type = 3;
-            wait(0.2);
+            wait(0.5);
             Type = 4;
-            wait(0.2);
+            wait(0.5);
             Type = 5;
-            wait(0.2);
+            wait(0.5);
         end
     end
 end);
@@ -2346,7 +2363,7 @@ v23.BorderSizePixel = 0;
 v23.Position = UDim2.new(0.120833337 - 0.1, 0, 0.0952890813 + 0.01, 0);
 v23.Size = UDim2.new(0, 50, 0, 50);
 v23.Draggable = true;
-v23.Image = "http://www.roblox.com/asset/?id=17382863073";
+v23.Image = "http://www.roblox.com/asset/?id=133979080007875";
 v24.Parent = v23;
 v24.CornerRadius = UDim.new(0, 12);
 v25.Parent = v23;
@@ -2395,7 +2412,7 @@ spawn(function()
         if _G.FastAttackStrix_Mode then
             pcall(function()
                 if (_G.FastAttackStrix_Mode == "Super Fast Attack") then
-                    _G.Fast_Delay = 1e-9;
+                    _G.Fast_Delay = 0.25;
                 end
             end);
         end
@@ -2475,13 +2492,15 @@ spawn(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, QuestLv);
                     end
                 elseif (string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, NameMon) or (game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible == true)) then
+                    Tween(CFrameMon);
+                    wait(1); -- chờ một chút để Tween hoàn tất
                     for v1432, v1433 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                         if (v1433:FindFirstChild("Humanoid") and v1433:FindFirstChild("HumanoidRootPart") and (v1433.Humanoid.Health > 0)) then
                             if (v1433.Name == Ms) then
                                 repeat
+                                    bringmob = true;
                                     wait(_G.Fast_Delay);
                                     AttackNoCoolDown();
-                                    bringmob = true;
                                     AutoHaki();
                                     EquipTool(SelectWeapon);
                                     Tween(v1433.HumanoidRootPart.CFrame * Pos);
@@ -2843,15 +2862,16 @@ if Sea3 then
                         end
                     elseif (game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible == true) then
                         if (game:GetService("Workspace").Enemies:FindFirstChild("Reborn Skeleton") or game:GetService("Workspace").Enemies:FindFirstChild("Living Zombie") or game:GetService("Workspace").Enemies:FindFirstChild("Demonic Soul") or game:GetService("Workspace").Enemies:FindFirstChild("Posessed Mummy")) then
+                            wait(1)
                             for v1661, v1662 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                                 if (v1662:FindFirstChild("HumanoidRootPart") and v1662:FindFirstChild("Humanoid") and (v1662.Humanoid.Health > 0)) then
                                     if ((v1662.Name == "Reborn Skeleton") or (v1662.Name == "Living Zombie") or (v1662.Name == "Demonic Soul") or (v1662.Name == "Posessed Mummy")) then
                                         if string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Demonic Soul") then
                                             repeat
+                                                bringmob = true;
                                                 wait(_G.Fast_Delay);
                                                 AttackNoCoolDown();
                                                 AutoHaki();
-                                                bringmob = true;
                                                 EquipTool(SelectWeapon);
                                                 Tween(v1662.HumanoidRootPart.CFrame * Pos);
                                                 v1662.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
@@ -2870,41 +2890,6 @@ if Sea3 then
                                 end
                             end
                         else
-                        end
-                    end
-                end);
-            end
-        end
-    end);
-    local v488 = CFrame.new(- 9515.75, 174.8521728515625, 6079.40625);
-    spawn(function()
-        while wait() do
-            if _G.AutoBoneNoQuest then
-                pcall(function()
-                    Tween(v488);
-                    if ((v488.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 3) then
-                    end
-                    if (game:GetService("Workspace").Enemies:FindFirstChild("Reborn Skeleton") or game:GetService("Workspace").Enemies:FindFirstChild("Living Zombie") or game:GetService("Workspace").Enemies:FindFirstChild("Demonic Soul") or game:GetService("Workspace").Enemies:FindFirstChild("Posessed Mummy")) then
-                        for v1436, v1437 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                            if (v1437:FindFirstChild("HumanoidRootPart") and v1437:FindFirstChild("Humanoid") and (v1437.Humanoid.Health > 0)) then
-                                if ((v1437.Name == "Reborn Skeleton") or (v1437.Name == "Living Zombie") or (v1437.Name == "Demonic Soul") or (v1437.Name == "Posessed Mummy")) then
-                                    repeat
-                                        wait(_G.Fast_Delay);
-                                        AttackNoCoolDown();
-                                        AutoHaki();
-                                        bringmob = true;
-                                        EquipTool(SelectWeapon);
-                                        Tween(v1437.HumanoidRootPart.CFrame * Pos);
-                                        v1437.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
-                                        v1437.HumanoidRootPart.Transparency = 1;
-                                        v1437.Humanoid.JumpPower = 0;
-                                        v1437.Humanoid.WalkSpeed = 0;
-                                        v1437.HumanoidRootPart.CanCollide = false;
-                                        FarmPos = v1437.HumanoidRootPart.CFrame;
-                                        MonFarm = v1437.Name;
-                                    until not _G.AutoBoneNoQuest or (v1437.Humanoid.Health <= 0) or not v1437.Parent
-                                end
-                            end
                         end
                     end
                 end);
@@ -3205,9 +3190,9 @@ elseif Sea3 then
         "Captain Elephant",
         "Beautiful Pirate",
         "rip_indra True Form",
-        "Longma",
         "Soul Reaper",
-        "Cake Queen"
+        "Cake Queen",
+        "Tyrant Of The Skies"
     };
 end
 local v61 = v16.Main:AddDropdown("DropdownBoss", {
@@ -3359,6 +3344,7 @@ spawn(function()
     end
 end);
 if Sea3 then
+    
     local v498 = v16.Sea:AddSection("Đảo Cáo");
     local v499 = v16.Sea:AddParagraph({
         Title = "Trạng Thái Đảo Cáo",
@@ -3422,6 +3408,7 @@ if Sea3 then
             end);
         end
     end
+
     local v501 = v16.Sea:AddToggle("ToggleTPKitsune", {
         Title = "Bay Vô Đảo Cáo",
         Description = "",
@@ -3870,6 +3857,14 @@ if Sea3 then
             Tween2(CFrame.new(- 16917.154296875, 7.757596015930176, 511.8203125));
         end
     });
+    local ListSeaZone = {
+        "Zone 1",
+        "Zone 2",
+        "Zone 3",
+        "Zone 4",
+        "Zone 5",
+        "Zone 6"
+    }
     local v511 = {};
     local v518 = {
         "Beast Hunter",
@@ -3891,7 +3886,7 @@ if Sea3 then
         Description = "",
         Values = v518,
         Multi = false,
-        Default = 1
+        Default = 5
     });
     v519:SetValue(selectedBoat);
     v519:OnChanged(function(v627)
@@ -6002,7 +5997,23 @@ if Sea2 then
         end);
     end);
 end
-local v85 = v16.Setting:AddToggle("ToggleAutoT", {
+local TweenSpeedInput = v16.Setting:AddInput("TweenSpeedInput", {
+    Title = "Tween Speed",
+    Default = "180",
+    Placeholder = "",
+    Numeric = false,
+    Finished = false,
+    Callback = function(SpeedInput)
+        local number = tonumber(SpeedInput)
+        if number then
+            _G.TweenSpeed = number
+        else
+            warn("Invalid Tween Speed input! Defaulting to 180.")
+            _G.TweenSpeed = 180
+        end
+    end
+});
+ v85 = v16.Setting:AddToggle("ToggleAutoT", {
     Title = "Bật Tộc V3",
     Description = "",
     Default = false
@@ -6104,43 +6115,34 @@ v17.ToggleBringMob:SetValue(true);
 spawn(function()
     while wait() do
         pcall(function()
-            for v733, v734 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                if (_G.BringMob and bringmob) then
-                    if ((v734.Name == MonFarm) and v734:FindFirstChild("Humanoid") and (v734.Humanoid.Health > 0)) then
-                        if (v734.Name == "Factory Staff") then
-                            if ((v734.HumanoidRootPart.Position - FarmPos.Position).Magnitude <= 1000000000) then
-                                v734.Head.CanCollide = false;
-                                v734.HumanoidRootPart.CanCollide = false;
-                                v734.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
-                                v734.HumanoidRootPart.CFrame = FarmPos;
-                                if v734.Humanoid:FindFirstChild("Animator") then
-                                    v734.Humanoid.Animator:Destroy();
-                                end
-                                sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge);
-                            end
-                        elseif (v734.Name == MonFarm) then
-                            if ((v734.HumanoidRootPart.Position - FarmPos.Position).Magnitude <= 1000000000) then
-                                v734.HumanoidRootPart.CFrame = FarmPos;
-                                v734.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
-                                v734.HumanoidRootPart.Transparency = 1;
-                                v734.Humanoid.JumpPower = 0;
-                                v734.Humanoid.WalkSpeed = 0;
-                                if v734.Humanoid:FindFirstChild("Animator") then
-                                    v734.Humanoid.Animator:Destroy();
-                                end
-                                v734.HumanoidRootPart.CanCollide = false;
-                                v734.Head.CanCollide = false;
-                                v734.Humanoid:ChangeState(11);
-                                v734.Humanoid:ChangeState(14);
-                                sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge);
-                            end
+            local count = 0
+            for _, mob in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                if _G.BringMob and bringmob and count < 3 then
+                    if mob.Name == MonFarm and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 and mob:FindFirstChild("HumanoidRootPart") then
+                        local distance = (mob.HumanoidRootPart.Position - FarmPos.Position).Magnitude
+                        if distance <= 160 then -- Gom Mob trong phạm vi
+                            count = count + 1
+                            mob.Head.CanCollide = false
+                            mob.HumanoidRootPart.CanCollide = false
+                            mob.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                            mob.HumanoidRootPart.CFrame = FarmPos
+                            mob.HumanoidRootPart.Transparency = 1
+                            mob.Humanoid.JumpPower = 0
+                            mob.Humanoid.WalkSpeed = 0
+                            mob.Humanoid:ChangeState(11)
+                            mob.Humanoid:ChangeState(14)
+                            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
                         end
                     end
                 end
             end
-        end);
+        end)
     end
-end);
+end)
+
+
+
+
 local v91 = v16.Setting:AddToggle("ToggleRemoveNotify", {
     Title = "Xóa Thông Báo",
     Description = "",
@@ -6219,10 +6221,6 @@ v98:OnChanged(function(v284)
     SkillF = v284;
 end);
 v17.ToggleF:SetValue(true);
-local v99 = v16.Status:AddParagraph({
-    Title = "Thông Tin",
-    Content = "━━━━━━━━━━━━━━━━━━━━━\n" .. "Tên : " .. game.Players.LocalPlayer.DisplayName .. " (@" .. game.Players.LocalPlayer.Name .. ")\n" .. "Cấp : " .. game:GetService("Players").LocalPlayer.Data.Level.Value .. "\n" .. "Tiền : " .. game:GetService("Players").LocalPlayer.Data.Beli.Value .. "\n" .. "Điểm F : " .. game:GetService("Players").LocalPlayer.Data.Fragments.Value .. "\n" .. "Tiền Truy Nã : " .. game:GetService("Players").LocalPlayer.leaderstats["Bounty/Honor"].Value .. "\n" .. "Máu: " .. game.Players.LocalPlayer.Character.Humanoid.Health .. "/" .. game.Players.LocalPlayer.Character.Humanoid.MaxHealth .. "\n" .. "Năng Lượng : " .. game.Players.LocalPlayer.Character.Energy.Value .. "/" .. game.Players.LocalPlayer.Character.Energy.MaxValue .. "\n" .. "Tộc : " .. game:GetService("Players").LocalPlayer.Data.Race.Value .. "\n" .. "Trái : " .. game:GetService("Players").LocalPlayer.Data.DevilFruit.Value .. "\n" .. "━━━━━━━━━━━━━━━━━━━━━"
-});
 local v100 = v16.Status:AddParagraph({
     Title = "Thời Gian",
     Content = ""
@@ -6252,37 +6250,7 @@ spawn(function()
         game:GetService("RunService").RenderStepped:Wait();
     end
 end);
-local v102 = v16.Status:AddParagraph({
-    Title = "Thời Gian Máy Chủ",
-    Content = ""
-});
-local function v103()
-    local v297 = math.floor(workspace.DistributedGameTime + 0.5);
-    local v298 = math.floor(v297 / (60 ^ 2)) % 24 ;
-    local v299 = math.floor(v297 / 60) % 60 ;
-    local v300 = v297 % 60 ;
-    v102:SetDesc(string.format("%02d Tiếng-%02d Phút-%02d Giây", v298, v299, v300));
-end
-spawn(function()
-    while task.wait() do
-        pcall(v103);
-    end
-end);
-local v104 = v16.Status:AddParagraph({
-    Title = "Đảo Leviathan",
-    Content = ""
-});
-spawn(function()
-    pcall(function()
-        while wait() do
-            if game:GetService("Workspace").Map:FindFirstChild("FrozenDimension") then
-                v104:SetDesc("✅");
-            else
-                v104:SetDesc("❌");
-            end
-        end
-    end);
-end);
+
 local v105 = v16.Status:AddInput("Input", {
     Title = "Job ID",
     Default = "",
@@ -6298,6 +6266,14 @@ v16.Status:AddButton({
     Description = "",
     Callback = function()
         game:GetService("TeleportService"):TeleportToPlaceInstance(game.placeId, _G.Job, game.Players.LocalPlayer);
+    end
+});
+v16.Status:AddButton({
+    Title = "Clear Job Id",
+    Description = "",
+    Callback = function()
+        _G.JobId = nil
+        v105:SetValue("") 
     end
 });
 v16.Status:AddButton({
@@ -7111,8 +7087,7 @@ spawn(function()
         end
     end
 end);
-local v56 = v16.Fruit:AddSection("Định Vị");
-local v130 = v16.Fruit:AddToggle("ToggleEspPlayer", {
+local v130 = v16.EPS:AddToggle("ToggleEspPlayer", {
     Title = "Người Chơi",
     Description = "",
     Default = false
@@ -7122,7 +7097,7 @@ v130:OnChanged(function(v345)
     UpdatePlayerChams();
 end);
 v17.ToggleEspPlayer:SetValue(false);
-local v131 = v16.Fruit:AddToggle("ToggleEspFruit", {
+local v131 = v16.EPS:AddToggle("ToggleEspFruit", {
     Title = "Trái",
     Description = "",
     Default = false
@@ -7135,7 +7110,7 @@ v131:OnChanged(function(v346)
     end
 end);
 v17.ToggleEspFruit:SetValue(false);
-local v132 = v16.Fruit:AddToggle("ToggleEspIsland", {
+local v132 = v16.EPS:AddToggle("ToggleEspIsland", {
     Title = "Đảo",
     Description = "",
     Default = false
@@ -7148,7 +7123,7 @@ v132:OnChanged(function(v347)
     end
 end);
 v17.ToggleEspIsland:SetValue(false);
-local v133 = v16.Fruit:AddToggle("ToggleEspFlower", {
+local v133 = v16.EPS:AddToggle("ToggleEspFlower", {
     Title = "Hoa",
     Description = "",
     Default = false
@@ -7177,7 +7152,7 @@ spawn(function()
         end
     end
 end);
-local v134 = v16.Fruit:AddToggle("ToggleEspRealFruit", {
+local v134 = v16.EPS:AddToggle("ToggleEspRealFruit", {
     Title = "Trái Dứa Khớm Táo",
     Description = "",
     Default = false
@@ -7276,7 +7251,7 @@ function UpdateRealFruitEsp()
         end
     end
 end
-local v135 = v16.Fruit:AddToggle("ToggleIslandMirageEsp", {
+local v135 = v16.EPS:AddToggle("ToggleIslandMirageEsp", {
     Title = "Đảo Bí Ẩn",
     Description = "",
     Default = false
@@ -7413,7 +7388,7 @@ spawn(function()
     end
 end);
 local v140 = v16.Raid:AddToggle("ToggleNextIsland", {
-    Title = "Đấm Quái Raid+Bay Đến Đảo",
+    Title = "Auto Raid",
     Description = "",
     Default = false
 });
@@ -8157,14 +8132,14 @@ v16.Shop:AddButton({
         game:GetService("ReplicatedStorage").Modules.Net:FindFirstChild("RF/InteractDragonQuest"):InvokeServer(unpack(v371));
     end
 });
-v16.Misc:AddButton({
+v16.Status:AddButton({
     Title = "Tham Gia Máy Chủ Lại",
     Description = "",
     Callback = function()
         game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer);
     end
 });
-v16.Misc:AddButton({
+v16.Status:AddButton({
     Title = "Đổi Máy Chủ",
     Description = "",
     Callback = function()
@@ -8945,8 +8920,149 @@ spawn(function()
         end
     end
 end);
+
+------------Full Moon Status-------
+    local FullMoonStatus = v16.Server_Status:AddParagraph({Title = "Full Moon", Content = "",})
+    task.spawn(function()
+        while task.wait(2) do -- Kiểm tra mỗi 2 giây để giảm tải
+            pcall(function()
+                local moonTextureId = game:GetService("Lighting").Sky.MoonTextureId
+    
+                if moonTextureId == "http://www.roblox.com/asset/?id=9709149431" then
+                    FullMoonStatus:SetDesc("Status : Full Moon")
+                elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149052" then
+                    FullMoonStatus:SetDesc("Status : 75%")
+                elseif moonTextureId == "http://www.roblox.com/asset/?id=9709143733" then
+                    FullMoonStatus:SetDesc("Status : 50%")
+                elseif moonTextureId == "http://www.roblox.com/asset/?id=9709150401" then
+                    FullMoonStatus:SetDesc("Status : 25%")
+                elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149680" then
+                    FullMoonStatus:SetDesc("Status : 15%")
+                else
+                    FullMoonStatus:SetDesc("Status: 0%")
+                end
+            end)
+        end
+    end)
+
+------------Mirage Island Status-------
+    local MirageIslandStatus = v16.Server_Status:AddParagraph({Title = "Mirage Island", Content = "", })
+    task.spawn(function()
+        while task.wait() do
+            pcall(function()
+                if game.Workspace.Map:FindFirstChild("MysticIsland") then
+                    MirageIslandStatus:SetDesc("Status : ✅")
+                else
+                    MirageIslandStatus:SetDesc("Status : ❌")
+                end
+            end)
+        end
+    end)
+------------Leviathan Status-------   
+    local LeviathanStatus = v16.Server_Status:AddParagraph({Title = "Leviathan", Content = "", })
+    spawn(function()
+        pcall(function()
+            while wait() do
+                local v811 = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("InfoLeviathan", "1");
+                if (v811 == 5) then
+                    LeviathanStatus:SetDesc("Status : Leviathan Is Out There");
+                elseif (v811 == -1) then
+                    LeviathanStatus:SetDesc("Status : I Don't Know");
+                else
+                    LeviathanStatus:SetDesc("Mua: " .. tostring(v811));
+                end
+            end
+        end);
+    end);
+------------Frozen Dimension Status-------
+    local FrozenDimensionStatus = v16.Server_Status:AddParagraph({Title = "Frozen Dimension", Content = "", })
+    spawn(function()
+        pcall(function()
+            while wait() do
+                if game:GetService("Workspace").Map:FindFirstChild("FrozenDimension") then
+                    FrozenDimensionStatus:SetDesc("Status : ✅");
+                else
+                    FrozenDimensionStatus:SetDesc("Status : ❌");
+                end
+            end
+        end);
+    end);
+------------Kitsune Island Status-------  
+    local KitsuneIslandStatus = v16.Server_Status:AddParagraph({Title = "Kitsune Island", Content = "", })
+    function UpdateKitsune()
+        if game:GetService("Workspace").Map:FindFirstChild("KitsuneIsland") then
+            KitsuneIslandStatus:SetDesc("Status : ✅️");
+        else
+            KitsuneIslandStatus:SetDesc("Status : ❌️");
+        end
+    end
+    spawn(function()
+        pcall(function()
+            while wait() do
+                UpdateKitsune();
+            end
+        end);
+    end);
+------------Volcano Island Status-------
+    local PrehistoricIslandStatus = v16.Server_Status:AddParagraph({Title = "Volcano Island", Content = ""})
+    spawn(function()
+        pcall(function()
+            while wait() do
+                if game:GetService("Workspace").Map:FindFirstChild("PrehistoricIsland") then
+                    PrehistoricIslandStatus:SetDesc("Status : ✅️");
+                else
+                    PrehistoricIslandStatus:SetDesc("Status : ❌️");
+                end
+            end
+        end);
+    end);
+------------Cake Prince Status-------
+    local CakePrinceStatus = v16.Server_Status:AddParagraph({Title = "Cake Prince", Content = "", })
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 88 then
+                    KillMob = (tonumber(string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,41)) - 500)
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 87 then
+                    KillMob = (tonumber(string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),40,41)) - 500)
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 86 then
+                    KillMob = (tonumber(string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),41,41)) - 500)
+                end
+            end)
+        end
+    end)
+    
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 88 then
+                    CakePrinceStatus:SetDesc("Defeat : "..string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,41).." Mobs")
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 87 then
+                    CakePrinceStatus:SetDesc("Defeat : "..string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,40).." Mobs")
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 86 then
+                    CakePrinceStatus:SetDesc("Defeat : "..string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,39).." Mobs")
+                else
+                    CakePrinceStatus:SetDesc("Cake Prince Is Spawning!")
+                end
+            end)
+        end
+    end)
+
+------------Elite Hunter Status---------
+    local EliteHunterStatus = v16.Server_Status:AddParagraph({Title = "Elite Hunter", Content = "", })
+    spawn(function()
+        while wait() do
+            pcall(function()
+                if (game:GetService("ReplicatedStorage"):FindFirstChild("Diablo") or game:GetService("ReplicatedStorage"):FindFirstChild("Deandre") or game:GetService("ReplicatedStorage"):FindFirstChild("Urban") or game:GetService("Workspace").Enemies:FindFirstChild("Diablo") or game:GetService("Workspace").Enemies:FindFirstChild("Deandre") or game:GetService("Workspace").Enemies:FindFirstChild("Urban")) then
+                    EliteHunterStatus:SetDesc("Status : ✅️");
+                else
+                    EliteHunterStatus:SetDesc("Status : ❌️");
+                end
+            end);
+        end
+    end);
 v14:Notify({
-    Title = "Royal Hub",
+    Title = "Binini Hub",
     Content = "Loading Successed",
     Duration = 10
 });

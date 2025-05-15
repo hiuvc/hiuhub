@@ -10,7 +10,7 @@ local validGameIds = {
 -- Kiểm tra nếu ID game hợp lệ
 if validGameIds[Id] then
     -- Tải script nếu game hợp lệ
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Royal.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Binini.lua"))()
 else
     -- Nếu game không hợp lệ, kick người chơi
     game.Players.LocalPlayer:kick("NOT SUPPORT!")

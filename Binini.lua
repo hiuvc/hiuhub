@@ -2168,47 +2168,63 @@ function GetWeaponInventory(v222)
     end
     return false;
 end
-function AttackNoCoolDown()
-    local player = game.Players.LocalPlayer
-    local char = player.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+function GetEquippedTool()
+    local v227 = v21.Character;
+    if not v227 then
+        return nil;
+    end
+    for v475, v476 in ipairs(v227:GetChildren()) do
+        if v476:IsA("Tool") then
+            return v476;
+        end
+    end
+    return nil;
+end
 
-    local enemies = game:GetService("Workspace"):WaitForChild("Enemies"):GetChildren()
-    local nearestEnemy = nil
-    local hitList = {}
-
-    for _, enemy in pairs(enemies) do
-        if enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
-            if enemy.Humanoid.Health > 0 then
-                local dist = (enemy.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Magnitude
-                if dist < 50 then
-                    table.insert(hitList, {
-                        Instance = enemy,
-                        Hitbox = enemy:FindFirstChild("HumanoidRootPart")
-                    })
-                    if not nearestEnemy then
-                        nearestEnemy = enemy
+function FindEnemiesInRange()
+    if not player.Character then return nil, {} end
+    local targets = {}
+    local closestTarget = nil
+    local minDistance = math.huge
+    local playerPos = player.Character:GetPivot().Position
+    for _, enemy in ipairs(game:GetService("Workspace").Enemies:GetChildren()) do
+        if enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 and not enemy:GetAttribute("IsBoat") then
+            local head = enemy:FindFirstChild("Head")
+            if head then
+                local distance = (playerPos - head.Position).Magnitude
+                if distance <= 60 then
+                    table.insert(targets, {enemy, head})
+                    if distance < minDistance then
+                        minDistance = distance
+                        closestTarget = head
                     end
                 end
             end
         end
     end
-
-    if #hitList == 0 or not nearestEnemy then return end
-
-    local tool = char:FindFirstChildOfClass("Tool")
-    if not tool then return end
-
-    pcall(function()
-        local reFolder = game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE")
-        local RegisterAttack = reFolder:WaitForChild("RegisterAttack")
-        local RegisterHit = reFolder:WaitForChild("RegisterHit")
-
-        RegisterAttack:FireServer(0.1)
-        RegisterHit:FireServer(nearestEnemy, hitList)
-    end)
+    return closestTarget, targets
 end
 
+-- Attack function
+function AttackNoCoolDown()
+    local closestTarget, targets = FindEnemiesInRange()
+    if not closestTarget or not GetEquippedTool() then return end
+    pcall(function()
+        local rs = game:GetService("ReplicatedStorage")
+        local registerAttack = rs:FindFirstChild("Modules") and rs.Modules:FindFirstChild("Net") and rs.Modules.Net:FindFirstChild("RE/RegisterAttack")
+        local registerHit = rs:FindFirstChild("Modules") and rs.Modules:FindFirstChild("Net") and rs.Modules.Net:FindFirstChild("RE/RegisterHit")
+        if registerAttack and registerHit then
+            if #targets > 0 then
+                registerAttack:FireServer(_G.Fast_Delay)
+                registerHit:FireServer(closestTarget, targets)
+            else
+                task.wait(_G.Fast_Delay)
+            end
+        else
+            print("Lỗi: Không tìm thấy RegisterAttack hoặc RegisterHit.")
+        end
+    end)
+end
 
 
 -- Dropdown để chọn chế độ Farm

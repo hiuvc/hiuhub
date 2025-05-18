@@ -2168,63 +2168,34 @@ function GetWeaponInventory(v222)
     end
     return false;
 end
--- Script Attack No Cooldown (Blox Fruits)
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+function AttackNoCoolDown()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Workspace = game:GetService("Workspace")
 
--- Tìm enemy gần nhất trong 60 stud
-function GetNearestEnemy()
-    local enemies = workspace:WaitForChild("Enemies"):GetChildren()
-    local nearest, minDist = nil, math.huge
-    local myPos = Character:FindFirstChild("HumanoidRootPart").Position
+    local enemies = Workspace.Enemies:GetChildren()
+    local hitTargets = {}
+    local mainTarget = FindEnemiesInRange(hitTargets, enemies) -- sử dụng hàm có sẵn
 
-    for _, enemy in pairs(enemies) do
-        if enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
-            local dist = (enemy.HumanoidRootPart.Position - myPos).Magnitude
-            if dist < 60 and enemy.Humanoid.Health > 0 then
-                nearest = enemy
-                minDist = dist
-            end
-        end
+    if not mainTarget or #hitTargets == 0 then
+        return
     end
 
-    return nearest
-end
-
--- Hàm gây sát thương M1 không cooldown
-function AttackNoCooldown()
-    local target = GetNearestEnemy()
-    if not target then return end
-
-    local CombatFramework = require(LocalPlayer.PlayerScripts:WaitForChild("CombatFramework"))
-    local CombatModule = debug.getupvalue(CombatFramework.activeController.attack, 1)
-    local blade = Character:FindFirstChildOfClass("Tool")
-
-    if not blade then return end
-
-    -- Gán vũ khí nếu chưa đúng
-    CombatFramework.activeController.equipped = blade
-    CombatFramework.activeController.blocking = false
-
-    -- Gửi tín hiệu đánh (giống player click)
-    for i = 1, 3 do
-        local args = {
-            [1] = target.HumanoidRootPart.CFrame,
-            [2] = target
-        }
-
-        CombatModule.hitboxMagnitude = 100 -- tăng tầm đánh (nếu cần)
-        CombatFramework.activeController.timeToNextAttack = 0
-        CombatFramework.activeController.hitboxMagnitude = 100
-        CombatFramework.activeController.increment = 1
-        CombatFramework.activeController.blocking = false
-
-        CombatFramework.activeController:attack()
-        task.wait(0.05)
+    local equippedTool = GetEquippedTool() -- dùng hàm có sẵn
+    if not equippedTool then
+        return
     end
+
+    pcall(function()
+        local reFolder = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE")
+        local RegisterAttack = reFolder:WaitForChild("RegisterAttack")
+        local RegisterHit = reFolder:WaitForChild("RegisterHit")
+
+        RegisterAttack:FireServer(1e-9) -- cooldown siêu nhỏ
+        RegisterHit:FireServer(mainTarget, hitTargets)
+    end)
 end
+
+
 
 -- Dropdown để chọn chế độ Farm
 local v48 = v16.Main:AddDropdown("DropdownSelectWeapon", {

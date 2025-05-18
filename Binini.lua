@@ -2169,29 +2169,43 @@ function GetWeaponInventory(v222)
     return false;
 end
 function AttackNoCoolDown()
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local Workspace = game:GetService("Workspace")
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
-    local enemies = Workspace.Enemies:GetChildren()
-    local hitTargets = {}
-    local mainTarget = FindEnemiesInRange(hitTargets, enemies) -- sử dụng hàm có sẵn
+    local enemies = game:GetService("Workspace"):WaitForChild("Enemies"):GetChildren()
+    local nearestEnemy = nil
+    local hitList = {}
 
-    if not mainTarget or #hitTargets == 0 then
-        return
+    for _, enemy in pairs(enemies) do
+        if enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") then
+            if enemy.Humanoid.Health > 0 then
+                local dist = (enemy.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Magnitude
+                if dist < 50 then
+                    table.insert(hitList, {
+                        Instance = enemy,
+                        Hitbox = enemy:FindFirstChild("HumanoidRootPart")
+                    })
+                    if not nearestEnemy then
+                        nearestEnemy = enemy
+                    end
+                end
+            end
+        end
     end
 
-    local equippedTool = GetEquippedTool() -- dùng hàm có sẵn
-    if not equippedTool then
-        return
-    end
+    if #hitList == 0 or not nearestEnemy then return end
+
+    local tool = char:FindFirstChildOfClass("Tool")
+    if not tool then return end
 
     pcall(function()
-        local reFolder = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE")
+        local reFolder = game:GetService("ReplicatedStorage"):WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE")
         local RegisterAttack = reFolder:WaitForChild("RegisterAttack")
         local RegisterHit = reFolder:WaitForChild("RegisterHit")
 
-        RegisterAttack:FireServer(1e-9) -- cooldown siêu nhỏ
-        RegisterHit:FireServer(mainTarget, hitTargets)
+        RegisterAttack:FireServer(0.1)
+        RegisterHit:FireServer(nearestEnemy, hitList)
     end)
 end
 

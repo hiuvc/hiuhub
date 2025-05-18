@@ -2168,72 +2168,37 @@ function GetWeaponInventory(v222)
     end
     return false;
 end
-local v21 = game.Players.LocalPlayer;
-function FindEnemiesInRange(v223, v224)
-    local v225 = (v21.Character or v21.CharacterAdded:Wait()):GetPivot().Position;
-    local v226 = nil;
-    for v471, v472 in ipairs(v224) do
-        if (not v472:GetAttribute("IsBoat") and v472:FindFirstChildOfClass("Humanoid") and (v472.Humanoid.Health > 0)) then
-            local v671 = v472:FindFirstChild("Head");
-            if (v671 and ((v225 - v671.Position).Magnitude <= 60)) then
-                if (v472 ~= v21.Character) then
-                    table.insert(v223, {
-                        v472,
-                        v671
-                    });
-                    v226 = v671;
-                end
-            end
-        end
-    end
-    for v473, v474 in ipairs(game.Players:GetPlayers()) do
-        if (v474.Character and (v474 ~= v21)) then
-            local v672 = v474.Character:FindFirstChild("Head");
-            if (v672 and ((v225 - v672.Position).Magnitude <= 60)) then
-                table.insert(v223, {
-                    v474.Character,
-                    v672
-                });
-                v226 = v672;
-            end
-        end
-    end
-    return v226;
-end
-function GetEquippedTool()
-    local v227 = v21.Character;
-    if not v227 then
-        return nil;
-    end
-    for v475, v476 in ipairs(v227:GetChildren()) do
-        if v476:IsA("Tool") then
-            return v476;
-        end
-    end
-    return nil;
-end
 function AttackNoCoolDown()
-    local v228 = {};
-    local v229 = game:GetService("Workspace").Enemies:GetChildren();
-    local v230 = FindEnemiesInRange(v228, v229);
-    if not v230 then
-        return;
+    -- Khởi tạo danh sách kẻ địch trong phạm vi
+    local enemiesInRange = {}
+    local enemies = game:GetService("Workspace"):WaitForChild("Enemies"):GetChildren()
+    
+    -- Tìm kẻ địch trong phạm vi 60 stud
+    local targetHead = FindEnemiesInRange(enemiesInRange, enemies)
+    if not targetHead then
+        return -- Thoát nếu không tìm thấy mục tiêu
     end
-    local v231 = GetEquippedTool();
-    if not v231 then
-        return;
+    
+    -- Lấy công cụ đang được trang bị
+    local equippedTool = GetEquippedTool()
+    if not equippedTool then
+        return -- Thoát nếu không có công cụ
     end
+    
+    -- Gửi tín hiệu tấn công đến server
     pcall(function()
-        local v477 = game:GetService("ReplicatedStorage");
-        local v478 = v477:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterAttack");
-        local v479 = v477:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterHit");
-        if (# v228 > 0) then
-            v478:FireServer(1e-9);
-            v479:FireServer(v230, v228);
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local netModule = replicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+        local registerAttack = netModule["RE/RegisterAttack"]
+        local registerHit = netModule["RE/RegisterHit"]
+        
+        if #enemiesInRange > 0 then
+            registerAttack:FireServer(1e-9) -- Gửi tín hiệu bắt đầu tấn công
+            registerHit:FireServer(targetHead, enemiesInRange) -- Gửi danh sách kẻ địch bị tấn công
         else
-            task.wait(1e-9);
+            task.wait(1e-9) -- Đợi ngắn nếu không có kẻ địch
         end
-    end);
+    end)
 end
 
 -- Dropdown để chọn chế độ Farm

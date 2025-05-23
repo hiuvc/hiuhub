@@ -176,7 +176,7 @@ function CheckLevel()
             QuestLv = 1;
             NameMon = "Prisoner";
             CFrameQ = CFrame.new(5310.60547, 0.350014925, 474.946594, 0.0175017118, 0, 0.999846935, 0, 1, 0, - 0.999846935, 0, 0.0175017118);
-            CFrameMon = CFrame.new(4937.31885, 0.332031399, 649.574524, 0.694649816, 0, - 0.719348073, 0, 1, 0, 0.719348073, 0, 0.694649816);
+            CFrameMon = CFrame.new(5275.7392578125, 16.018795013427734, 357.03741455078125);
         elseif ((v197 == 210) or (v197 <= 249) or (SelectMonster == "Dangerous Prisoner")) then
             Ms = "Dangerous Prisoner";
             NameQuest = "PrisonerQuest";
@@ -184,20 +184,13 @@ function CheckLevel()
             NameMon = "Dangerous Prisoner";
             CFrameQ = CFrame.new(5310.60547, 0.350014925, 474.946594, 0.0175017118, 0, 0.999846935, 0, 1, 0, - 0.999846935, 0, 0.0175017118);
             CFrameMon = CFrame.new(5099.6626, 0.351562679, 1055.7583, 0.898906827, 0, - 0.438139856, 0, 1, 0, 0.438139856, 0, 0.898906827);
-        elseif ((v197 == 250) or (v197 <= 274) or (SelectMonster == "Toga Warrior")) then
+        elseif ((v197 == 250) or (v197 <= 299) or (SelectMonster == "Toga Warrior")) then
             Ms = "Toga Warrior";
             NameQuest = "ColosseumQuest";
             QuestLv = 1;
             NameMon = "Toga Warrior";
             CFrameQ = CFrame.new(- 1577.7890625, 7.4151420593262, - 2984.4838867188);
-            CFrameMon = CFrame.new(- 1872.5166015625, 49.080215454102, - 2913.810546875);
-        elseif ((v197 == 275) or (v197 <= 299) or (SelectMonster == "Gladiator")) then
-            Ms = "Gladiator";
-            NameQuest = "ColosseumQuest";
-            QuestLv = 2;
-            NameMon = "Gladiator";
-            CFrameQ = CFrame.new(- 1577.7890625, 7.4151420593262, - 2984.4838867188);
-            CFrameMon = CFrame.new(-1328.474, 45.6500092, -3231.90405, 0.186027944);
+            CFrameMon = CFrame.new(-1821.96704, 39.3840027, -2740.58691);
         elseif ((v197 == 300) or (v197 <= 324) or (SelectMonster == "Military Soldier")) then
             Ms = "Military Soldier";
             NameQuest = "MagmaQuest";
@@ -211,7 +204,7 @@ function CheckLevel()
             QuestLv = 2;
             NameMon = "Military Spy";
             CFrameQ = CFrame.new(- 5316.1157226563, 12.262831687927, 8517.00390625);
-            CFrameMon = CFrame.new(- 5787.00293, 75.8262634, 8651.69922, 0.838590562, 0, - 0.544762194, 0, 1, 0, 0.544762194, 0, 0.838590562);
+            CFrameMon = CFrame.new(-5808.8046875, 100.11664581298828, 8776.7587890625);
         elseif ((v197 == 375) or (v197 <= 399) or (SelectMonster == "Fishman Warrior")) then
             Ms = "Fishman Warrior";
             NameQuest = "FishmanQuest";
@@ -232,7 +225,7 @@ function CheckLevel()
             if (_G.AutoLevel and ((CFrameMon.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 3000)) then
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875));
             end
-        elseif ((v197 == 10) or (v197 <= 474) or (SelectMonster == "God's Guard")) then
+        elseif ((v197 == 450) or (v197 <= 474) or (SelectMonster == "God's Guard")) then
             Ms = "God's Guard";
             NameQuest = "SkyExp1Quest";
             QuestLv = 1;
@@ -258,28 +251,28 @@ function CheckLevel()
             QuestLv = 1;
             NameMon = "Royal Squad";
             CFrameQ = CFrame.new(- 7903.3828125, 5635.9897460938, - 1410.923828125);
-            CFrameMon = CFrame.new(- 7654.2514648438, 5637.1079101563, - 1407.7550048828);
+            CFrameMon = CFrame.new(-7580.54833984375, 5606.9130859375, -1495.0101318359375);
         elseif ((v197 == 550) or (v197 <= 624) or (SelectMonster == "Royal Soldier")) then
             Ms = "Royal Soldier";
             NameQuest = "SkyExp2Quest";
             QuestLv = 2;
             NameMon = "Royal Soldier";
             CFrameQ = CFrame.new(- 7903.3828125, 5635.9897460938, - 1410.923828125);
-            CFrameMon = CFrame.new(- 7760.4106445313, 5679.9077148438, - 1884.8112792969);
+            CFrameMon = CFrame.new(-7834.0625, 5635.33984375, -1729.39306640625);
         elseif ((v197 == 625) or (v197 <= 649) or (SelectMonster == "Galley Pirate")) then
             Ms = "Galley Pirate";
             NameQuest = "FountainQuest";
             QuestLv = 1;
             NameMon = "Galley Pirate";
             CFrameQ = CFrame.new(5258.2788085938, 38.526931762695, 4050.044921875);
-            CFrameMon = CFrame.new(5557.1684570313, 152.32717895508, 3998.7758789063);
+            CFrameMon = CFrame.new(5802.3251953125, 62.45168685913086, 3975.887939453125);
         elseif ((v197 >= 650) or (SelectMonster == "Galley Captain")) then
             Ms = "Galley Captain";
             NameQuest = "FountainQuest";
             QuestLv = 2;
             NameMon = "Galley Captain";
             CFrameQ = CFrame.new(5258.2788085938, 38.526931762695, 4050.044921875);
-            CFrameMon = CFrame.new(5677.6772460938, 92.786109924316, 4966.6323242188);
+            CFrameMon = CFrame.new(5696.1318359375, 66.30705261230469, 4923.837890625);
         end
     end
     if Sea2 then
@@ -2168,6 +2161,38 @@ function GetWeaponInventory(v222)
     end
     return false;
 end
+local v21 = game.Players.LocalPlayer;
+function FindEnemiesInRange(v223, v224)
+    local v225 = (v21.Character or v21.CharacterAdded:Wait()):GetPivot().Position;
+    local v226 = nil;
+    for v471, v472 in ipairs(v224) do
+        if (not v472:GetAttribute("IsBoat") and v472:FindFirstChildOfClass("Humanoid") and (v472.Humanoid.Health > 0)) then
+            local v671 = v472:FindFirstChild("Head");
+            if (v671 and ((v225 - v671.Position).Magnitude <= 60)) then
+                if (v472 ~= v21.Character) then
+                    table.insert(v223, {
+                        v472,
+                        v671
+                    });
+                    v226 = v671;
+                end
+            end
+        end
+    end
+    for v473, v474 in ipairs(game.Players:GetPlayers()) do
+        if (v474.Character and (v474 ~= v21)) then
+            local v672 = v474.Character:FindFirstChild("Head");
+            if (v672 and ((v225 - v672.Position).Magnitude <= 60)) then
+                table.insert(v223, {
+                    v474.Character,
+                    v672
+                });
+                v226 = v672;
+            end
+        end
+    end
+    return v226;
+end
 function GetEquippedTool()
     local v227 = v21.Character;
     if not v227 then
@@ -2180,52 +2205,29 @@ function GetEquippedTool()
     end
     return nil;
 end
-
-function FindEnemiesInRange()
-    if not player.Character then return nil, {} end
-    local targets = {}
-    local closestTarget = nil
-    local minDistance = math.huge
-    local playerPos = player.Character:GetPivot().Position
-    for _, enemy in ipairs(game:GetService("Workspace").Enemies:GetChildren()) do
-        if enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 and not enemy:GetAttribute("IsBoat") then
-            local head = enemy:FindFirstChild("Head")
-            if head then
-                local distance = (playerPos - head.Position).Magnitude
-                if distance <= 60 then
-                    table.insert(targets, {enemy, head})
-                    if distance < minDistance then
-                        minDistance = distance
-                        closestTarget = head
-                    end
-                end
-            end
-        end
-    end
-    return closestTarget, targets
-end
-
--- Attack function
 function AttackNoCoolDown()
-    local closestTarget, targets = FindEnemiesInRange()
-    if not closestTarget or not GetEquippedTool() then return end
+    local v228 = {};
+    local v229 = game:GetService("Workspace").Enemies:GetChildren();
+    local v230 = FindEnemiesInRange(v228, v229);
+    if not v230 then
+        return;
+    end
+    local v231 = GetEquippedTool();
+    if not v231 then
+        return;
+    end
     pcall(function()
-        local rs = game:GetService("ReplicatedStorage")
-        local registerAttack = rs:FindFirstChild("Modules") and rs.Modules:FindFirstChild("Net") and rs.Modules.Net:FindFirstChild("RE/RegisterAttack")
-        local registerHit = rs:FindFirstChild("Modules") and rs.Modules:FindFirstChild("Net") and rs.Modules.Net:FindFirstChild("RE/RegisterHit")
-        if registerAttack and registerHit then
-            if #targets > 0 then
-                registerAttack:FireServer(_G.Fast_Delay)
-                registerHit:FireServer(closestTarget, targets)
-            else
-                task.wait(_G.Fast_Delay)
-            end
+        local v477 = game:GetService("ReplicatedStorage");
+        local v478 = v477:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterAttack");
+        local v479 = v477:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterHit");
+        if (# v228 > 0) then
+            v478:FireServer(1e-9);
+            v479:FireServer(v230, v228);
         else
-            print("Lỗi: Không tìm thấy RegisterAttack hoặc RegisterHit.")
+            task.wait(1e-9);
         end
-    end)
+    end);
 end
-
 
 -- Dropdown để chọn chế độ Farm
 local v48 = v16.Main:AddDropdown("DropdownSelectWeapon", {
@@ -2403,7 +2405,7 @@ spawn(function()
         if _G.FastAttackStrix_Mode then
             pcall(function()
                 if (_G.FastAttackStrix_Mode == "Super Fast Attack") then
-                    _G.Fast_Delay = 0.25;
+                    _G.Fast_Delay = 0.01;
                 end
             end);
         end
@@ -2475,50 +2477,63 @@ spawn(function()
     while task.wait() do
         if _G.AutoLevel then
             pcall(function()
-                CheckLevel();
-                if (not string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, NameMon) or (game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible == false)) then
-                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest");
-                    Tween(CFrameQ);
-                    if ((CFrameQ.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 5) then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, QuestLv);
+                CheckLevel()
+                local player = game:GetService("Players").LocalPlayer
+                local questUI = player.PlayerGui.Main.Quest
+                local questTitle = questUI.Container.QuestTitle.Title.Text
+
+                if not string.find(questTitle, NameMon) or not questUI.Visible then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                    Tween(CFrameQ)
+                    if (CFrameQ.Position - player.Character.HumanoidRootPart.Position).Magnitude <= 5 then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, QuestLv)
                     end
-                elseif (string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, NameMon) or (game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible == true)) then
-                    Tween(CFrameMon);
-                    wait(1); -- chờ một chút để Tween hoàn tất
-                    for v1432, v1433 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                        if (v1433:FindFirstChild("Humanoid") and v1433:FindFirstChild("HumanoidRootPart") and (v1433.Humanoid.Health > 0)) then
-                            if (v1433.Name == Ms) then
+                else
+                    Tween(CFrameMon)
+                    wait(1)
+
+                    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                        if enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+                            if enemy.Name == Ms then
+                                bringmob = true  -- 👉 chỉ bật bringmob khi xác định đúng quái
                                 repeat
-                                    bringmob = true;
-                                    wait(_G.Fast_Delay);
-                                    AttackNoCoolDown();
-                                    AutoHaki();
-                                    EquipTool(SelectWeapon);
-                                    Tween(v1433.HumanoidRootPart.CFrame * Pos);
-                                    v1433.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
-                                    v1433.HumanoidRootPart.Transparency = 1;
-                                    v1433.Humanoid.JumpPower = 0;
-                                    v1433.Humanoid.WalkSpeed = 0;
-                                    v1433.HumanoidRootPart.CanCollide = false;
-                                    FarmPos = v1433.HumanoidRootPart.CFrame;
-                                    MonFarm = v1433.Name;
-                                until not _G.AutoLevel or not v1433.Parent or (v1433.Humanoid.Health <= 0) or not game:GetService("Workspace").Enemies:FindFirstChild(v1433.Name) or (game.Players.LocalPlayer.PlayerGui.Main.Quest.Visible == false)
-                                bringmob = false;
+                                    wait(_G.Fast_Delay)
+                                    AttackNoCoolDown()
+                                    AutoHaki()
+                                    EquipTool(SelectWeapon)
+                                    Tween(enemy.HumanoidRootPart.CFrame * Pos)
+
+                                    -- xử lý kéo mob
+                                    enemy.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                                    enemy.HumanoidRootPart.Transparency = 1
+                                    enemy.Humanoid.JumpPower = 0
+                                    enemy.Humanoid.WalkSpeed = 0
+                                    enemy.HumanoidRootPart.CanCollide = false
+
+                                    FarmPos = enemy.HumanoidRootPart.CFrame
+                                    MonFarm = enemy.Name
+                                until not _G.AutoLevel or not enemy.Parent or enemy.Humanoid.Health <= 0 or not workspace.Enemies:FindFirstChild(enemy.Name) or not questUI.Visible
+                                
+                                bringmob = false  -- 👉 chỉ tắt sau khi đánh xong
                             end
                         end
                     end
-                    for v1434, v1435 in pairs(game:GetService("Workspace")['_WorldOrigin'].EnemySpawns:GetChildren()) do
-                        if string.find(v1435.Name, NameMon) then
-                            if ((game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v1435.Position).Magnitude >= 10) then
-                                Tween(v1435.HumanoidRootPart.CFrame * Pos);
+
+                    -- Teleport lại gần spawn nếu không tìm thấy mob
+                    for _, spawnPoint in pairs(workspace._WorldOrigin.EnemySpawns:GetChildren()) do
+                        if string.find(spawnPoint.Name, NameMon) then
+                            if (player.Character.HumanoidRootPart.Position - spawnPoint.Position).Magnitude >= 10 then
+                                Tween(spawnPoint.CFrame * Pos)
                             end
                         end
                     end
                 end
-            end);
+            end)
         end
     end
-end);
+end) 
+
+
 local v50 = v16.Main:AddToggle("ToggleMobAura", {
     Title = "Mob Aura",
     Description = "",
@@ -6111,7 +6126,7 @@ spawn(function()
                 if _G.BringMob and bringmob and count < 3 then
                     if mob.Name == MonFarm and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 and mob:FindFirstChild("HumanoidRootPart") then
                         local distance = (mob.HumanoidRootPart.Position - FarmPos.Position).Magnitude
-                        if distance <= 160 then -- Gom Mob trong phạm vi
+                        if distance <= 155 then -- Gom Mob trong phạm vi
                             count = count + 1
                             mob.Head.CanCollide = false
                             mob.HumanoidRootPart.CanCollide = false
@@ -6121,7 +6136,6 @@ spawn(function()
                             mob.Humanoid.JumpPower = 0
                             mob.Humanoid.WalkSpeed = 0
                             mob.Humanoid:ChangeState(11)
-                            mob.Humanoid:ChangeState(14)
                             sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
                         end
                     end
@@ -6130,9 +6144,6 @@ spawn(function()
         end)
     end
 end)
-
-
-
 
 local v91 = v16.Setting:AddToggle("ToggleRemoveNotify", {
     Title = "Xóa Thông Báo",
@@ -6508,71 +6519,107 @@ spawn(function()
     end);
 end);
 local v118 = v16.Teleport:AddSection("Thế Giới");
-local v119 = v16.Teleport:AddToggle("ToggleAutoSea2", {
+local Toggle = v16.Teleport:AddToggle("ToggleAutoSea2", {
     Title = "Nhiệm Vụ Qua Biển 2",
-    Description = "",
+    Description = "Tự động làm nhiệm vụ và chuyển sang Sea 2 khi đủ điều kiện",
     Default = false
-});
-v119:OnChanged(function(v315)
-    _G.Auto_Sea2 = v315;
-end);
-v17.ToggleAutoSea2:SetValue(false);
+})
+Toggle:OnChanged(function(state)
+    _G.Auto_Sea2 = state
+end)
+v17.ToggleAutoSea2:SetValue(false)
+ -- bạn có thể gán toggle ở đây
 spawn(function()
-    while wait() do
+    while task.wait(1) do
         if _G.Auto_Sea2 then
-            pcall(function()
-                local v800 = game:GetService("Players").LocalPlayer.Data.Level.Value;
-                if ((v800 >= 700) and World1) then
-                    if ((game:GetService("Workspace").Map.Ice.Door.CanCollide == false) and (game:GetService("Workspace").Map.Ice.Door.Transparency == 1)) then
-                        local v1346 = CFrame.new(4849.29883, 5.65138149, 719.611877);
+            local player = game.Players.LocalPlayer
+            local char = player.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local level = player:FindFirstChild("Data") and player.Data:FindFirstChild("Level")
+
+            if hrp and level and level.Value >= 700 and v19 == 2753915549 then
+                -- 1. Đến chỗ nhận nhiệm vụ
+                local questCFrame = CFrame.new(4852.93603515625, 5.686506748199463, 719.44384765625)
+                repeat
+                    Tween(questCFrame)
+                    task.wait(0.5)
+                until (hrp.Position - questCFrame.Position).Magnitude <= 3 or not _G.Auto_Sea2
+
+                -- 2. Nhận nhiệm vụ
+                pcall(function()
+                    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("DressrosaQuestProgress", "Detective")
+                end)
+
+                -- 3. Kiểm tra có Key chưa
+                local function HasKey()
+                    return player.Backpack:FindFirstChild("Key") or (char and char:FindFirstChild("Key"))
+                end
+
+                -- 4. Kiểm tra cửa đã mở chưa (IceDoor còn tồn tại không)
+                local doorClosed = workspace:FindFirstChild("IceDoor") ~= nil
+
+                if doorClosed then
+                    -- Nếu chưa mở thì cần có Key để mở
+                    if HasKey() then
+                        EquipTool("Key")
+
+                        -- Đến cửa băng
+                        local doorCFrame = CFrame.new(1347.6932373046875, 37.38442611694336, -1325.1688232421875)
                         repeat
-                            Tween(v1346);
-                            wait();
-                        until ((v1346.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 3) or (_G.Auto_Sea2 == false)
-                        wait(1.1);
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("DressrosaQuestProgress", "Detective");
-                        wait(0.5);
-                        EquipTool("Key");
+                            Tween(doorCFrame)
+                            task.wait(0.5)
+                        until (hrp.Position - doorCFrame.Position).Magnitude <= 3 or not _G.Auto_Sea2
+
+                        -- 🔓 Mở cửa băng
+                        local iceDoor = workspace:FindFirstChild("IceDoor")
+                        if iceDoor then
+                            firetouchinterest(hrp, iceDoor, 0)
+                            task.wait(0.2)
+                            firetouchinterest(hrp, iceDoor, 1)
+                        end
+
+                        -- ⏳ Đợi cửa mở
                         repeat
-                            Tween(CFrame.new(1347.7124, 37.3751602, - 1325.6488));
-                            wait();
-                        until ((Vector3.new(1347.7124, 37.3751602, - 1325.6488) - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 3) or (_G.Auto_Sea2 == false)
-                        wait(0.5);
-                    elseif ((game:GetService("Workspace").Map.Ice.Door.CanCollide == false) and (game:GetService("Workspace").Map.Ice.Door.Transparency == 1)) then
-                        if game:GetService("Workspace").Enemies:FindFirstChild("Ice Admiral") then
-                            for v1680, v1681 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                                if (v1681.Name == "Ice Admiral") then
-                                    if (not v1681.Humanoid.Health <= 0) then
-                                        if (v1681:FindFirstChild("Humanoid") and v1681:FindFirstChild("HumanoidRootPart") and (v1681.Humanoid.Health > 0)) then
-                                            OldCFrameSecond = v1681.HumanoidRootPart.CFrame;
-                                            repeat
-                                                task.wait(_G.Fast_Delay);
-                                                AutoHaki();
-                                                EquipTool(SelectWeapon);
-                                                v1681.HumanoidRootPart.CanCollide = false;
-                                                v1681.Humanoid.WalkSpeed = 0;
-                                                v1681.Head.CanCollide = false;
-                                                v1681.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                                                v1681.HumanoidRootPart.CFrame = OldCFrameSecond;
-                                                Tween(v1681.HumanoidRootPart.CFrame * Pos);
-                                                AttackNoCoolDown();
-                                                sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                                            until not _G.Auto_Sea2 or not v1681.Parent or (v1681.Humanoid.Health <= 0)
-                                        end
-                                    else
-                                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa");
-                                    end
+                            task.wait(0.5)
+                        until (iceDoor.CanCollide == false and iceDoor.Transparency == 1) or not _G.Auto_Sea2
+                        
+                        -- 👊 Tìm và đánh boss Ice Admiral nếu có
+                        local enemies = workspace.Enemies
+                        if enemies:FindFirstChild("Ice Admiral") then
+                            for _, enemy in pairs(enemies:GetChildren()) do
+                                if enemy.Name == "Ice Admiral" and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0 then
+                                    local OldCFrameSecond = enemy.HumanoidRootPart.CFrame
+                                    repeat
+                                        task.wait(_G.Fast_Delay)
+                                        AutoHaki()
+                                        EquipTool(SelectWeapon)
+                                        enemy.HumanoidRootPart.CanCollide = false
+                                        enemy.Humanoid.WalkSpeed = 0
+                                        enemy.Head.CanCollide = false
+                                        enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+                                        enemy.HumanoidRootPart.CFrame = OldCFrameSecond
+                                        Tween(enemy.HumanoidRootPart.CFrame * Pos)
+                                        AttackNoCoolDown()
+                                        sethiddenproperty(player, "SimulationRadius", math.huge)
+                                    until not _G.Auto_Sea2 or not enemy.Parent or enemy.Humanoid.Health <= 0
                                 end
                             end
-                        elseif game:GetService("ReplicatedStorage"):FindFirstChild("Ice Admiral") then
-                            Tween(game:GetService("ReplicatedStorage"):FindFirstChild("Ice Admiral").HumanoidRootPart.CFrame * CFrame.new(5, 10, 7));
+                        elseif game.ReplicatedStorage:FindFirstChild("Ice Admiral") then
+                            -- Boss chưa spawn: tới vị trí boss chuẩn bị spawn
+                            Tween(CFrame.new(1266.869873046875, 27.3371524810791, -1345.0625)) -- hoặc vị trí gần Ice Admiral
                         end
+                    else
+                        print("🚫 Không có Key! Không thể mở cửa.")
+                        continue
                     end
                 end
-            end);
+            end
         end
     end
-end);
+end)
+
+
+
 local v120 = v16.Teleport:AddToggle("ToggleAutoSea3", {
     Title = "Nhiệm Vụ Qua Biển 3",
     Description = "",

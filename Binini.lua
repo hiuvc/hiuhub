@@ -719,6 +719,39 @@ function CheckQuest()
         end
     end
 end
+----------------Save Config--------------------------------
+local player = game.Players.LocalPlayer
+-- Tự viết SaveManager không phụ thuộc
+local HttpService = game:GetService("HttpService")
+local configFileName = "HiuHub_Config.json"
+local Config = {}
+
+local function LoadConfig()
+    if isfile(configFileName) then
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(readfile(configFileName))
+        end)
+        if success and type(result) == "table" then
+            Config = result
+        end
+    end
+end
+
+local function SaveConfig()
+    writefile(configFileName, HttpService:JSONEncode(Config))
+end
+
+local function SetConfig(key, value)
+    Config[key] = value
+    SaveConfig()
+end
+
+local function GetConfig(key, default)
+    return Config[key] ~= nil and Config[key] or default
+end
+
+LoadConfig()
+
 function Hop()
     local v404 = game.PlaceId;
     local v405 = {};
@@ -2325,19 +2358,23 @@ v16.Status:AddButton({
 	end
 });
 ---------------Tab Framming------------------------
-local v4047 = v16.Main:AddToggle("ToggleLevel", {
+local AutoLevel = v16.Main:AddToggle("ToggleLevel", {
 	Title = "Auto Farm Level",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleLevel", false)
 });
-v4047:OnChanged(function(v4048)
-	_G.Level = v4048;
-	if (v4048 == false) then
+AutoLevel:OnChanged(function(v)
+	_G.Level = v;
+    SetConfig("ToggleLevel", v)
+	if (v == false) then
 		wait()
 		StopTween(_G.Level)
 		wait()
 	end
 end);
+_G.Level = GetConfig("ToggleLevel", false)
+AutoLevel:SetValue(_G.Level)
+
 spawn(function()
 	while task.wait() do
 		if _G.Level then
@@ -2417,15 +2454,19 @@ spawn(function()
 end)
 
 
-local v3001 = v16.Main:AddToggle("ToggleMobAura", {
+local FramNear = v16.Main:AddToggle("ToggleMobAura", {
 	Title = "Mob Aura",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleMobAura", false)
 });
-v3001:OnChanged(function(v)
+FramNear:OnChanged(function(v)
 	_G.FarmNearest = v
 	StopTween(_G.FarmNearest);
+    SetConfig("ToggleMobAura", v)
 end);
+_G.FarmNearest = GetConfig("ToggleMobAura", false)
+FramNear:SetValue(_G.FarmNearest)
+
 spawn(function()
 	while wait() do
 		if _G.FarmNearest then
@@ -3354,11 +3395,14 @@ _G.Point = 3
 local Kaitunstats = v16.Stats:AddToggle("ToggleKaitunStats", {
 	Title = "Auto Add Stats",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleKaitunStats", false)
 })
 Kaitunstats:OnChanged(function(v)
 	_G.Stats_Kaitun = v;
+    SetConfig("ToggleKaitunStats", v)
 end)
+_G.Stats_Kaitun = GetConfig("ToggleKaitunStats", false)
+Kaitunstats:SetValue(_G.Stats_Kaitun)
 spawn(function()
 	while wait() do
 		pcall(function()
@@ -3391,48 +3435,63 @@ end);
 local v01 = v16.Stats:AddToggle("ToggleMelee", {
 	Title = "Add Melee",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleMelee", false)
 });
 v01:OnChanged(function(v)
 	_G.Auto_Stats_Melee = v;
+    SetConfig("ToggleMelee", v)
 end);
-v17.ToggleMelee:SetValue(false);
+_G.Auto_Stats_Melee = GetConfig("ToggleMelee", false)
+v01:SetValue(_G.Auto_Stats_Melee)
+
 local v02 = v16.Stats:AddToggle("ToggleDe", {
 	Title = "Add Defense",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleDe", false)
 });
 v02:OnChanged(function(v)
 	_G.Auto_Stats_Defense = v;
+    SetConfig("ToggleDe", v)
 end);
-v17.ToggleDe:SetValue(false);
+_G.Auto_Stats_Defense = GetConfig("ToggleDe", false)
+v02:SetValue(_G.Auto_Stats_Defense)
+
 local v09 = v16.Stats:AddToggle("ToggleSword", {
 	Title = "Add Sword",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleSword", false)
 });
 v09:OnChanged(function(v)
 	_G.Auto_Stats_Sword = v;
+    SetConfig("ToggleSword", v)
 end);
-v17.ToggleSword:SetValue(false);
+_G.Auto_Stats_Sword = GetConfig("ToggleSword", false)
+v09:SetValue(_G.Auto_Stats_Sword)
+
 local v010 = v16.Stats:AddToggle("ToggleGun", {
 	Title = "Add Gun",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleGun", false)
 });
 v010:OnChanged(function(v)
 	_G.Auto_Stats_Gun = v;
+    SetConfig("ToggleGun", v)
 end);
-v17.ToggleGun:SetValue(false);
+_G.Auto_Stats_Gun = GetConfig("ToggleGun", false)
+v010:SetValue(_G.Auto_Stats_Gun)
+
 local v011 = v16.Stats:AddToggle("ToggleFruit", {
 	Title = "Add Blox Fruit",
 	Description = "",
-	Default = false
+	Default = GetConfig("ToggleFruit", false)
 });
 v011:OnChanged(function(v)
 	_G.Auto_Stats_Devil_Fruit = v;
+    SetConfig("ToggleFruit", v)
 end);
-v17.ToggleFruit:SetValue(false);
+_G.Auto_Stats_Devil_Fruit = GetConfig("ToggleFruit", false)
+v011:SetValue(_G.Auto_Stats_Devil_Fruit)
+
 spawn(function()
 	while wait() do
 		if _G.Auto_Stats_Devil_Fruit then
@@ -3557,19 +3616,21 @@ local v81 = {
 	"Melee",
 	"Sword",
 	"Blox Fruit",
-	"Gun"
 };
 local v4026 = v16.Setting:AddDropdown("DropdownWeapon", {
 	Title = "Select Weapon",
 	Description = "",
 	Values = v81,
 	Multi = false,
-	Default = 1
+	Default = table.find(v81, GetConfig("DropdownWeapon", "Melee")) or 1
 });
-v4026:SetValue("Melee")
 v4026:OnChanged(function(v4027)
-	_G.SelectWeapon = v4027;
+    _G.SelectWeapon = v4027;
+    SetConfig("DropdownWeapon", v4027)
 end);
+_G.SelectWeapon = table.find(v81, GetConfig("DropdownWeapon", "Melee")) or 1
+v4026:SetValue(_G.SelectWeapon)
+
 task.spawn(function()
 	while wait() do
 		pcall(function()
@@ -3586,14 +3647,6 @@ task.spawn(function()
 					if (v2429.ToolTip == "Sword") then
 						if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v2429.Name)) then
 							_G.SelectWeapon = v2429.Name;
-						end
-					end
-				end
-			elseif (_G.SelectWeapon == "Gun") then
-				for v2706, v2707 in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-					if (v2707.ToolTip == "Gun") then
-						if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v2707.Name)) then
-							_G.SelectWeapon = v2707.Name;
 						end
 					end
 				end
@@ -3711,8 +3764,6 @@ if _G.FastAttack then
     _ENV.rz_FastAttack = FastAttack
 end
 
-
-local v4030 = v16.Setting:AddSection("Tween")
 local v91 = {
 	"180",
 	"250",

@@ -13,6 +13,7 @@ local validGameLBIds = {
 -- Kiểm tra nếu ID game hợp lệ
 if validGameBFIds[Id] then
     -- Tải script nếu game hợp lệ Blox Fruits
+    _G.Team = "Marines"
     loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Binini.lua"))()
 elseif validGameLBIds[Id] then
     -- Tải script nếu game hợp lệ Lucky Block

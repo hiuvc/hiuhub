@@ -1,7 +1,6 @@
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
-_G.Team = "Marines"
 local player = game:GetService("Players").LocalPlayer
 local currentTeam = player.Team and player.Team.Name
 

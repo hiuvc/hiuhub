@@ -1,16 +1,21 @@
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
-local player = game:GetService("Players").LocalPlayer
-local currentTeam = player.Team and player.Team.Name
+_G.Team = "Marines"
 
-if _G.Team == "Marines" and currentTeam ~= "Marines" then
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Marines")
-elseif _G.Team == "Pirates" and currentTeam ~= "Pirates" then
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
-elseif _G.Team ~= "Marines" and _G.Team ~= "Pirates" then
-    player:Kick("Invalid team selection")
-end
+task.spawn(function()
+    local currentTeam = game.Players.LocalPlayer.Team.Name
+    local player = game.Players.LocalPlayer
+
+    if _G.Team == "Marines" and currentTeam ~= "Marines" then
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Marines")
+    elseif _G.Team == "Pirates" and currentTeam ~= "Pirates" then
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+    elseif _G.Team ~= "Marines" and _G.Team ~= "Pirates" then
+        player:Kick("Invalid team selection")
+    end
+end)
+
 task.wait(1)
 print("---Loading Ui---")
 local v14 = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))();
@@ -25,13 +30,10 @@ local v15 = v14:CreateWindow({
 });
 local v16 = {
     Server_Status = v15:AddTab({
-        Title = "Server-Status"
-    }),
-    Status = v15:AddTab({
         Title = "Server"
     }),
     Main = v15:AddTab({
-        Title = "Framing"
+        Title = "Main"
     }),
     Sea = v15:AddTab({
         Title = "Sea Events"
@@ -44,9 +46,6 @@ local v16 = {
     }),
     Stats = v15:AddTab({
         Title = "Stats"
-    }),
-    Player = v15:AddTab({
-        Title = "Player"
     }),
     Teleport = v15:AddTab({
         Title = "Teleport"
@@ -2052,7 +2051,7 @@ end
 
 PosY = 20;
 Kill_At = 28;
-
+local ServerStatusLabel = v16.Server_Status:AddSection("Server Status")
 local FullMoonStatus = v16.Server_Status:AddParagraph({Title = "Full Moon", Content = "", })
 task.spawn(function()
     while task.wait(1) do
@@ -2324,8 +2323,9 @@ spawn(function()
     end
 end)
 
----------Tab Server-------------------------------------------------------------------------------
-local v105 = v16.Status:AddInput("Input", {
+-----------------Server-------------------------------------------------------------------------------
+local ServerLabel = v16.Server_Status:AddSection("Server")
+local v105 = v16.Server_Status:AddInput("Input", {
     Title = "Job ID",
     Default = "",
     Placeholder = "",
@@ -2335,14 +2335,14 @@ local v105 = v16.Status:AddInput("Input", {
         _G.Job = v301;
     end
 });
-v16.Status:AddButton({
+v16.Server_Status:AddButton({
     Title = "Join Server",
     Description = "",
     Callback = function()
         game:GetService("TeleportService"):TeleportToPlaceInstance(game.placeId, _G.Job, game.Players.LocalPlayer);
     end
 });
-v16.Status:AddButton({
+v16.Server_Status:AddButton({
     Title = "Clear Job Id",
     Description = "",
     Callback = function()
@@ -2350,14 +2350,14 @@ v16.Status:AddButton({
         v105:SetValue("") 
     end
 });
-v16.Status:AddButton({
-    Title = "Copy Job ID",
+v16.Server_Status:AddButton({
+    Title = "Copy Job ID Server",
     Description = "",
     Callback = function()
         setclipboard(tostring(game.JobId));
     end
 });
-local v106 = v16.Status:AddToggle("MyToggle", {
+local v106 = v16.Server_Status:AddToggle("MyToggle", {
     Title = "Spam Join Server",
     Default = false
 });
@@ -2371,14 +2371,14 @@ spawn(function()
         end
     end
 end);
-v16.Status:AddButton({
+v16.Server_Status:AddButton({
     Title = "Rejoin",
     Description = "",
     Callback = function()
         game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer);
     end
 });
-v16.Status:AddButton({
+v16.Server_Status:AddButton({
     Title = "Hop Server",
     Description = "",
     Callback = function()

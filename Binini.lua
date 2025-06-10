@@ -4,7 +4,7 @@ end
 _G.Team = "Marines"
 
 task.spawn(function()
-    local currentTeam = game.Players.LocalPlayer.Team.Name
+    local currentTeam = game.Players.LocalPlayer.Team
     local player = game.Players.LocalPlayer
 
     if _G.Team == "Marines" and currentTeam ~= "Marines" then

@@ -3816,7 +3816,7 @@ spawn(function()
                 local brought = 0 -- đếm số quái đã gom
 
                 for _, enemy in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                    if brought >= 3 then
+                    if brought >= 2 then
                         break -- dừng gom nếu đủ 3 quái
                     end
                     if _G.Level and StartMagnet and enemy.Name == Mon 
@@ -3837,7 +3837,7 @@ spawn(function()
                             if enemy.Humanoid:FindFirstChild("Animator") then
                                 enemy.Humanoid.Animator:Destroy();
                             end
-                            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+                       
                             brought = brought + 1
                         end
                     end
@@ -4244,7 +4244,7 @@ local v4035 = v16.Setting:AddDropdown("DropdownBringMode", {
     Default = 1
 });
 if World1 then
-    v4035:SetValue("100")
+    v4035:SetValue("250")
 elseif World2 or World3 then
     v4035:SetValue("250")
 end

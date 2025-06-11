@@ -3831,7 +3831,7 @@ spawn(function()
                             -- Gom quái
                             enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
                             enemy.HumanoidRootPart.CFrame = PosMon
-                            enemy.Humanoid:ChangeState(14)
+                          
                             enemy.HumanoidRootPart.CanCollide = false
                             enemy.Head.CanCollide = false
                             if enemy.Humanoid:FindFirstChild("Animator") then

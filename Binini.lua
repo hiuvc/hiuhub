@@ -1,8 +1,6 @@
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
-_G.Team = "Marines"
-
 task.spawn(function()
     local currentTeam = game.Players.LocalPlayer.Team
     local player = game.Players.LocalPlayer
@@ -18,14 +16,14 @@ end)
 
 task.wait(1)
 print("---Loading Ui---")
-local v14 = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))();
-local v15 = v14:CreateWindow({
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local v15 = Fluent:CreateWindow({
     Title = "Hiu Hub",
     SubTitle = "By hiuvc",
     TabWidth = 160,
     Theme = "Dark",
     Acrylic = false,
-    Size = UDim2.fromOffset(500, 350),
+    Size = UDim2.fromOffset(540, 350),
     MinimizeKey = Enum.KeyCode.LeftControl
 });
 local v16 = {
@@ -35,14 +33,14 @@ local v16 = {
     Main = v15:AddTab({
         Title = "Main"
     }),
-    Sea = v15:AddTab({
-        Title = "Sea Events"
-    }),
     ITM = v15:AddTab({
         Title = "Item"
     }),
+    Sea = v15:AddTab({
+    Title = "Sea Events"
+    }),
     Setting = v15:AddTab({
-        Title = "Settings"
+        Title = "Settings Fram"
     }),
     Stats = v15:AddTab({
         Title = "Stats"
@@ -70,7 +68,7 @@ local v16 = {
     })
 };
 v15:SelectTab(1)
-local v17 = v14.Options;
+local v17 = Fluent.Options;
 local v22 = Instance.new("ScreenGui");
 local v23 = Instance.new("ImageButton");
 local v24 = Instance.new("UICorner");
@@ -1757,6 +1755,7 @@ function topos(target)
     local nearestTele = CheckNearestTeleporter(targetCFrame)
     if nearestTele then
         requestEntrance(nearestTele)
+        task.wait(0.5)
     end
 
     -- Tạo PartTele nếu chưa có
@@ -1907,6 +1906,43 @@ function TPB(v443)
     end;
     return v446;
 end
+function TweenToPosition(targetCFrame)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = char:WaitForChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChild("Humanoid")
+    local distance = (targetCFrame.Position - humanoidRootPart.Position).Magnitude
+    if humanoid then
+        humanoid.WalkSpeed = 0
+        humanoid.JumpPower = 50
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    bodyVelocity.Name = "ChestBodyVel"
+    bodyVelocity.Parent = humanoidRootPart
+    local tween = game:GetService("TweenService"):Create(humanoidRootPart, TweenInfo.new(distance / getgenv().TweenSpeed, Enum.EasingStyle.Linear), { CFrame = targetCFrame })
+    tween:Play()
+    tween.Completed:Wait()
+    if humanoidRootPart:FindFirstChild("ChestBodyVel") then 
+        humanoidRootPart.ChestBodyVel:Destroy() 
+    end
+    if humanoid then
+        humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end
+
+function CancelTween(doCancel)
+    if not doCancel then
+        _G.StopTween = true
+        wait()
+        -- Không tween lại vị trí hiện tại nữa
+        wait()
+        _G.StopTween = false
+    end
+end
 Type = 1;
 spawn(function()
     while wait() do
@@ -1967,7 +2003,7 @@ end);
 spawn(function()
     pcall(function()
         game:GetService("RunService").Stepped:Connect(function()
-            if (_G.AdvanceDungeon or _G.DoughtBoss or _G.DungeonMobAura or _G.FarmChest or _G.Factory or _G.FarmBossHallow or _G.FarmSwanGlasses or _G.LongSword or _G.BlackSpikeycoat or _G.ElectricClaw or _G.FarmGunMastery or _G.HolyTorch or _G.LawRaid or _G.FarmBoss or _G.TwinHooks or _G.OpenSwanDoor or _G.Dragon_Trident or _G.Saber or _G.NoClip or _G.FarmFruitMastery or _G.FarmGunMastery or _G.TeleportIsland or _G.EvoRace or _G.FarmAllMsBypassType or _G.Observationv2 or _G.MusketeerHat or _G.Ectoplasm or _G.Rengoku or _G.Rainbow_Haki or _G.Observation or _G.DarkDagger or _G.Safe_Mode or _G.MasteryFruit or _G.BudySword or _G.OderSword or _G.AllBoss or _G.Sharkman or _G.Mastery_Fruit or _G.Mastery_Gun or _G.Dungeon or _G.Cavender or _G.Pole or _G.Kill_Ply or _G.Factory or _G.SecondSea or _G.TeleportPly or _G.Bartilo or _G.DarkBoss or _G.GrabChest or _G.Holy_Torch or _G.Level or _G.Clip or _G.Elitehunter or _G.ThirdSea or _G.Bone or _G.heart or _G.doughking or _G.FarmMaterial or _G.Guitar or _G.Dragon_Trident or _G.tushita or _G.waden or _G.pole or _G.saw or _G.ObservationHakiV2 or _G.FarmNearest or _G.Carvender or _G.TwinHook or AutoMobAura or _G.Tweenfruit or _G.TeleportNPC or _G.Kai or _G.Leather or _G.Wing or _G.Umm or _G.Makori_gay or Radioactive or Fish or Gunpowder or Dragon_Scale or Cocoafarm or Scrap or MiniHee or _G.FarmSeabaest or _G.CDK or _G.FarmMob or _G.MysticIsland or _G.FarmDungeon or _G.RaidPirate or _G.QuestRace or _G.TweenMGear or getgenv().AutoFarm or _G.PlayerHunter or _G.Factory or _G.Seabest or _G.SeaBest or _G.KillTial or _G.Saber or _G.Position_Spawn or _G.TPB or _G.Farmfast or _G.Race or _G.RaidPirate or Open_Color_Haki or _G.Terrorshark or FarmShark or _G.farmpiranya or _G.Fish_Crew_Member or _G.AppleAutoDriveBoat or _G.FrozenDimension or _G.FKitsune) then
+            if (_G.AdvanceDungeon or _G.DoughtBoss or _G.DungeonMobAura or _G.FarmChest or _G.Factory or _G.FarmBossHallow or _G.FarmSwanGlasses or _G.LongSword or _G.BlackSpikeycoat or _G.ElectricClaw or _G.FarmGunMastery or _G.HolyTorch or _G.LawRaid or _G.FarmBoss or _G.TwinHooks or _G.OpenSwanDoor or _G.Dragon_Trident or _G.Saber or _G.NoClip or _G.FarmFruitMastery or _G.FarmGunMastery or _G.TeleportIsland or _G.EvoRace or _G.FarmAllMsBypassType or _G.Observationv2 or _G.MusketeerHat or _G.Ectoplasm or _G.Rengoku or _G.Rainbow_Haki or _G.Observation or _G.DarkDagger or _G.Safe_Mode or _G.MasteryFruit or _G.BudySword or _G.OderSword or _G.AllBoss or _G.Sharkman or _G.Mastery_Fruit or _G.Mastery_Gun or _G.Dungeon or _G.Cavender or _G.Pole or _G.Kill_Ply or _G.Factory or _G.SecondSea or _G.TeleportPly or _G.Bartilo or _G.DarkBoss or _G.GrabChest or _G.Holy_Torch or _G.Level or _G.Clip or _G.Elitehunter or _G.ThirdSea or _G.Bone or _G.heart or _G.doughking or _G.FarmMaterial or _G.Guitar or _G.Dragon_Trident or _G.tushita or _G.waden or _G.pole or _G.saw or _G.ObservationHakiV2 or _G.FarmNearest or _G.Carvender or _G.TwinHook or AutoMobAura or _G.Tweenfruit or _G.TeleportNPC or _G.Kai or _G.Leather or _G.Wing or _G.Umm or _G.Makori_gay or Radioactive or Fish or Gunpowder or Dragon_Scale or Cocoafarm or Scrap or MiniHee or _G.FarmSeabaest or _G.CDK or _G.FarmMob or _G.MysticIsland or _G.FarmDungeon or _G.RaidPirate or _G.QuestRace or _G.TweenMGear or getgenv().AutoFarm or _G.PlayerHunter or _G.Factory or _G.Seabest or _G.SeaBest or _G.KillTial or _G.Saber or _G.Position_Spawn or _G.TPB or _G.Farmfast or _G.Race or _G.RaidPirate or Open_Color_Haki or _G.Terrorshark or FarmShark or _G.farmpiranya or _G.Fish_Crew_Member or _G.AppleAutoDriveBoat or _G.FrozenDimension or _G.FKitsune or _G.AutoCollectChest) then
                 for v2191, v2192 in pairs(game:GetService("Players").LocalPlayer.Character:GetDescendants()) do
                     if v2192:IsA("BasePart") then
                         v2192.CanCollide = false;
@@ -1985,7 +2021,7 @@ function TP3(v450)
 end
 spawn(function()
     while wait() do
-        if (_G.DoughtBoss or _G.DungeonMobAura or _G.FarmChest or _G.FarmBossHallow or _G.Factory or _G.FarmSwanGlasses or _G.LongSword or _G.BlackSpikeycoat or _G.ElectricClaw or _G.FarmGunMastery or _G.HolyTorch or _G.LawRaid or _G.FarmBoss or _G.TwinHooks or _G.OpenSwanDoor or _G.Dragon_Trident or _G.Saber or _G.NoClip or _G.FarmFruitMastery or _G.FarmGunMastery or _G.TeleportIsland or _G.EvoRace or _G.FarmAllMsBypassType or _G.Observationv2 or _G.MusketeerHat or _G.Ectoplasm or _G.Rengoku or _G.Rainbow_Haki or _G.Observation or _G.DarkDagger or _G.Safe_Mode or _G.MasteryFruit or _G.BudySword or _G.OderSword or _G.AllBoss or _G.Sharkman or _G.Mastery_Fruit or _G.Mastery_Gun or _G.Dungeon or _G.Cavender or _G.Pole or _G.Factory or _G.SecondSea or _G.TeleportPly or _G.Bartilo or _G.DarkBoss or _G.Level or _G.Clip or _G.Elitehunter or _G.ThirdSea or _G.Bone or _G.heart or _G.doughking or _G.d or _G.waden or _G.gay or _G.ObservationHakiV2 or _G.FarmMaterial or _G.FarmNearest or _G.Carvender or _G.TwinHook or AutoMobAura or _G.Leather or _G.Wing or _G.Umm or _G.Makori_gay or Radioactive or Fish or Gunpowder or Dragon_Scale or Cocoafarm or Scrap or MiniHee or _G.FarmSeabaest or _G.CDK or _G.RaidPirate or getgenv().AutoFarm or _G.PlayerHunter or _G.Factory or _G.AttackDummy or _G.Seabest or _G.SeaBest or _G.KillTial or _G.Saber or _G.Farmfast or _G.RaidPirate or _G.Terrorshark or FarmShark or _G.farmpiranya or _G.Fish_Crew_Member or _G.bjirFishBoat or (_G.KillGhostShip == true)) then
+        if (_G.DoughtBoss or _G.DungeonMobAura or _G.FarmChest or _G.AutoCollectChest or _G.FarmBossHallow or _G.Factory or _G.FarmSwanGlasses or _G.LongSword or _G.BlackSpikeycoat or _G.ElectricClaw or _G.FarmGunMastery or _G.HolyTorch or _G.LawRaid or _G.FarmBoss or _G.TwinHooks or _G.OpenSwanDoor or _G.Dragon_Trident or _G.Saber or _G.NoClip or _G.FarmFruitMastery or _G.FarmGunMastery or _G.TeleportIsland or _G.EvoRace or _G.FarmAllMsBypassType or _G.Observationv2 or _G.MusketeerHat or _G.Ectoplasm or _G.Rengoku or _G.Rainbow_Haki or _G.Observation or _G.DarkDagger or _G.Safe_Mode or _G.MasteryFruit or _G.BudySword or _G.OderSword or _G.AllBoss or _G.Sharkman or _G.Mastery_Fruit or _G.Mastery_Gun or _G.Dungeon or _G.Cavender or _G.Pole or _G.Factory or _G.SecondSea or _G.TeleportPly or _G.Bartilo or _G.DarkBoss or _G.Level or _G.Clip or _G.Elitehunter or _G.ThirdSea or _G.Bone or _G.heart or _G.doughking or _G.d or _G.waden or _G.gay or _G.ObservationHakiV2 or _G.FarmMaterial or _G.FarmNearest or _G.Carvender or _G.TwinHook or AutoMobAura or _G.Leather or _G.Wing or _G.Umm or _G.Makori_gay or Radioactive or Fish or Gunpowder or Dragon_Scale or Cocoafarm or Scrap or MiniHee or _G.FarmSeabaest or _G.CDK or _G.RaidPirate or getgenv().AutoFarm or _G.PlayerHunter or _G.Factory or _G.AttackDummy or _G.Seabest or _G.SeaBest or _G.KillTial or _G.Saber or _G.Farmfast or _G.RaidPirate or _G.Terrorshark or FarmShark or _G.farmpiranya or _G.Fish_Crew_Member or _G.bjirFishBoat or (_G.KillGhostShip == true)) then
             pcall(function()
                 game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("Ken", true);
             end);
@@ -2049,7 +2085,7 @@ if EffectContainer then
 end
 
 
-PosY = 20;
+PosY = 25;
 Kill_At = 28;
 local ServerStatusLabel = v16.Server_Status:AddSection("Server Status")
 local FullMoonStatus = v16.Server_Status:AddParagraph({Title = "Full Moon", Content = "", })
@@ -2091,63 +2127,47 @@ task.spawn(function()
 end)
 
 if World1 then
-
-    local function isBossAlive(name)
-        local boss = game:GetService("Workspace").Enemies:FindFirstChild(name)
-
-        if boss and boss:IsA("Model") then
-            local humanoid = boss:FindFirstChildOfClass("Humanoid")
-            local rootPart = boss:FindFirstChild("HumanoidRootPart")
-
-            if humanoid and rootPart then
-                return humanoid.Health > 0
-            else
-                warn("[BOSS CHECK] '" .. name .. "' thiếu Humanoid hoặc HumanoidRootPart")
-            end
-        end
-
-        return false
-    end
-
     -- The Saw
     local TheSawStatus = v16.Server_Status:AddParagraph({Title = "The Saw", Content = "", })
     spawn(function()
-        while task.wait(1) do
-            local success = pcall(function()
-                if isBossAlive("The Saw") then
-                    TheSawStatus:SetDesc("Status : ✅")
+        while wait(1) do
+            pcall(function()
+                if game:GetService("ReplicatedStorage"):FindFirstChild("The Saw") or game:GetService("Workspace").Enemies:FindFirstChild("The Saw") then
+                    TheSawStatus:SetDesc("Status : ✅️");
                 else
-                    TheSawStatus:SetDesc("Status : ❌")
+                    TheSawStatus:SetDesc("Status : ❌️");
                 end
-            end)
-            if not success then
-                warn("[ERROR] Kiểm tra The Saw thất bại.")
-                TheSawStatus:SetDesc("Status : ⚠️")
-            end
+            end);
         end
-    end)
+    end);
 
     -- Greybeard
     local GreyBeardStatus = v16.Server_Status:AddParagraph({Title = "Grey Beard", Content = "", })
     spawn(function()
-        while task.wait(1) do
-            local success = pcall(function()
-                if isBossAlive("Greybeard") then
-                    GreyBeardStatus:SetDesc("Status : ✅")
+        while wait(1) do
+            pcall(function()
+                if game:GetService("ReplicatedStorage"):FindFirstChild("Greybeard") or game:GetService("Workspace").Enemies:FindFirstChild("Greybeard") then
+                    GreyBeardStatus:SetDesc("Status : ✅️");
                 else
-                    GreyBeardStatus:SetDesc("Status : ❌")
+                    GreyBeardStatus:SetDesc("Status : ❌️");
                 end
-            end)
-            if not success then
-                warn("[ERROR] Kiểm tra Greybeard thất bại.")
-                GreyBeardStatus:SetDesc("Status : ⚠️")
-            end
+            end);
         end
-    end)
+    end);
 end
-
-
 if World2 then 
+    local CursedCaptainStatus = v16.Server_Status:AddParagraph({Title = "Cursed Captain", Content = "", })
+    spawn(function()
+        while wait(1) do
+            pcall(function()
+                if game:GetService("ReplicatedStorage"):FindFirstChild("Cursed Captain") or game:GetService("Workspace").Enemies:FindFirstChild("Cursed Captain") then
+                    CursedCaptainStatus:SetDesc("Status : ✅️");
+                else
+                    CursedCaptainStatus:SetDesc("Status : ❌️");
+                end
+            end);
+        end
+    end);
     local LegendarySword = v16.Server_Status:AddParagraph({Title = "Legendary Sword", Content = "", })
     spawn(function()
         local previousStatus = ""
@@ -2841,6 +2861,148 @@ if World2 then
         end
     end);
 end
+
+local ChestLabel = v16.Main:AddSection("Chest")
+_G.ChestLimit = GetConfig("ChestLimit", 30)
+local ChestLimitInput = v16.Main:AddInput("ChestLimitInput", {
+    Title = "Value Collect Chest to Hop",
+    Description = "",
+    Default = tostring(_G.ChestLimit),
+    Placeholder = "Enter Value Collect Chest",
+    Numeric = true,
+    Finished = true,
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num >= 1 and num <= 100 and math.floor(num) == num then
+            _G.ChestLimit = num
+            SetConfig("ChestLimit", num)
+        end
+    end
+})
+
+_G.CollectedChestCount = 0
+_G.AutoCollectChest = GetConfig("AutoChest", false)
+
+-- Auto Chest
+local AutoChest = v16.Main:AddToggle("AutoChest", {
+    Title = "Auto Chest",
+    Default = _G.AutoCollectChest
+})
+AutoChest:SetValue(_G.AutoCollectChest)
+AutoChest:OnChanged(function(v)
+    _G.AutoCollectChest = v
+    SetConfig("AutoChest", v)
+end)
+spawn(function()
+    local failCount = 0
+    while task.wait() do
+        if _G.AutoCollectChest then
+            local char = player.Character or player.CharacterAdded:Wait()
+            local pos = char:GetPivot().Position
+            local tagged = game:GetService("CollectionService"):GetTagged("_ChestTagged")
+            local nearestDist, nearestChest = math.huge
+
+            for _, chest in ipairs(tagged) do
+                local chestPos = chest:GetPivot().Position
+                local dist = (chestPos - pos).Magnitude
+                if not chest:GetAttribute("IsDisabled") and dist < nearestDist then
+                    nearestDist = dist
+                    nearestChest = chest
+                end
+            end
+
+            if nearestChest then
+                TweenToPosition(CFrame.new(nearestChest:GetPivot().Position))
+                local timeout = 3
+                repeat
+                    task.wait(0.2)
+                    timeout = timeout - 0.2
+                until nearestChest:GetAttribute("IsDisabled") == true or timeout <= 0
+
+                if nearestChest:GetAttribute("IsDisabled") == true then
+                    _G.CollectedChestCount = _G.CollectedChestCount + 1
+                    failCount = 0
+                    print("✅ Đã nhặt: " .. _G.CollectedChestCount .. " rương")
+
+                    if _G.CollectedChestCount >= (_G.ChestLimit or 30) then
+                        _G.AutoCollectChest = false
+                        _G.CollectedChestCount = 0
+                        Fluent:Notify({
+                            Title = "Hiu Hub",
+                            Content = "Hop Server...",
+                            Duration = 5
+                        })
+                        Hop()
+                        return
+                    end
+                else
+                    failCount = failCount + 1
+                    if failCount >= 3 then
+                        _G.AutoCollectChest = false
+                        _G.CollectedChestCount = 0
+                        Hop()
+                        return
+                    end
+                end
+            else
+                failCount = failCount +1
+                if failCount >= 3 then
+                    _G.AutoCollectChest = false
+                    _G.CollectedChestCount = 0
+                    Hop()
+                    return
+                end
+            end
+        end
+    end
+end)
+-- Stop  If Found Item
+_G.StopRareItem = GetConfig("StopRareItem", false)
+local StopRareItem = v16.Main:AddToggle("StopRareItem", {
+    Title = "Stop If Found Item",
+    Default = _G.StopRareItem
+})
+StopRareItem:SetValue(_G.StopRareItem)
+StopRareItem:OnChanged(function(v)
+    _G.StopRareItem = v
+    SetConfig("StopRareItem", v)
+end)
+spawn(function()
+    while task.wait(2) do
+        if _G.AutoCollectChest and _G.StopRareItem then
+            local backpack = player:FindFirstChild("Backpack")
+            if backpack then
+                local chalice = backpack:FindFirstChild("God's Chalice")
+                local fist = backpack:FindFirstChild("Fist of Darkness")
+                if chalice or fist then
+                    _G.AutoCollectChest = false
+
+                    local foundItem = chalice and "God's Chalice" or "Fist of Darkness"
+                    Fluent:Notify({
+                        Title = "Binini Hub",
+                        Content = "Found:  ".. foundItem .. " Stopping Chest Collection!",
+                        Duration = 5
+                    })
+
+                    -- Teleport về vị trí an toàn
+                    local placeId = game.PlaceId
+                    if World2 then -- Sea 2
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-281.93, 306.13, 609.28))
+                        wait()
+                        TP1(CFrame.new(-380.47, 77.22, 255.82))
+                    elseif World3 then -- Sea 3
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-12468.53, 375.00, -7554.62))
+                        wait()
+                        TP1(CFrame.new(-12468.53, 375.00, -7554.62))
+                    end
+
+                    return
+                end
+            end
+        end
+    end
+end)
+
 function MaterialMon()
     if (SelectMaterial == "Radioactive Material") then
         MMon = { "Factory Staff" }
@@ -3404,6 +3566,7 @@ spawn(function()
     end
 end)
 
+
 -----------Tab Stats------------------------------------------------------
 _G.Point = 3
 local Kaitunstats = v16.Stats:AddToggle("ToggleKaitunStats", {
@@ -3566,6 +3729,198 @@ spawn(function()
         end
     end
 end);
+-------Tab Shop--------------------------
+v16.Shop:AddParagraph({
+    Title = "Fighting Shop",
+    Content = string.rep("-", 21)
+})
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local CommF_Remote = Remotes:WaitForChild("CommF_")
+v16.Shop:AddButton({
+    Title = "Black Leg",
+    Callback = function()
+        local success, result = pcall(function()
+            return CommF_Remote:InvokeServer("BuyBlackLeg")
+        end)
+        if not success then            
+        end
+    end
+})
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local CommF_Remote = Remotes:WaitForChild("CommF_")
+v16.Shop:AddButton({
+    Title = "Fishman Karate",
+    Callback = function()
+        local success, result = pcall(function()
+            return CommF_Remote:InvokeServer("BuyFishmanKarate")
+        end)
+        if not success then            
+        end
+    end
+})
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local CommF_Remote = Remotes:WaitForChild("CommF_")
+v16.Shop:AddButton({
+    Title = "Electro",
+    Callback = function()
+        local success, result = pcall(function()
+            return CommF_Remote:InvokeServer("BuyElectro")
+        end)
+        if not success then            
+        end
+    end
+})
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local CommF_Remote = Remotes:WaitForChild("CommF_")
+v16.Shop:AddButton({
+    Title = "Dragon Breath",
+    Callback = function()
+        local success1, result1 = pcall(function()
+            return CommF_Remote:InvokeServer("BlackbeardReward", "DragonClaw", "1")
+        end)
+        if not success1 then
+            return
+        end
+        local success2, result2 = pcall(function()
+            return CommF_Remote:InvokeServer("BlackbeardReward", "DragonClaw", "2")
+        end)
+        if not success2 then
+            return
+        end
+    end
+})
+v16.Shop:AddButton({
+    Title = "SuperHuman",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local CommF_ = ReplicatedStorage.Remotes.CommF_
+        CommF_:InvokeServer("BuySuperhuman")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Death Step",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local CommF_ = ReplicatedStorage.Remotes.CommF_
+        CommF_:InvokeServer("BuyDeathStep")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Sharkman Karate",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local CommF_ = ReplicatedStorage.Remotes.CommF_
+        CommF_:InvokeServer("BuySharkmanKarate", true)
+        wait(0.2)
+        CommF_:InvokeServer("BuySharkmanKarate")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Electric Claw",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local CommF_ = ReplicatedStorage.Remotes.CommF_
+        CommF_:InvokeServer("BuyElectricClaw")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Dragon Talon",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local CommF_ = ReplicatedStorage.Remotes.CommF_
+        CommF_:InvokeServer("BuyDragonTalon")
+    end
+})
+v16.Shop:AddButton({
+    Title = "God Human",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local CommF_ = ReplicatedStorage.Remotes.CommF_
+        CommF_:InvokeServer("BuyGodhuman")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Sanguine Art",
+    Callback = function()
+        local ReplicatedStorage = game:GetService("ReplicatedStorage")
+        local CommF_ = ReplicatedStorage.Remotes.CommF_
+        CommF_:InvokeServer("BuySanguineArt", true)
+        wait(0.2)
+        CommF_:InvokeServer("BuySanguineArt")
+    end
+})
+v16.Shop:AddParagraph({
+    Title = "Abilities Shop",
+    Content = string.rep("-", 21)
+})
+v16.Shop:AddButton({
+    Title = "Skyjump [ $10,000 Beli ]",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyHaki","Geppo")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Buso Haki [ $25,000 Beli ]",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyHaki","Buso")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Observation haki [ $750,000 Beli ]",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("KenTalk","Buy")
+    end
+})
+v16.Shop:AddButton({
+    Title = "Soru [ $100,000 Beli ]",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyHaki","Soru")
+    end
+})
+v16.Shop:AddParagraph({
+    Title = "Misc Shop",
+    Content = string.rep("-", 21)
+})
+v16.Shop:AddButton({
+     Title = "Buy Refund Stat (2500F)",
+     Callback = function()            
+         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","1")
+         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","2")
+     end
+})
+v16.Shop:AddButton({
+     Title = "Buy Reroll Race (3000F)",
+     Callback = function()            
+         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Reroll","1")
+         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Reroll","2")
+     end
+})
+v16.Shop:AddButton({
+    Title = "Buy Ghoul Race",
+    Callback = function()
+        local args1 = {[1] = "Ectoplasm", [2] = "BuyCheck", [3] = 4}
+        local args2 = {[1] = "Ectoplasm", [2] = "Change", [3] = 4}
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args1))        
+        wait(0.5)
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args2))
+    end
+})
+v16.Shop:AddButton({
+    Title = "Buy Cyborg Race (2500F)",
+    Callback = function()
+        if not isBuying then
+            isBuying = true
+            local args = {[1] = "CyborgTrainer", [2] = "Buy"}
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))                        
+            wait(0.5)
+            isBuying = false
+        end
+    end
+})
 -------Tab Mic---------------------------
 local v020 = {
     "KITT_RESET",
@@ -3855,10 +4210,10 @@ spawn(function()
 
                 for _, enemy in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
                     if brought >= 3 then
-                        break -- chỉ cho phép tối đa 2 quái
+                        break
                     end
                     
-                    -- Sử dụng enemy thay vì v2218 (biến không được định nghĩa)
+                
                     if (_G.Ectoplasm and StartEctoplasmMagnet) then
                         if (string.find(enemy.Name, "Ship") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0) and ((enemy.HumanoidRootPart.Position - EctoplasmMon.Position).Magnitude <= _G.BringMode)) then
                             enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
@@ -4235,7 +4590,7 @@ task.spawn(function()
     end
 end)
 
-local v93 = {"100", "250", "350"}
+local v93 = {"150", "250", "350"}
 local v4035 = v16.Setting:AddDropdown("DropdownBringMode", {
     Title = "Bring Mode Distance",
     Description = "",
@@ -4255,8 +4610,8 @@ spawn(function()
     while wait(0.1) do
         if _G.BringMode then
             pcall(function()
-                if (_G.BringMode == "100") then
-                    _G.BringMode = 100;
+                if (_G.BringMode == "150") then
+                    _G.BringMode = 150;
                 elseif (_G.BringMode == "250") then
                     _G.BringMode = 250;
                 elseif (_G.BringMode == "350") then

@@ -1,6 +1,7 @@
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
+_G.Team = "Marines"
 task.spawn(function()
     local currentTeam = game.Players.LocalPlayer.Team
     local player = game.Players.LocalPlayer

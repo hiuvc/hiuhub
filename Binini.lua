@@ -1,29 +1,24 @@
-if not game:IsLoaded() then
-    game.Loaded:Wait()
+
+repeat wait() until game:IsLoaded() and game.Players.LocalPlayer:FindFirstChild("DataLoaded")
+
+-- Reliable team selection method
+if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
+    repeat
+        wait()
+        local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
+        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team)
+        task.wait(3)
+    until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
-_G.Team = "Marines"
-task.spawn(function()
-    local currentTeam = game.Players.LocalPlayer.Team
-    local player = game.Players.LocalPlayer
 
-    if _G.Team == "Marines" and currentTeam ~= "Marines" then
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Marines")
-    elseif _G.Team == "Pirates" and currentTeam ~= "Pirates" then
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
-    elseif _G.Team ~= "Marines" and _G.Team ~= "Pirates" then
-        player:Kick("Invalid team selection")
-    end
-end)
-
-task.wait(1)
-print("---Loading Ui---")
+print("-----Loading Ui-----")
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local v15 = Fluent:CreateWindow({
     Title = "Hiu Hub",
     SubTitle = "By hiuvc",
     TabWidth = 160,
-    Theme = "Dark",
-    Acrylic = false,
+    Theme = "Darker",
+    Acrylic = true,
     Size = UDim2.fromOffset(540, 350),
     MinimizeKey = Enum.KeyCode.LeftControl
 });
@@ -34,11 +29,8 @@ local v16 = {
     Main = v15:AddTab({
         Title = "Main"
     }),
-    ITM = v15:AddTab({
+    Item = v15:AddTab({
         Title = "Item"
-    }),
-    Sea = v15:AddTab({
-    Title = "Sea Events"
     }),
     Setting = v15:AddTab({
         Title = "Settings Fram"
@@ -49,14 +41,14 @@ local v16 = {
     Teleport = v15:AddTab({
         Title = "Teleport"
     }),
-    Fruit = v15:AddTab({
-        Title = "Fruit"
-    }),
-    Raid = v15:AddTab({
-        Title = "Raid"
+    Fruit_Raid = v15:AddTab({
+        Title = "Fruit/Raid"
     }),
     Race = v15:AddTab({
         Title = "Race"
+    }),
+    Sea = v15:AddTab({
+        Title = "Sea Events"
     }),
     Shop = v15:AddTab({
         Title = "Shop"
@@ -727,13 +719,18 @@ function CheckQuest()
         end
     end
 end
+------------------------------------------------------------------------------------------------------------------------
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Fastattack.lua"))() ---Fast Attack
 ----------------Save Config--------------------------------
 local player = game.Players.LocalPlayer
--- Tự viết SaveManager không phụ thuộc
 local HttpService = game:GetService("HttpService")
-local configFileName = "HiuHub_Config.json"
+local StarterGui = game:GetService("StarterGui")
+
+-- Đặt tên file theo tên người chơi
+local configFileName = player.Name .. "_Config.json"
 local Config = {}
 
+-- Load config from file
 local function LoadConfig()
     if isfile(configFileName) then
         local success, result = pcall(function()
@@ -745,82 +742,192 @@ local function LoadConfig()
     end
 end
 
+-- Save config to file
 local function SaveConfig()
     writefile(configFileName, HttpService:JSONEncode(Config))
 end
 
+-- Set value and save
 local function SetConfig(key, value)
     Config[key] = value
     SaveConfig()
 end
 
+-- Get value or default
 local function GetConfig(key, default)
     return Config[key] ~= nil and Config[key] or default
 end
 
+-- Reset configuration
+local function ResetConfig()
+    Config = {}
+    SaveConfig()
+end
+
+
+-- Run
 LoadConfig()
 
 
 
+local Player = game.Players.LocalPlayer    
+local Http = game:GetService("HttpService")
+local TPS = game:GetService("TeleportService")
+local Api = "https://games.roblox.com/v1/games/"
+
+local _place = game.PlaceId
+local _id = game.JobId
+local _servers = Api .. _place .. "/servers/Public?sortOrder=Desc&limit=100"
+
+local function ListServers(cursor)
+    local Raw = game:HttpGet(_servers .. ((cursor and "&cursor="..cursor) or ""))
+    return Http:JSONDecode(Raw)
+end
+
 function Hop()
-    local v404 = game.PlaceId;
-    local v405 = {};
-    local v406 = "";
-    local v407 = os.date("!*t").hour;
-    local v408 = false;
+    local PlaceID = game.PlaceId
+    local AllIDs = {}
+    local foundAnything = ""
+    local actualHour = os.date("!*t").hour
+    local Deleted = false
     function TPReturner()
-        local v857;
-        if (v406 == "") then
-            v857 = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"   .. v404   .. "/servers/Public?sortOrder=Asc&limit=100" ));
+        local Site;
+        if foundAnything == "" then
+            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
         else
-            v857 = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"   .. v404   .. "/servers/Public?sortOrder=Asc&limit=100&cursor="   .. v406 ));
-        end
-        local v858 = "";
-        if (v857.nextPageCursor and (v857.nextPageCursor ~= "null") and (v857.nextPageCursor ~= nil)) then
-            v406 = v857.nextPageCursor;
-        end
-        local v859 = 0;
-        for v1841, v1842 in pairs(v857.data) do
-            local v1843 = true;
-            v858 = tostring(v1842.id);
-            if (tonumber(v1842.maxPlayers) > tonumber(v1842.playing)) then
-                for v2187, v2188 in pairs(v405) do
-                    if (v859 ~= 0) then
-                        if (v858 == tostring(v2188)) then
-                            v1843 = false;
+            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+        end        
+        local ID = ""
+        if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+            foundAnything = Site.nextPageCursor
+        end        
+        local num = 0
+        for i,v in pairs(Site.data) do
+            local Possible = true
+            ID = tostring(v.id)            
+            if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                for _,Existing in pairs(AllIDs) do
+                    if num ~= 0 then
+                        if ID == tostring(Existing) then
+                            Possible = false
                         end
-                    elseif (tonumber(v407) ~= tonumber(v2188)) then
-                        local v2702 = pcall(function()
-                            v405 = {};
-                            table.insert(v405, v407);
-                        end);
+                    else
+                        if tonumber(actualHour) ~= tonumber(Existing) then
+                            local delFile = pcall(function()
+                                AllIDs = {}
+                                table.insert(AllIDs, actualHour)
+                            end)
+                        end
                     end
-                    v859 = v859 + 1 ;
+                    num = num + 1
                 end
-                if (v1843 == true) then
-                    table.insert(v405, v858);
-                    wait();
+                if Possible == true then
+                    table.insert(AllIDs, ID)
+                    wait(0.1)
                     pcall(function()
-                        wait();
-                        game:GetService("TeleportService"):TeleportToPlaceInstance(v404, v858, game.Players.LocalPlayer);
-                    end);
-                    wait(4);
+                        game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                    end)
+                    wait(1)
+                    break
                 end
             end
         end
     end
-    function Teleport()
-        while wait() do
+    function Teleport() 
+        while true do
             pcall(function()
-                TPReturner();
-                if (v406 ~= "") then
-                    TPReturner();
+                TPReturner()
+                if foundAnything ~= "" then
+                    TPReturner()
                 end
-            end);
+            end)
+            wait(2)
         end
     end
-    Teleport();
+    Teleport()
 end
+
+
+
+local PlaceID = game.PlaceId
+local AllIDs = {}
+local foundAnything = ""
+local actualHour = os.date("!*t").hour
+local Deleted = false
+
+local last
+
+local File = pcall(function()
+   AllIDs = game:GetService('HttpService'):JSONDecode(readfile("NotSameServers.json"))
+end)
+if not File then
+   table.insert(AllIDs, actualHour)
+   writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
+end
+function TPReturner()
+   local Site;
+   if foundAnything == "" then
+       Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+   else
+       Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
+   end
+   local ID = ""
+   if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+       foundAnything = Site.nextPageCursor
+   end
+   local num = 0;
+   local extranum = 0
+   for i,v in pairs(Site.data) do
+       extranum += 1
+       local Possible = true
+       ID = tostring(v.id)
+       if tonumber(v.maxPlayers) > tonumber(v.playing) then
+           if extranum ~= 1 and tonumber(v.playing) < last or extranum == 1 then
+               last = tonumber(v.playing)
+           elseif extranum ~= 1 then
+               continue
+           end
+           for _,Existing in pairs(AllIDs) do
+               if num ~= 0 then
+                   if ID == tostring(Existing) then
+                       Possible = false
+                   end
+               else
+                   if tonumber(actualHour) ~= tonumber(Existing) then
+                       local delFile = pcall(function()
+                           delfile("NotSameServers.json")
+                           AllIDs = {}
+                           table.insert(AllIDs, actualHour)
+                       end)
+                   end
+               end
+               num = num + 1
+           end
+           if Possible == true then
+               table.insert(AllIDs, ID)
+               wait()
+               pcall(function()
+                   writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
+                   wait()
+                   game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+               end)
+               wait(4)
+           end
+       end
+   end
+end
+
+function HopLessPeople()
+   while wait() do
+       pcall(function()
+           TPReturner()
+           if foundAnything ~= "" then
+               TPReturner()
+           end
+       end)
+   end
+end
+
 function UpdateIslandESP()
     for v860, v861 in pairs(game:GetService("Workspace")['_WorldOrigin'].Locations:GetChildren()) do
         pcall(function()
@@ -1915,7 +2022,10 @@ function TweenToPosition(targetCFrame)
     if humanoid then
         humanoid.WalkSpeed = 0
         humanoid.JumpPower = 50
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+        -- Đảm bảo nhân vật không ngồi
+    if humanoid.Sit == true then
+        humanoid.Sit = false
     end
     local bodyVelocity = Instance.new("BodyVelocity")
     bodyVelocity.Velocity = Vector3.new(0, 0, 0)
@@ -1931,7 +2041,6 @@ function TweenToPosition(targetCFrame)
     if humanoid then
         humanoid.WalkSpeed = 16
         humanoid.JumpPower = 50
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end
 
@@ -1944,6 +2053,171 @@ function CancelTween(doCancel)
         _G.StopTween = false
     end
 end
+-- Hàm chống rơi và NoClip
+function EnableNoClipAndAntiGravity()
+    pcall(function()
+        local character = game.Players.LocalPlayer.Character
+        if not character then return end
+        
+        -- NoClip cho tất cả các part
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+        
+        -- Anti-gravity
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            -- Xóa BodyVelocity cũ nếu có
+            for _, child in pairs(hrp:GetChildren()) do
+                if child:IsA("BodyVelocity") and child.Name == "ChestFarmAntiGravity" then
+                    child:Destroy()
+                end
+            end
+            
+            -- Tạo BodyVelocity mới
+            local bodyVel = Instance.new("BodyVelocity")
+            bodyVel.Name = "ChestFarmAntiGravity"
+            bodyVel.MaxForce = Vector3.new(0, 9999, 0)
+            bodyVel.Velocity = Vector3.new(0, 0.5, 0) -- Đẩy nhẹ lên trên
+            bodyVel.P = 1500 -- Lực mạnh để chống rơi tốt hơn
+            bodyVel.Parent = hrp
+            
+            -- Chống trạng thái Stun
+            if character:FindFirstChild("Stun") then
+                character.Stun.Value = 0
+            end
+            
+            -- Chống rơi
+            if character:FindFirstChild("Humanoid") then
+                character.Humanoid:ChangeState(11)
+                character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            end
+        end
+    end)
+end
+
+-- Biến người chơi
+local plr = game:GetService("Players").LocalPlayer
+local IsTweening = false
+-- Hàm chống rơi và NoClip
+function EnableNoClipAndAntiGravity()
+    pcall(function()
+        local character = game.Players.LocalPlayer.Character
+        if not character then return end
+        
+        -- NoClip cho tất cả các part
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+        
+        -- Anti-gravity
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            -- Xóa BodyVelocity cũ nếu có
+            for _, child in pairs(hrp:GetChildren()) do
+                if child:IsA("BodyVelocity") and child.Name == "ChestFarmAntiGravity" then
+                    child:Destroy()
+                end
+            end
+            
+            -- Tạo BodyVelocity mới
+            local bodyVel = Instance.new("BodyVelocity")
+            bodyVel.Name = "ChestFarmAntiGravity"
+            bodyVel.MaxForce = Vector3.new(0, 9999, 0)
+            bodyVel.Velocity = Vector3.new(0, 0.5, 0) -- Đẩy nhẹ lên trên
+            bodyVel.P = 1500 -- Lực mạnh để chống rơi tốt hơn
+            bodyVel.Parent = hrp
+            
+            -- Chống trạng thái Stun
+            if character:FindFirstChild("Stun") then
+                character.Stun.Value = 0
+            end
+            
+            -- Chống rơi
+            if character:FindFirstChild("Humanoid") then
+                character.Humanoid:ChangeState(11)
+                character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            end
+        end
+    end)
+end
+
+-- Chờ nhân vật hồi sinh
+function WaitForRespawn()
+    repeat
+        task.wait()
+    until plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") 
+        and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0
+    print("Character respawned successfully!")
+end
+
+-- Tween đến vị trí Pos (CFrame)
+function Tween(Pos)
+    EnableNoClipAndAntiGravity()
+    -- Kiểm tra nếu biến plr chưa sẵn sàng
+    if not plr then
+        warn("Player (plr) is nil!")
+        return
+    end
+
+    -- Nếu nhân vật chưa tồn tại hoặc đã chết → chờ hồi sinh
+    if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") or 
+       not plr.Character:FindFirstChild("Humanoid") or 
+       plr.Character.Humanoid.Health <= 0 then
+        print("Character is dead, waiting for respawn...")
+        WaitForRespawn()
+    end
+
+    -- Kiểm tra lại sau khi hồi sinh
+    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and 
+       plr.Character:FindFirstChild("Humanoid") and 
+       plr.Character.Humanoid.Health > 0 then
+
+        local char = plr.Character
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+
+        -- Tính khoảng cách
+        local Distance = (Pos.Position - hrp.Position).Magnitude
+
+        -- Đảm bảo nhân vật không ngồi
+        if hum.Sit == true then
+            hum.Sit = false
+        end
+
+        -- Tạo tween
+        local Tweeb
+        pcall(function()
+            Tweeb = game:GetService("TweenService"):Create(
+                hrp,
+                TweenInfo.new(Distance / (getgenv().TweenSpeed or 100), Enum.EasingStyle.Linear),
+                {CFrame = Pos}
+            )
+        end)
+
+        if Tweeb then
+            IsTweening = true
+            Tweeb:Play()
+
+            Tweeb.Completed:Connect(function()
+                IsTweening = false
+                EnableNoClipAndAntiGravity()
+            end)
+        else
+            warn("Failed to create Tween.")
+        end
+    else
+        warn("Character not ready for tweening.")
+    end
+end
+
+
 Type = 1;
 spawn(function()
     while wait() do
@@ -2086,10 +2360,10 @@ if EffectContainer then
 end
 
 
-PosY = 25;
+PosY = 20;
 Kill_At = 28;
 local ServerStatusLabel = v16.Server_Status:AddSection("Server Status")
-local FullMoonStatus = v16.Server_Status:AddParagraph({Title = "Full Moon", Content = "", })
+local FullMoonStatus = v16.Server_Status:AddParagraph({Title = "Moon", Content = "", })
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -2111,17 +2385,17 @@ task.spawn(function()
 
             -- Kiểm tra trạng thái trăng
             if moonTextureId == "http://www.roblox.com/asset/?id=9709149431" then
-                FullMoonStatus:SetDesc("Full Moon Status: 🌕 Full Moon")
+                FullMoonStatus:SetDesc("Status: 🌕 Full Moon")
             elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149052" then
-                FullMoonStatus:SetDesc("Full Moon Status: 🌖 75%")
+                FullMoonStatus:SetDesc("Status: 🌖 75%")
             elseif moonTextureId == "http://www.roblox.com/asset/?id=9709143733" then
-                FullMoonStatus:SetDesc("Full Moon Status: 🌓 50%")
+                FullMoonStatus:SetDesc("Status: 🌓 50%")
             elseif moonTextureId == "http://www.roblox.com/asset/?id=9709150401" then
-                FullMoonStatus:SetDesc("Full Moon Status: 🌘 25%")
+                FullMoonStatus:SetDesc("Status: 🌘 25%")
             elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149680" then
-                FullMoonStatus:SetDesc("Full Moon Status: 🌑 15%")
+                FullMoonStatus:SetDesc("Status: 🌑 15%")
             else
-                FullMoonStatus:SetDesc("Full Moon Status: 🌚 0%")
+                FullMoonStatus:SetDesc("Moon Status: 🌚 0%")
             end
         end)
     end
@@ -2305,47 +2579,55 @@ if World3 then
     end);
 end
 local FruitList = {
-    "Bomb-Bomb", "Spike-Spike", "Chop-Chop", "Spring-Spring", "Kilo-Kilo", "Spin-Spin",
-    "Bird: Falcon", "Smoke-Smoke", "Flame-Flame", "Ice-Ice", "Sand-Sand", "Dark-Dark",
-    "Revive-Revive", "Diamond-Diamond", "Light-Light", "Love-Love", "Rubber-Rubber",
-    "Barrier-Barrier", "Magma-Magma", "Door-Door", "Quake-Quake", "Human-Human: Buddha",
-    "String-String", "Bird-Bird: Phoenix", "Rumble-Rumble", "Paw-Paw", "Gravity-Gravity",
-    "Dough-Dough", "Venom-Venom", "Shadow-Shadow", "Control-Control", "Soul-Soul",
-    "Dragon-Dragon", "Leopard-Leopard"
+    "Bomb Fruit", "Spike Fruit", "Spring Fruit", "Spin Fruit",
+    "Eagle Fruit", "Smoke Fruit", "Flame Fruit", "Ice Fruit", "Sand Fruit", "Dark Fruit",
+    "Diamond Fruit", "Light Fruit", "Love Fruit", "Rubber Fruit", "Rocket Fruit",
+    "Creation Fruit", "Magma Fruit", "Portal Fruit", "Quake Fruit", "Buddha Fruit",
+    "String Fruit", "Phoenix Fruit", "Rumble Fruit", "Pain Fruit", "Gravity Fruit",
+    "Dough Fruit", "Venom Fruit", "Shadow Fruit", "Control Fruit", "Spirit Fruit",
+    "Dragon Fruit", "Leopard Fruit", "Blizzard Fruit", "Sound Fruit", "Spider Fruit",
+    "T-Rex Fruit", "Ghost Fruit", "Gas Fruit", "Yeti Fruit", "Kitsune Fruit", "Mammoth Fruit"
 }
 
--- Khởi tạo bảng kiểm tra nhanh
-local FruitSet = {}
-for _, fruitName in pairs(FruitList) do
-    FruitSet[fruitName] = true
-end
-
+-- Tạo Paragraph hiển thị trạng thái
 local FruitStatus = v16.Server_Status:AddParagraph({
     Title = "Fruit in Server",
     Content = "",
 })
 
+-- Vòng lặp tự động kiểm tra trái cây mỗi giây
 spawn(function()
-    while task.wait(1) do
+    while task.wait(0.2) do
         pcall(function()
             local foundFruits = {}
-            for _, v in pairs(game.Workspace:GetDescendants()) do
-                if v:IsA("Tool") and FruitSet[v.Name] then
+
+            for i, v in pairs(game.Workspace:GetChildren()) do
+                if v:IsA("Tool") and string.find(v.Name, "Fruit") and v:FindFirstChild("Handle") then
                     table.insert(foundFruits, v.Name)
                 end
             end
 
             if #foundFruits > 0 then
-                FruitStatus:SetDesc("Status : ✅️ Found: " .. table.concat(foundFruits, ", "))
+                FruitStatus:SetDesc("✅ Found (" .. #foundFruits .. "): " .. table.concat(foundFruits, ", "))
             else
-                FruitStatus:SetDesc("Status : ❌️")
+                FruitStatus:SetDesc("❌ Not found")
             end
         end)
     end
 end)
 
+
 -----------------Server-------------------------------------------------------------------------------
 local ServerLabel = v16.Server_Status:AddSection("Server")
+local JobId = v16.Server_Status:AddParagraph({Title = "Job ID", Content = "", })
+JobId:SetDesc(game.JobId)
+v16.Server_Status:AddButton({
+    Title = "Copy Job ID Server",
+    Description = "",
+    Callback = function()
+        setclipboard(tostring(game.JobId));
+    end
+});
 local v105 = v16.Server_Status:AddInput("Input", {
     Title = "Job ID",
     Default = "",
@@ -2369,13 +2651,6 @@ v16.Server_Status:AddButton({
     Callback = function()
         _G.JobId = nil
         v105:SetValue("") 
-    end
-});
-v16.Server_Status:AddButton({
-    Title = "Copy Job ID Server",
-    Description = "",
-    Callback = function()
-        setclipboard(tostring(game.JobId));
     end
 });
 local v106 = v16.Server_Status:AddToggle("MyToggle", {
@@ -2403,10 +2678,17 @@ v16.Server_Status:AddButton({
     Title = "Hop Server",
     Description = "",
     Callback = function()
-        Hop();
+        Hop()
     end
 });
----------------Tab Framming------------------------
+v16.Server_Status:AddButton({
+    Title = "Hop Server Less Player",
+    Description = "",
+    Callback = function()
+        HopLessPeople()
+    end
+})
+---------------Tab Main------------------------
 local AutoLevel = v16.Main:AddToggle("ToggleLevel", {
     Title = "Auto Farm Level",
     Description = "",
@@ -2708,7 +2990,7 @@ if World2 then
         pcall(function()
             while wait(0.1) do
                 if _G.Bartilo then
-                    if ((game:GetService("Players").LocalPlayer.Data.Level.Value >= 800) and (game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 0)) then
+                    if ((game:GetService("Players").LocalPlayer.Data.Level.Value >= 850) and (game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 0)) then
                         if (string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Swan Pirates") and string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "50") and (game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible == true)) then
                             if game:GetService("Workspace").Enemies:FindFirstChild("Swan Pirate") then
                                 Ms = "Swan Pirate";
@@ -2745,7 +3027,7 @@ if World2 then
                             wait(1.1);
                             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "BartiloQuest", 1);
                         end
-                    elseif ((game:GetService("Players").LocalPlayer.Data.Level.Value >= 800) and (game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 1)) then
+                    elseif ((game:GetService("Players").LocalPlayer.Data.Level.Value >= 850) and (game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 1)) then
                         if game:GetService("Workspace").Enemies:FindFirstChild("Jeremy") then
                             Ms = "Jeremy";
                             for v2921, v2922 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
@@ -2896,7 +3178,7 @@ AutoChest:OnChanged(function(v)
 end)
 spawn(function()
     local failCount = 0
-    while task.wait() do
+    while task.wait(0.2) do
         if _G.AutoCollectChest then
             local char = player.Character or player.CharacterAdded:Wait()
             local pos = char:GetPivot().Position
@@ -2957,52 +3239,55 @@ spawn(function()
         end
     end
 end)
--- Stop  If Found Item
-_G.StopRareItem = GetConfig("StopRareItem", false)
-local StopRareItem = v16.Main:AddToggle("StopRareItem", {
-    Title = "Stop If Found Item",
-    Default = _G.StopRareItem
-})
-StopRareItem:SetValue(_G.StopRareItem)
-StopRareItem:OnChanged(function(v)
-    _G.StopRareItem = v
-    SetConfig("StopRareItem", v)
-end)
-spawn(function()
-    while task.wait(2) do
-        if _G.AutoCollectChest and _G.StopRareItem then
-            local backpack = player:FindFirstChild("Backpack")
-            if backpack then
-                local chalice = backpack:FindFirstChild("God's Chalice")
-                local fist = backpack:FindFirstChild("Fist of Darkness")
-                if chalice or fist then
-                    _G.AutoCollectChest = false
 
-                    local foundItem = chalice and "God's Chalice" or "Fist of Darkness"
-                    Fluent:Notify({
-                        Title = "Binini Hub",
-                        Content = "Found:  ".. foundItem .. " Stopping Chest Collection!",
-                        Duration = 5
-                    })
+if (World2 or World3) then 
+    -- Stop  If Found Item
+    _G.StopRareItem = GetConfig("StopRareItem", false)
+    local StopRareItem = v16.Main:AddToggle("StopRareItem", {
+        Title = "Stop If Found Item",
+        Default = _G.StopRareItem
+    })
+    StopRareItem:SetValue(_G.StopRareItem)
+    StopRareItem:OnChanged(function(v)
+        _G.StopRareItem = v
+        SetConfig("StopRareItem", v)
+    end)
+    spawn(function()
+        while task.wait(2) do
+            if _G.AutoCollectChest and _G.StopRareItem then
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    local chalice = backpack:FindFirstChild("God's Chalice")
+                    local fist = backpack:FindFirstChild("Fist of Darkness")
+                    if chalice or fist then
+                        _G.AutoCollectChest = false
 
-                    -- Teleport về vị trí an toàn
-                    local placeId = game.PlaceId
-                    if World2 then -- Sea 2
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-281.93, 306.13, 609.28))
-                        wait()
-                        TP1(CFrame.new(-380.47, 77.22, 255.82))
-                    elseif World3 then -- Sea 3
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-12468.53, 375.00, -7554.62))
-                        wait()
-                        TP1(CFrame.new(-12468.53, 375.00, -7554.62))
+                        local foundItem = chalice and "God's Chalice" or "Fist of Darkness"
+                        Fluent:Notify({
+                            Title = "Binini Hub",
+                            Content = "Found:  ".. foundItem .. " Stopping Chest Collection!",
+                            Duration = 5
+                        })
+
+                        -- Teleport về vị trí an toàn
+                        local placeId = game.PlaceId
+                        if World2 then -- Sea 2
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-281.93, 306.13, 609.28))
+                            wait()
+                            TP1(CFrame.new(-380.47, 77.22, 255.82))
+                        elseif World3 then -- Sea 3
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-12468.53, 375.00, -7554.62))
+                            wait()
+                            TP1(CFrame.new(-12468.53, 375.00, -7554.62))
+                        end
+
+                        return
                     end
-
-                    return
                 end
             end
         end
-    end
-end)
+    end)
+end
 
 function MaterialMon()
     if (SelectMaterial == "Radioactive Material") then
@@ -3523,6 +3808,7 @@ local KillBoss = v16.Main:AddToggle("ToggleAutoFarmBoss", {
 })
 KillBoss:OnChanged(function(v)
     _G.AutoBoss = v
+    StopTween(_G.AutoBoss)
 end)
 
 spawn(function()
@@ -3545,13 +3831,17 @@ spawn(function()
                                 task.wait()
                                 AutoHaki()
                                 EquipWeapon(_G.SelectWeapon)
-                                v.HumanoidRootPart.CanCollide = false
-                                v.Humanoid.WalkSpeed = 0
-                                v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                                if humanoidRootPart.CanCollide then
+                                    humanoidRootPart.CanCollide = false
+                                end
+                                if humanoid.WalkSpeed ~= 0 then
+                                    humanoid.WalkSpeed = 0
+                                end
+                                if humanoidRootPart.Size ~= Vector3.new(80, 80, 80) then
+                                    humanoidRootPart.Size = Vector3.new(80, 80, 80)
+                                end
                                 TP1(v.HumanoidRootPart.CFrame * CFrame.new(0, 20, 0))
-                                pcall(function()
-                                    sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge)
-                                end)
+
                             until not _G.AutoBoss or not v.Parent or v.Humanoid.Health <= 0
                         end
                     end
@@ -3566,7 +3856,238 @@ spawn(function()
         end
     end
 end)
+-----------Tab Item-----------------------------------------------------------------------------------------------------------
+if World1 then
+    local AutoSaber = v16.Item:AddToggle("AutoSaber", {
+        Title = "Auto Saber",
+        Description = "",
+        Default = GetConfig("AutoSaber", false)
+    })
+    AutoSaber:OnChanged(function(v)
+        getgenv().AutoSaber = v
+        if (v == false) then 
+            StopTween()
+        end
+        SetConfig("AutoSaber", v)
+    end)
+    getgenv().AutoSaber = GetConfig("AutoSaber", false)
+    AutoSaber:SetValue(getgenv().AutoSaber)
 
+    spawn(function()
+        while task.wait(0.5) do
+            if getgenv().AutoSaber and game.Players.LocalPlayer.Data.Level.Value >= 200 then
+                pcall(function()
+                    local player = game.Players.LocalPlayer
+                    local char = player.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                    if not hrp then return end
+                    local jungle = game:GetService("Workspace").Map.Jungle
+                    local desert = game:GetService("Workspace").Map.Desert
+                    local relicPos = CFrame.new(-1404.91, 29.97, 3.80)                
+                    if jungle.Final.Part.Transparency == 0 then
+                        if jungle.QuestPlates.Door.Transparency == 0 then
+                            local saberPos = CFrame.new(-1612.55, 36.97, 148.71)
+                            if (saberPos.Position - hrp.Position).Magnitude <= 100 then
+                                for i = 1, 5 do
+                                    local plate = jungle.QuestPlates:FindFirstChild("Plate" .. i)
+                                    if plate and plate:FindFirstChild("Button") then
+                                        hrp.CFrame = plate.Button.CFrame
+                                        task.wait(0.5)
+                                    end
+                                end
+                            else
+                                topos(saberPos)
+                            end
+                        else
+                            if desert.Burn.Part.Transparency == 0 then
+                                if player.Backpack:FindFirstChild("Torch") or char:FindFirstChild("Torch") then
+                                    EquipWeapon("Torch")
+                                    topos(CFrame.new(1114.61, 5.04, 4350.22))
+                                else
+                                    topos(CFrame.new(-1610.00, 11.50, 164.00))
+                                end
+                            else
+                                local commF = game:GetService("ReplicatedStorage").Remotes.CommF_
+                                if commF:InvokeServer("ProQuestProgress", "SickMan") ~= 0 then
+                                    commF:InvokeServer("ProQuestProgress", "GetCup")
+                                    task.wait(0.1)
+                                    EquipWeapon("Cup")
+                                    task.wait(0.1)
+                                    commF:InvokeServer("ProQuestProgress", "FillCup", char:FindFirstChild("Cup"))
+                                    task.wait(0.1)
+                                    commF:InvokeServer("ProQuestProgress", "SickMan")
+                                else
+                                    if commF:InvokeServer("ProQuestProgress", "RichSon") == nil then
+                                        commF:InvokeServer("ProQuestProgress", "RichSon")
+                                    elseif commF:InvokeServer("ProQuestProgress", "RichSon") == 0 then
+                                        local mobLeader = game:GetService("Workspace").Enemies:FindFirstChild("Mob Leader")
+                                        if not mobLeader then
+                                            mobLeader = game:GetService("ReplicatedStorage"):FindFirstChild("Mob Leader")
+                                        end                                    
+                                        if mobLeader then
+                                            topos(mobLeader.HumanoidRootPart.CFrame)
+                                            repeat
+                                                task.wait()
+                                                AutoHaki()
+                                                EquipWeapon(getgenv().SelectWeapon)
+                                                mobLeader.HumanoidRootPart.CanCollide = false
+                                                mobLeader.Humanoid.WalkSpeed = 0
+                                                topos(mobLeader.HumanoidRootPart.CFrame * Pos)
+                                                game:GetService("VirtualUser"):CaptureController()
+                                                game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                                                sethiddenproperty(player, "SimulationRadius", math.huge)
+                                            until mobLeader.Humanoid.Health <= 0 or not getgenv().AutoSaber
+                                        end
+                                    elseif commF:InvokeServer("ProQuestProgress", "RichSon") == 1 then
+                                        commF:InvokeServer("ProQuestProgress", "RichSon")
+                                        task.wait(0.1)
+                                        EquipWeapon("Relic")
+                                        task.wait(0.1)
+                                        topos(relicPos)
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        local saberExpert = game:GetService("Workspace").Enemies:FindFirstChild("Saber Expert")
+                        if not saberExpert then
+                            saberExpert = game:GetService("ReplicatedStorage"):FindFirstChild("Saber Expert")
+                            Fluent:Notify({
+                                Title = 'Hiu Hub',
+                                Content = "Saber Expert not found. Switching server...",
+                                Duration = 5,
+                            })
+                            task.wait(2)
+                            HopLessPeople()
+                        end                    
+                        if saberExpert then
+                            repeat
+                                task.wait()
+                                EquipWeapon(_G.SelectWeapon)
+                                topos(saberExpert.HumanoidRootPart.CFrame * Pos)
+                                saberExpert.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                                saberExpert.HumanoidRootPart.Transparency = 1
+                                saberExpert.Humanoid.JumpPower = 0
+                                saberExpert.Humanoid.WalkSpeed = 0
+                                saberExpert.HumanoidRootPart.CanCollide = false
+                                game:GetService("VirtualUser"):CaptureController()
+                                game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                            until saberExpert.Humanoid.Health <= 0 or not getgenv().AutoSaber                       
+                            if saberExpert.Humanoid.Health <= 0 then
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("ProQuestProgress", "PlaceRelic")
+                            end
+                        end
+                    end
+                end)
+            end
+        end
+    end)
+
+    local AutoSawSword = v16.Item:AddToggle("AutoSawSword", {
+        Title = "Auto Saw Sword",
+        Description = "",
+        Default = GetConfig("AutoSawSword", false)
+    })
+    AutoSawSword:OnChanged(function(v)
+        getgenv().saw = v
+        if (v == false) then 
+            StopTween()
+        end
+        SetConfig("AutoSawSword", v)
+    end)
+    getgenv().saw = GetConfig("AutoSawSword", false)
+    AutoSawSword:SetValue(getgenv().saw)
+
+    local TheSawPos = CFrame.new(-690.33081054688, 15.09425163269, 1582.2380371094)
+
+    spawn(function()
+        while task.wait() do
+            if getgenv().saw and World1 then
+                pcall(function()
+                    local enemies = game:GetService("Workspace").Enemies
+                    local replicated = game:GetService("ReplicatedStorage")
+
+                    -- Kiểm tra The Saw có tồn tại trong server không
+                    local sawExists = replicated:FindFirstChild("The Saw") or enemies:FindFirstChild("The Saw")
+
+                    if sawExists then
+                        local saw = enemies:FindFirstChild("The Saw")
+                        if saw and saw:FindFirstChild("Humanoid") and saw:FindFirstChild("HumanoidRootPart") and saw.Humanoid.Health > 0 then
+                            repeat
+                                task.wait()
+                                AutoHaki()
+                                EquipWeapon(_G.SelectWeapon)
+                                saw.HumanoidRootPart.CanCollide = false
+                                saw.Humanoid.WalkSpeed = 0
+                                saw.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+                                topos(saw.HumanoidRootPart.CFrame * Pos)
+                                sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+                            until not getgenv().saw or not saw.Parent or saw.Humanoid.Health <= 0
+                        else
+                            -- Đang có boss nhưng chưa spawn vào Workspace → chờ hoặc teleport đến vị trí
+                            topos(TheSawPos)
+                        end
+                    else
+                        -- Không có boss trong server → hop
+                        topos(TheSawPos)
+                    end
+                end)
+            end
+        end
+    end)
+
+    local AutoPolev1 = v16.Item:AddToggle("AutoPolev1", {
+        Title = "Auto Pole V1",
+        Description = "",
+        Default = GetConfig("AutoPolev1", false)
+    })
+    AutoPolev1:OnChanged(function(v)
+        _G.pole = v
+        if (v == false) then 
+            StopTween()
+        end
+        SetConfig("AutoPolev1", v)
+    end)
+    _G.pole = GetConfig("AutoPolev1", false)
+    AutoPolev1:SetValue(_G.pole)
+
+    local v97 = CFrame.new(-7748.0185546875, 5606.80615234375, -2305.898681640625)
+    spawn(function()
+        while task.wait() do
+            if _G.pole and World1 then
+                pcall(function()
+                    local enemies = game:GetService("Workspace").Enemies
+                    local replicated = game:GetService("ReplicatedStorage")
+                    local thunderGod = enemies:FindFirstChild("Thunder God")
+
+                    if thunderGod and thunderGod:FindFirstChild("Humanoid") and thunderGod:FindFirstChild("HumanoidRootPart") and thunderGod.Humanoid.Health > 0 then
+                        repeat
+                            task.wait()
+                            AutoHaki()
+                            EquipWeapon(_G.SelectWeapon)
+                            thunderGod.HumanoidRootPart.CanCollide = false
+                            thunderGod.Humanoid.WalkSpeed = 0
+                            thunderGod.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+                            topos(thunderGod.HumanoidRootPart.CFrame * Pos)
+                            sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+                        until not _G.pole or not thunderGod.Parent or thunderGod.Humanoid.Health <= 0
+                    else
+                        -- Không có Thunder God trong Workspace, dịch đến vị trí chờ
+                        topos(v97)
+
+                        -- Nếu boss đang trong ReplicatedStorage thì teleport tới gần chờ spawn
+                        local thunderInReplicated = replicated:FindFirstChild("Thunder God")
+                        if thunderInReplicated and thunderInReplicated:FindFirstChild("HumanoidRootPart") then
+                            topos(thunderInReplicated.HumanoidRootPart.CFrame * CFrame.new(2, 20, 2))
+                        end
+                        -- Không Hop server nữa
+                    end
+                end)
+            end
+        end
+    end)
+
+end
 
 -----------Tab Stats------------------------------------------------------
 _G.Point = 3
@@ -3730,6 +4251,480 @@ spawn(function()
         end
     end
 end);
+-------Tab Fruit/Raid-----------------------------------------------
+local FruitLabel = v16.Fruit_Raid:AddSection("Fruit")
+local TweenToFruit = v16.Fruit_Raid:AddToggle("TweenToFruit", {
+    Title = "Tween To Fruit",
+    Description = "",
+    Default = GetConfig("TweenToFruit", false)
+})
+TweenToFruit:OnChanged(function(v)
+    getgenv().TweenToFruit = v
+    SetConfig("TweenToFruit", v)
+end)
+getgenv().TweenToFruit = GetConfig("TweenToFruit", false)
+TweenToFruit:SetValue(getgenv().TweenToFruit)
+
+spawn(function()
+    while wait(0.2) do
+        if getgenv().TweenToFruit then
+            for i, v in pairs(game.Workspace:GetChildren()) do
+                if string.find(v.Name, "Fruit") then
+                    TweenToPosition(v.Handle.CFrame);
+                end;
+            end;
+        end;
+    end;
+end);
+
+
+local AutoStoreFruit = v16.Fruit_Raid:AddToggle("AutoStoreFruit", {
+    Title = "Auto Store Fruit",
+    Description = "",
+    Default = GetConfig("AutoStoreFruit", false)
+})
+AutoStoreFruit:OnChanged(function(v)
+    getgenv().AutoStoreFruit = v
+    SetConfig("AutoStoreFruit", v)
+end)
+getgenv().AutoStoreFruit = GetConfig("AutoStoreFruit", false)
+AutoStoreFruit:SetValue(getgenv().AutoStoreFruit)
+
+spawn(function()
+    while task.wait(0.2) do
+        if getgenv().AutoStoreFruit then
+            pcall(function()
+                if getgenv().AutoStoreFruit then
+                    local player = game:GetService("Players").LocalPlayer
+                    local character = player.Character
+                    local backpack = player.Backpack
+                    local fruits = {
+                        {"Rocket Fruit", "Rocket-Rocket"},
+                        {"Creation Fruit", "Creation-Creation"},
+                        {"Spin Fruit", "Spin-Spin"},
+                        {"Blade Fruit", "Blade-Blade"},
+                        {"Spring Fruit", "Spring-Spring"},
+                        {"Bomb Fruit", "Bomb-Bomb"},
+                        {"Smoke Fruit", "Smoke-Smoke"},
+                        {"Spike Fruit", "Spike-Spike"},
+                        {"Flame Fruit", "Flame-Flame"},
+                        {"Falcon Fruit", "Falcon-Falcon"},
+                        {"Ice Fruit", "Ice-Ice"},
+                        {"Sand Fruit", "Sand-Sand"},
+                        {"Dark Fruit", "Dark-Dark"},
+                        {"Diamond Fruit", "Diamond-Diamond"},
+                        {"Light Fruit", "Light-Light"},
+                        {"Rubber Fruit", "Rubber-Rubber"},
+                        {"Barrier Fruit", "Barrier-Barrier"},
+                        {"Ghost Fruit", "Ghost-Ghost"},
+                        {"Magma Fruit", "Magma-Magma"},
+                        {"Quake Fruit", "Quake-Quake"},
+                        {"Buddha Fruit", "Buddha-Buddha"},
+                        {"Love Fruit", "Love-Love"},
+                        {"Spider Fruit", "Spider-Spider"},
+                        {"Sound Fruit", "Sound-Sound"},
+                        {"Phoenix Fruit", "Phoenix-Phoenix"},
+                        {"Portal Fruit", "Portal-Portal"},
+                        {"Rumble Fruit", "Rumble-Rumble"},
+                        {"Pain Fruit", "Pain-Pain"},
+                        {"Blizzard Fruit", "Blizzard-Blizzard"},
+                        {"Gravity Fruit", "Gravity-Gravity"},
+                        {"Mammoth Fruit", "Mammoth-Mammoth"},
+                        {"T-Rex Fruit", "T-Rex-T-Rex"},
+                        {"Dough Fruit", "Dough-Dough"},
+                        {"Shadow Fruit", "Shadow-Shadow"},
+                        {"Venom Fruit", "Venom-Venom"},
+                        {"Gas Fruit", "Gas-Gas"},
+                        {"Control Fruit", "Control-Control"},
+                        {"Spirit Fruit", "Spirit-Spirit"},
+                        {"Leopard Fruit", "Leopard-Leopard"},
+                        {"Yeti Fruit", "Yeti-Yeti"},
+                        {"Kitsune Fruit", "Kitsune-Kitsune"},
+                        {"Dragon Fruit", "Dragon-Dragon"},
+                    }
+                    for _, fruit in ipairs(fruits) do
+                        local fruitName, serverName = fruit[1], fruit[2]
+                        if character:FindFirstChild(fruitName) or backpack:FindFirstChild(fruitName) then
+                            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", serverName, backpack:FindFirstChild(fruitName))
+                        end
+                    end
+                end
+            end)
+        end
+        task.wait(0.1)
+    end
+end)
+
+local RandomFruit = v16.Fruit_Raid:AddToggle("RandomFruit", {
+    Title = "Random Fruit",
+    Description = "",
+    Default = GetConfig("RandomFruit", false)
+})
+RandomFruit:OnChanged(function(v)
+    _G.RandomFruit = v
+    SetConfig("RandomFruit", v)
+end)
+_G.RandomFruit = GetConfig("RandomFruit", false)
+RandomFruit:SetValue(_G.RandomFruit)
+spawn(function()
+    pcall(function()
+        while wait(0.2) do
+            if _G.RandomFruit then
+                (game:GetService("ReplicatedStorage")).Remotes.CommF_:InvokeServer("Cousin", "Buy");
+            end;
+        end;
+    end);
+end);
+if World1 then
+    local RaidLabelSea_1 = v16.Fruit_Raid:AddSection("Raid")
+    local RaidLabelSea1 = v16.Fruit_Raid:AddSection("Function Only Sea 2 And Sea 3")
+end
+if World2 or World3 then 
+    local RaidLabel = v16.Fruit_Raid:AddSection("Raid")
+end
+-------------Tab Teleport--------------------------------------------------------------
+local TravelLabel = v16.Teleport:AddSection("Travel")
+v16.Teleport:AddButton({
+    Title = "World 1",
+    Description = "",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelMain");
+    end
+});
+v16.Teleport:AddButton({
+    Title = "World 2",
+    Description = "",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelDressrosa");
+    end
+});
+v16.Teleport:AddButton({
+    Title = "World 3",
+    Description = "",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("TravelZou");
+    end
+});
+local IslandLabel = v16.Teleport:AddSection("Islands");
+if World1 then
+    IslandList = {
+        "WindMill",
+        "Marine",
+        "Middle Town",
+        "Jungle",
+        "Pirate Village",
+        "Desert",
+        "Snow Island",
+        "MarineFord",
+        "Colosseum",
+        "Sky Island 1",
+        "Sky Island 2",
+        "Sky Island 3",
+        "Prison",
+        "Magma Village",
+        "Under Water Island",
+        "Fountain City",
+        "Shank Room",
+        "Mob Island"
+    };
+elseif World2 then
+    IslandList = {
+        "The Cafe",
+        "Frist Spot",
+        "Dark Area",
+        "Flamingo Mansion",
+        "Flamingo Room",
+        "Green Zone",
+        "Factory",
+        "Colossuim",
+        "Zombie Island",
+        "Two Snow Mountain",
+        "Punk Hazard",
+        "Cursed Ship",
+        "Ice Castle",
+        "Forgotten Island",
+        "Ussop Island",
+        "Mini Sky Island"
+    };
+elseif World3 then
+    IslandList = {
+        "Mansion",
+        "Port Town",
+        "Great Tree",
+        "Castle On The Sea",
+        "MiniSky",
+        "Hydra Island",
+        "Floating Turtle",
+        "Haunted Castle",
+        "Ice Cream Island",
+        "Peanut Island",
+        "Cake Island",
+        "Cocoa Island",
+        "Candy Island",
+        "Tiki Outpost"
+    };
+end
+local DropDownIsland = v16.Teleport:AddDropdown("DropdownIsland", {
+    Title = "Select Island",
+    Description = "",
+    Values = IslandList,
+    Multi = false,
+    Default = 1
+});
+DropDownIsland:SetValue(_G.SelectIsland);
+DropDownIsland:OnChanged(function(v)
+    _G.SelectIsland = v;
+end);
+v16.Teleport:AddButton({
+    Title = "Start Tween To Island",
+    Description = "",
+    Callback = function()
+        if (_G.SelectIsland == "WindMill") then
+            TP1(CFrame.new(979.79895019531, 16.516613006592, 1429.0466308594));
+        elseif (_G.SelectIsland == "Marine") then
+            TP1(CFrame.new(- 2566.4296875, 6.8556680679321, 2045.2561035156));
+        elseif (_G.SelectIsland == "Middle Town") then
+            TP1(CFrame.new(- 690.33081054688, 15.09425163269, 1582.2380371094));
+        elseif (_G.SelectIsland == "Jungle") then
+            TP1(CFrame.new(- 1612.7957763672, 36.852081298828, 149.12843322754));
+        elseif (_G.SelectIsland == "Pirate Village") then
+            TP1(CFrame.new(- 1181.3093261719, 4.7514905929565, 3803.5456542969));
+        elseif (_G.SelectIsland == "Desert") then
+            TP1(CFrame.new(944.15789794922, 20.919729232788, 4373.3002929688));
+        elseif (_G.SelectIsland == "Snow Island") then
+            TP1(CFrame.new(1347.8067626953, 104.66806030273, - 1319.7370605469));
+        elseif (_G.SelectIsland == "MarineFord") then
+            TP1(CFrame.new(- 4914.8212890625, 50.963626861572, 4281.0278320313));
+        elseif (_G.SelectIsland == "Colosseum") then
+            TP1(CFrame.new(- 1427.6203613281, 7.2881078720093, - 2792.7722167969));
+        elseif (_G.SelectIsland == "Sky Island 1") then
+            TP1(CFrame.new(- 4869.1025390625, 733.46051025391, - 2667.0180664063));
+        elseif (_G.SelectIsland == "Sky Island 2") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(- 4607.82275, 872.54248, - 1667.55688));
+        elseif (_G.SelectIsland == "Sky Island 3") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(- 7894.6176757813, 5547.1416015625, - 380.29119873047));
+        elseif (_G.SelectIsland == "Prison") then
+            TP1(CFrame.new(4875.330078125, 5.6519818305969, 734.85021972656));
+        elseif (_G.SelectIsland == "Magma Village") then
+            TP1(CFrame.new(- 5247.7163085938, 12.883934020996, 8504.96875));
+        elseif (_G.SelectIsland == "Under Water Island") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875));
+        elseif (_G.SelectIsland == "Fountain City") then
+            TP1(CFrame.new(5127.1284179688, 59.501365661621, 4105.4458007813));
+        elseif (_G.SelectIsland == "Shank Room") then
+            TP1(CFrame.new(- 1442.16553, 29.8788261, - 28.3547478));
+        elseif (_G.SelectIsland == "Mob Island") then
+            TP1(CFrame.new(- 2850.20068, 7.39224768, 5354.99268));
+        elseif (_G.SelectIsland == "The Cafe") then
+            TP1(CFrame.new(- 380.47927856445, 77.220390319824, 255.82550048828));
+        elseif (_G.SelectIsland == "Frist Spot") then
+            TP1(CFrame.new(- 11.311455726624, 29.276733398438, 2771.5224609375));
+        elseif (_G.SelectIsland == "Dark Area") then
+            TP1(CFrame.new(3780.0302734375, 22.652164459229, - 3498.5859375));
+        elseif (_G.SelectIsland == "Flamingo Mansion") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(- 281.93707275390625, 306.130615234375, 609.280029296875));
+        elseif (_G.SelectIsland == "Flamingo Room") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(2284.912109375, 15.152034759521484, 905.48291015625));
+        elseif (_G.SelectIsland == "Green Zone") then
+            TP1(CFrame.new(- 2448.5300292969, 73.016105651855, - 3210.6306152344));
+        elseif (_G.SelectIsland == "Factory") then
+            TP1(CFrame.new(424.12698364258, 211.16171264648, - 427.54049682617));
+        elseif (_G.SelectIsland == "Colossuim") then
+            TP1(CFrame.new(- 1503.6224365234, 219.7956237793, 1369.3101806641));
+        elseif (_G.SelectIsland == "Zombie Island") then
+            TP1(CFrame.new(- 5622.033203125, 492.19604492188, - 781.78552246094));
+        elseif (_G.SelectIsland == "Two Snow Mountain") then
+            TP1(CFrame.new(753.14288330078, 408.23559570313, - 5274.6147460938));
+        elseif (_G.SelectIsland == "Punk Hazard") then
+            TP1(CFrame.new(- 6127.654296875, 15.951762199402, - 5040.2861328125));
+        elseif (_G.SelectIsland == "Cursed Ship") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.40197753906, 125.05712890625, 32885.875));
+        elseif (_G.SelectIsland == "Ice Castle") then
+            TP1(CFrame.new(6148.4116210938, 294.38687133789, - 6741.1166992188));
+        elseif (_G.SelectIsland == "Forgotten Island") then
+            TP1(CFrame.new(- 3032.7641601563, 317.89672851563, - 10075.373046875));
+        elseif (_G.SelectIsland == "Ussop Island") then
+            TP1(CFrame.new(4816.8618164063, 8.4599885940552, 2863.8195800781));
+        elseif (_G.SelectIsland == "Mini Sky Island") then
+            TP1(CFrame.new(- 288.74060058594, 49326.31640625, - 35248.59375));
+        elseif (_G.SelectIsland == "Great Tree") then
+            TP1(CFrame.new(2681.2736816406, 1682.8092041016, - 7190.9853515625));
+        elseif (_G.SelectIsland == "Castle On The Sea") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(- 5075.50927734375, 314.5155029296875, - 3150.0224609375));
+        elseif (_G.SelectIsland == "MiniSky") then
+            TP1(CFrame.new(- 260.65557861328, 49325.8046875, - 35253.5703125));
+        elseif (_G.SelectIsland == "Port Town") then
+            TP1(CFrame.new(- 290.7376708984375, 6.729952812194824, 5343.5537109375));
+        elseif (_G.SelectIsland == "Hydra Island") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(5661.5322265625, 1013.0907592773438, - 334.9649963378906));
+        elseif (_G.SelectIsland == "Floating Turtle") then
+            TP1(CFrame.new(- 13274.528320313, 531.82073974609, - 7579.22265625));
+        elseif (_G.SelectIsland == "Mansion") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(- 12468.5380859375, 375.0094299316406, - 7554.62548828125));
+        elseif (_G.SelectIsland == "Castle On The Sea") then
+            game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(- 5075.50927734375, 314.5155029296875, - 3150.0224609375));
+        elseif (_G.SelectIsland == "Haunted Castle") then
+            TP1(CFrame.new(- 9515.3720703125, 164.00624084473, 5786.0610351562));
+        elseif (_G.SelectIsland == "Ice Cream Island") then
+            TP1(CFrame.new(- 902.56817626953, 79.93204498291, - 10988.84765625));
+        elseif (_G.SelectIsland == "Peanut Island") then
+            TP1(CFrame.new(- 2062.7475585938, 50.473892211914, - 10232.568359375));
+        elseif (_G.SelectIsland == "Cake Island") then
+            TP1(CFrame.new(- 1884.7747802734375, 19.327526092529297, - 11666.8974609375));
+        elseif (_G.SelectIsland == "Cocoa Island") then
+            TP1(CFrame.new(87.94276428222656, 73.55451202392578, - 12319.46484375));
+        elseif (_G.SelectIsland == "Candy Island") then
+            TP1(CFrame.new(- 1014.4241943359375, 149.11068725585938, - 14555.962890625));
+        elseif (_G.SelectIsland == "Tiki Outpost") then
+            TP1(CFrame.new(- 16542.447265625, 55.68632888793945, 1044.41650390625));
+        end
+    end
+});
+
+local NpcList = {};
+if World1 then
+    NpcList = {
+        "Random Devil Fruit",
+        "Blox Fruits Dealer",
+        "Remove Devil Fruit",
+        "Ability Teacher",
+        "Dark Step",
+        "Electro",
+        "Fishman Karate"
+    };
+elseif World2 then
+    NpcList = {
+        "Dargon Berath",
+        "Mtsterious Man",
+        "Mysterious Scientist",
+        "Awakening Expert",
+        "Nerd",
+        "Bar Manager",
+        "Barista",
+        "Blox Fruits Dealer",
+        "Trevor",
+        "Enhancement Editor",
+        "Pirate Recruiter",
+        "Marines Recruiter",
+        "Chemist",
+        "Cyborg",
+        "Ghoul Mark",
+        "Guashiem",
+        "El Admin",
+        "El Rodolfo",
+        "Arowe"
+    };
+elseif World3 then
+    NpcList = {
+        "Blox Fruits Dealer",
+        "Remove Devil Fruit",
+        "Horned Man",
+        "Hungey Man",
+        "Previous Hero",
+        "Butler",
+        "Lunoven",
+        "Trevor",
+        "Elite Hunter",
+        "Player Hunter",
+        "Uzoth"
+    };
+end;
+local NPCLabel = v16.Teleport:AddSection("NPC")
+local DropDownNPC = v16.Teleport:AddDropdown("DropDownNPC", {
+    Title = "Select NPC",
+    Description = "",
+    Values = NpcList,
+    Multi = false,
+    Default = 1
+});
+DropDownNPC:SetValue(_G.SelectNPC);
+DropDownNPC:OnChanged(function(v)
+    _G.SelectNPC = v;
+end);
+v16.Teleport:AddButton({
+    Title = "Start Tween To NPC",
+    Description = "",
+    Callback = function()   
+        if _G.SelectNPC == "Dargon Berath" then
+            TP1(CFrame.new(703.372986, 186.985519, 654.522034, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Barista" then 
+            TP1(CFrame.new(-380.80633544921875, 73.09506225585938, 262.6371154785156))
+        elseif _G.SelectNPC == "Mtsterious Man" then
+            TP1(CFrame.new(-2574.43335, 1627.92371, -3739.35767, 0.378697902, -0.00000000906400288, 0.92552036, -0.00000000895582009, 1, 0.0000000134578926, -0.92552036, -0.0000000133852689, 0.378697902));
+        elseif _G.SelectNPC == "Mysterious Scientist" then
+            TP1(CFrame.new(-6437.87793, 250.645355, -4498.92773, 0.502376854, -0.0000000101223634, -0.864648759, 0.0000000234106086, 1, 0.00000000189508653, 0.864648759, -0.0000000211940012, 0.502376854));
+        elseif _G.SelectNPC == "Awakening Expert" then
+            TP1(CFrame.new(-408.098846, 16.0459061, 247.432846, 0.028394036, 0.000000000617599138, 0.999596894, -0.00000000557905944, 1, -0.000000000459372484, -0.999596894, -0.00000000556376767, 0.028394036));
+        elseif _G.SelectNPC == "Nerd" then
+            TP1(CFrame.new(-401.783722, 73.0859299, 262.306702, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Bar Manager" then
+            TP1(CFrame.new(-385.84726, 73.0458984, 316.088806, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Blox Fruits Dealer" then
+            TP1(CFrame.new(-450.725464, 73.0458984, 355.636902, -0.780352175, -0.000000027266168, 0.625340283, 0.00000000978516468, 1, 0.0000000558128797, -0.625340283, 0.0000000496727601, -0.780352175));
+        elseif _G.SelectNPC == "Trevor" then
+            TP1(CFrame.new(-341.498322, 331.886444, 643.024963, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Plokster" then
+            TP1(CFrame.new(-1885.16016, 88.3838196, -1912.28723, -0.513468027, 0, 0.858108759, 0, 1, 0, -0.858108759, 0, -0.513468027));
+        elseif _G.SelectNPC == "Enhancement Editor" then
+            TP1(CFrame.new(-346.820221, 72.9856339, 1194.36218, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Pirate Recruiter" then
+           TP1(CFrame.new(-428.072998, 72.9495239, 1445.32422, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Marines Recruiter" then
+            TP1(CFrame.new(-1349.77295, 72.9853363, -1045.12964, 0.866493046, 0, -0.499189168, 0, 1, 0, 0.499189168, 0, 0.866493046));
+        elseif _G.SelectNPC == "Chemist" then
+            TP1(CFrame.new(-2777.45288, 72.9919434, -3572.25732, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Ghoul Mark" then
+            TP1(CFrame.new(635.172546, 125.976357, 33219.832, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Cyborg" then
+            TP1(CFrame.new(629.146851, 312.307373, -531.624146, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Guashiem" then
+            TP1(CFrame.new(937.953003, 181.083359, 33277.9297, 1, -0.0000000860126406, 0.0000000000000000381773896, 0.0000000860126406, 1, -0.000000000000000189969598, -0.000000000000000038177373, 0.000000000000000189969598, 1));
+        elseif _G.SelectNPC == "El Admin" then
+            TP1(CFrame.new(1322.80835, 126.345039, 33135.8789, 0.988783717, -0.0000000869797603, -0.149354503, 0.0000000862223786, 1, -0.0000000115461916, 0.149354503, -0.00000000146101409, 0.988783717));
+        elseif _G.SelectNPC == "El Rodolfo" then
+            TP1(CFrame.new(941.228699, 40.4686775, 32778.9922, -0.818029106, -0.0000000119524382, 0.575176775, -0.0000000128741648, 1, 0.00000000247053866, -0.575176775, -0.00000000538394795, -0.818029106));
+        elseif _G.SelectNPC == "Arowe" then
+            TP1(CFrame.new(-1994.51038, 125.519142, -72.2622986, -0.16715166, -0.0000000655417338, -0.985931218, -0.0000000713315558, 1, -0.0000000543836585, 0.985931218, 0.0000000612376851, -0.16715166));
+        elseif _G.SelectNPC == "Random Devil Fruit" then
+            TP1(CFrame.new(-1436.19727, 61.8777695, 4.75247526, -0.557794094, 0.0000000274216543, 0.829979479, 0.0000000583273234, 1, 0.00000000616037932, -0.829979479, 0.0000000518467118, -0.557794094));
+        elseif _G.SelectNPC == "Blox Fruits Dealer" then
+            TP1(CFrame.new(-923.255066, 7.67800522, 1608.61011, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Remove Devil Fruit" then
+           TP1(CFrame.new(5664.80469, 64.677681, 867.85907, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Ability Teacher" then
+            TP1(CFrame.new(-1057.67822, 9.65220833, 1799.49146, -0.865874112, -0.0000000926330159, 0.500262439, -0.0000000733759435, 1, 0.00000005816689, -0.500262439, 0.0000000136579752, -0.865874112));
+        elseif _G.SelectNPC == "Dark Step" then
+            TP1(CFrame.new(-987.873047, 13.7778397, 3989.4978, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Electro" then
+            TP1(CFrame.new(-5389.49561, 13.283, -2149.80151, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Fishman Karate" then
+            TP1(CFrame.new(61581.8047, 18.8965912, 987.832703, 1, 0, 0, 0, 1, 0, 0, 0, 1));
+        elseif _G.SelectNPC == "Random Devil Fruit" then
+            TP1(CFrame.new(-12491, 337, -7449));
+        elseif _G.SelectNPC == "Blox Fruits Dealer" then
+            TP1(CFrame.new(-12511, 337, -7448));
+        elseif _G.SelectNPC == "Remove Devil Fruit" then
+            TP1(CFrame.new(-5571, 1089, -2661));
+        elseif _G.SelectNPC == "Horned Man" then
+            TP1(CFrame.new(-11890, 931, -8760));
+        elseif _G.SelectNPC == "Hungey Man" then
+           TP1(CFrame.new(-10919, 624, -10268));
+        elseif _G.SelectNPC == "Previous Hero" then
+            TP1(CFrame.new(-10368, 332, -10128));
+        elseif _G.SelectNPC == "Butler" then
+            TP1(CFrame.new(-5125, 316, -3130));
+        elseif _G.SelectNPC == "Lunoven" then
+            TP1(CFrame.new(-5117, 316, -3093));
+        elseif _G.SelectNPC == "Elite Hunter" then
+           TP1(CFrame.new(-5420, 314, -2828));
+        elseif _G.SelectNPC == "Player Hunter" then
+            TP1(CFrame.new(-5559, 314, -2840));
+        elseif _G.SelectNPC == "Uzoth" then
+            TP1(CFrame.new(-9785, 852, 6667));
+        end;
+    end
+})
+
 -------Tab Shop--------------------------
 v16.Shop:AddParagraph({
     Title = "Fighting Shop",
@@ -3981,178 +4976,97 @@ v16.Misc:AddButton({
 function RedeemCode(v377)
     game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(v377);
 end
-local v4025 = v16.Setting:AddSection("Setting Fram")
-local v81 = {
-    "Melee",
-    "Sword",
-    "Blox Fruit",
-};
-local v4026 = v16.Setting:AddDropdown("DropdownWeapon", {
+
+local SettingLabel = v16.Setting:AddSection("Setting Fram")
+
+local WeaponList = { "Melee", "Sword", "Blox Fruit" }
+
+local WeaponListSelect = v16.Setting:AddDropdown("Weapon", {
     Title = "Select Weapon",
     Description = "",
-    Values = v81,
+    Values = WeaponList,
     Multi = false,
-    Default = table.find(v81, GetConfig("DropdownWeapon", "Melee")) or 1
-});
-v4026:OnChanged(function(v4027)
-    _G.SelectWeapon = v4027;
-    SetConfig("DropdownWeapon", v4027)
-end);
-_G.SelectWeapon = table.find(v81, GetConfig("DropdownWeapon", "Melee")) or 1
-v4026:SetValue(_G.SelectWeapon)
+    Default = GetConfig("Weapon", "Melee") 
+})
 
+WeaponListSelect:OnChanged(function(v)
+    _G.SelectWeaponType = v
+    SetConfig("Weapon", v)
+end)
+
+_G.SelectWeaponType = GetConfig("Weapon", "Melee")
+WeaponListSelect:SetValue(_G.SelectWeaponType)
+
+-- Lưu tên Weapon
+_G.SelectWeapon = nil
+
+-- Tự động chọn Weapon
 task.spawn(function()
-    while wait() do
+    while wait(0.2) do
         pcall(function()
-            if (_G.SelectWeapon == "Melee") then
-                for v2193, v2194 in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if (v2194.ToolTip == "Melee") then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v2194.Name)) then
-                            _G.SelectWeapon = v2194.Name;
-                        end
-                    end
-                end
-            elseif (_G.SelectWeapon == "Sword") then
-                for v2428, v2429 in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if (v2429.ToolTip == "Sword") then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v2429.Name)) then
-                            _G.SelectWeapon = v2429.Name;
-                        end
-                    end
-                end
-            elseif (_G.SelectWeapon == "Blox Fruit") then
-                for v2903, v2904 in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
-                    if (v2904.ToolTip == "Blox Fruit") then
-                        if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v2904.Name)) then
-                            _G.SelectWeapon = v2904.Name;
-                        end
-                    end
+            for _, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+                if v.ToolTip == _G.SelectWeaponType then
+                    _G.SelectWeapon = v.Name
+                    break
                 end
             end
-        end);
-    end
-end);
-
-_G.FastAttack = true
-if _G.FastAttack then
-    local _ENV = (getgenv or getrenv or getfenv)()
-
-    local function SafeWait(parent, child)
-        local success, result = pcall(function()
-            return parent:WaitForChild(child)
         end)
-        if not success or not result then
-            warn("Không tìm thấy: " .. child)
-        end
-        return result
     end
+end)
 
-    local function DeepFind(parent, ...)
-        local current = parent
-        for _, name in ipairs({...}) do
-            current = current:FindFirstChild(name) or SafeWait(current, name)
-            if not current then break end
-        end
-        return current
-    end
+local SpeedList = {
+    "180", "250", "300", "325", "350"
+}
 
-    local Services = {
-        Players = game:GetService("Players"),
-        RunService = game:GetService("RunService"),
-        ReplicatedStorage = game:GetService("ReplicatedStorage"),
-        Workspace = workspace
-    }
-
-    local LocalPlayer = Services.Players.LocalPlayer
-    if not LocalPlayer then
-        warn("Không tìm thấy LocalPlayer")
-        return
-    end
-
-    local Remotes = SafeWait(Services.ReplicatedStorage, "Remotes")
-    local NetModules = DeepFind(Services.ReplicatedStorage, "Modules", "Net")
-    local RegisterAttack = SafeWait(NetModules, "RE/RegisterAttack")
-    local RegisterHit = SafeWait(NetModules, "RE/RegisterHit")
-
-    local Enemies = SafeWait(Services.Workspace, "Enemies")
-    local Characters = SafeWait(Services.Workspace, "Characters")
-
-    local ClickConfig = {
-        AutoClick = true,
-        ClickDelay = 0.15
-    }
-
-    local function IsAlive(model)
-        local hum = model:FindFirstChildOfClass("Humanoid")
-        return hum and hum.Health > 0
-    end
-
-    local function GetTargets()
-        local targets = {}
-        local function scan(container)
-            for _, enemy in ipairs(container:GetChildren()) do
-                if enemy ~= LocalPlayer.Character and IsAlive(enemy) then
-                    local head = enemy:FindFirstChild("Head")
-                    if head and (LocalPlayer:DistanceFromCharacter(head.Position) <= 100) then
-                        table.insert(targets, {enemy, head})
-                    end
-                end
-            end
-        end
-        scan(Enemies)
-        scan(Characters)
-        return targets
-    end
-
-    local FastAttack = {
-        Attack = function(self, target, hitList)
-            if target and #hitList > 0 then
-                RegisterAttack:FireServer(ClickConfig.ClickDelay)
-                RegisterHit:FireServer(target, hitList)
-            end
-        end,
-        BladeHits = function(self)
-            local char = LocalPlayer.Character
-            local tool = char and char:FindFirstChildOfClass("Tool")
-            if tool and tool.ToolTip ~= "Gun" and IsAlive(char) then
-                local targets = GetTargets()
-                if #targets > 0 then
-                    self:Attack(targets[1][2], targets)
-                end
-            end
-        end
-    }
-
-    task.spawn(function()
-        while task.wait(ClickConfig.ClickDelay) do
-            if ClickConfig.AutoClick then
-                FastAttack:BladeHits()
-            end
-        end
-    end)
-
-    _ENV.rz_FastAttack = FastAttack
-end
-
-local v91 = {
-    "180",
-    "250",
-    "300",
-    "325",
-    "350"
-};
-getgenv().TweenSpeed = "300";
-local v4031 = v16.Setting:AddDropdown("DropdownTweenSpeed", {
+local DropDownTween = v16.Setting:AddDropdown("TweenSpeed", {
     Title = "Tween Speed",
     Description = "",
-    Values = v91,
+    Values = SpeedList,
     Multi = false,
-    Default = 1
-});
-v4031:SetValue("300")
-v4031:OnChanged(function(v4032)
-    getgenv().TweenSpeed = v4032;
-end);
+    Default = GetConfig("TweenSpeed", "325")
+})
+
+local savedSpeed = GetConfig("TweenSpeed", "325")
+DropDownTween:SetValue(savedSpeed)
+getgenv().TweenSpeed = tonumber(savedSpeed)
+
+DropDownTween:OnChanged(function(v)
+    getgenv().TweenSpeed = tonumber(v)     
+    SetConfig("TweenSpeed", v)
+end)
+
+local BringDistanceList = {"220", "250", "350"}
+
+local BringDistance = v16.Setting:AddDropdown("BringDistance", {
+    Title = "Bring Mode Distance",
+    Description = "",
+    Values = BringDistanceList,
+    Multi = false,
+    Default = GetConfig("BringDistance", nil)
+})
+
+-- Phát hiện thiết bị
+local isMobile = game:GetService("UserInputService").TouchEnabled
+local defaultBring = isMobile and "250" or "220"
+
+-- Ưu tiên giá trị đã lưu, nếu chưa có thì dùng mặc định theo thiết bị
+local savedBring = GetConfig("BringDistance", nil)
+if savedBring then
+    BringDistance:SetValue(savedBring)
+else
+    BringDistance:SetValue(defaultBring)
+    SetConfig("BringDistance", defaultBring)
+end
+
+-- Khi người dùng chọn giá trị mới
+BringDistance:OnChanged(function(v)
+    _G.BringMode = tonumber(v)
+    SetConfig("BringDistance", v)
+end)
+
+-- Gán giá trị ban đầu
+_G.BringMode = tonumber(BringDistance.Value)
+
 
 local v4033 = v16.Setting:AddToggle("ToggleBringMob", {
     Title = "Bring Mob",
@@ -4163,38 +5077,122 @@ v4033:OnChanged(function(v4034)
     _G.BringMonster = v4034;
 end);
 
+function TweenEnemyToTarget(enemy, targetCFrame, size)
+    pcall(function()
+        local hrp = enemy:FindFirstChild("HumanoidRootPart")
+        local hum = enemy:FindFirstChild("Humanoid")
+        if not hrp or not hum or hum.Health <= 0 then return end
+
+        hrp.Size = size or Vector3.new(50, 50, 50)
+        hrp.CanCollide = false
+        if enemy:FindFirstChild("Head") then
+            enemy.Head.CanCollide = false
+        end
+
+        hum:ChangeState(14)
+        sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+
+        -- ✅ Tween đúng yêu cầu
+        local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear)
+        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = targetCFrame})
+        tween:Play()
+    end)
+end
+
 spawn(function()
     while task.wait() do
         pcall(function()
             if _G.BringMonster then
                 CheckQuest()
+                local brought = 0
 
-                local brought = 0 -- đếm số quái đã gom
+                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if brought >= 3 then break end
 
-                for _, enemy in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                    if brought >= 2 then
-                        break -- dừng gom nếu đủ 3 quái
-                    end
-                    if _G.Level and StartMagnet and enemy.Name == Mon 
-                        and enemy:FindFirstChild("Humanoid") 
-                        and enemy:FindFirstChild("HumanoidRootPart") 
-                        and enemy.Humanoid.Health > 0 then
+                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
+                    local hum = enemy:FindFirstChild("Humanoid")
+                    if not hrp or not hum or hum.Health <= 0 then continue end
 
-                        local distance = (enemy.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-                        local isSpecial = (Mon == "Factory Staff [Lv. 800]" or Mon == "Monkey [Lv. 14]" or Mon == "Gorilla [Lv. 20]" or Mon == "Dragon Crew Warrior [Lv. 1575]" or Mon == "Dragon Crew Archer [Lv. 1600]" or  Mon == "Mercenary [Lv. 725]")
+                    -- Ectoplasm (Ship)
+                    if _G.Ectoplasm and StartEctoplasmMagnet and string.find(enemy.Name, "Ship") then
+                        if (hrp.Position - EctoplasmMon.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, EctoplasmMon)
+                            brought += 1
+                        end
 
-                        if (isSpecial and distance <= 220) or (not isSpecial and distance <= _G.BringMode) then
-                            -- Gom quái
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
-                            enemy.HumanoidRootPart.CFrame = PosMon
-                          
-                            enemy.HumanoidRootPart.CanCollide = false
-                            enemy.Head.CanCollide = false
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                       
-                            brought = brought + 1
+                    -- Rengoku (Snow Lurker / Arctic Warrior)
+                    elseif _G.Rengoku and StartRengokuMagnet and (enemy.Name == "Snow Lurker" or enemy.Name == "Arctic Warrior") then
+                        if (hrp.Position - RengokuMon.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, RengokuMon, Vector3.new(1500, 1500, 1500))
+                            brought += 1
+                        end
+
+                    -- Musketeer Hat
+                    elseif _G.MusketeerHat and StartMagnetMusketeerhat and enemy.Name == "Forest Pirate" then
+                        if (hrp.Position - MusketeerHatMon.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, MusketeerHatMon)
+                            brought += 1
+                        end
+
+                    -- Observation Haki V2
+                    elseif _G.ObservationHakiV2 and Mangnetcitzenmon and enemy.Name == "Forest Pirate" then
+                        if (hrp.Position - PosHee.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, PosHee)
+                            brought += 1
+                        end
+
+                    -- EvoRace (Zombie)
+                    elseif _G.EvoRace and StartEvoMagnet and enemy.Name == "Zombie" then
+                        if (hrp.Position - PosMonEvo.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, PosMonEvo)
+                            brought += 1
+                        end
+                    ---Bartilo Quest
+                    elseif _G.Bartilo and AutoBartiloBring and enemy.Name == "Swan Pirate" then 
+                        if (hrp.Position - PosMonBarto.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, PosMonBarto)
+                            brought += 1
+                        end
+                    ---Material
+                    elseif _G.AutoMaterial and StartMaterialMagnet and ((enemy.Name == "Factory Staff") or (enemy.Name == "Water Fighter") or (enemy.Name == "Military Spy") or (enemy.Name == "Magma Ninja") or (enemy.Name == "God's Guard") or (enemy.Name == "Brute") or (enemy.Name == "Marine Captain") or (enemy.Name == "Jungle Pirate") or (enemy.Name == "Swan Pirate") or (enemy.Name == "Fishman Raider") or (enemy.Name == "Fishman Warrior") or (enemy.Name == "Demonic Soul") or (enemy.Name == "Vampire") or (enemy.Name == "Chocolate Bar Battler") or (enemy.Name == "Dragon Crew Archer") or (enemy.Name == "Pistol Billionaire") or (enemy.Name == "Hydra Enforcer") or (enemy.Name == "Venomous Assailant") or (enemy.Name == "Mythological Pirate") or (enemy.Name == "Ship Deckhand") or (enemy.Name == "Ship Engineer") or (enemy.Name == "Ship Steward") or (enemy.Name == "Ship Officer")) then
+                        if (hrp.Position - PosMonMaterial.Position).Magnitude <= _G.BringMode then 
+                            TweenEnemyToTarget(enemy, PosMonMaterial)
+                            brought += 1
+                        end 
+                    ---Mastery Fruit
+                    elseif _G.FarmFruitMastery and StartMasteryFruitMagnet and (enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon) then
+                        if (hrp.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode then 
+                            TweenEnemyToTarget(enemy, PosMonMasteryFruit)
+                            brought += 1
+                        end
+                    elseif _G.FarmGunMastery and StartMasteryGunMagnet and (enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon) then
+
+                        if (hrp.Position - PosMonMasteryGun.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, PosMonMasteryGun)
+                            brought += 1
+                        end
+                    elseif _G.Bone and StartMagnetBoneMon and ((enemy.Name == "Reborn Skeleton") or (enemy.Name == "Living Zombie") or (enemy.Name == "Demonic Soul") or (enemy.Name == "Posessed Mummy")) then
+                        if (hrp.Position - PosMonBone.Position).Magnitude <= _G.BringMode then 
+                            TweenEnemyToTarget(enemy, PosMonBone)
+                            brought += 1
+                        end
+                    elseif _G.DoughtBoss and MagnetDought and  ((enemy.Name == "Cookie Crafter") or (enemy.Name == "Cake Guard") or (enemy.Name == "Baking Staff") or (enemy.Name == "Head Baker")) then
+                        if (hrp.Position - PosMonDoughtOpenDoor.Position).Magnitude <= _G.BringMode then 
+                            TweenEnemyToTarget(enemy, PosMonDoughtOpenDoor)
+                            brought += 1
+                        end
+                    elseif _G.FarmNearest and AutoFarmNearestMagnet then
+                        if (hrp.Position - PosMon.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, PosMon)
+                            brought += 1
+                        end
+                    -- Default BringMonster (theo Mon)
+                    elseif _G.Level and StartMagnet and enemy.Name == Mon then
+                        local isSpecial = (Mon == "Factory Staff [Lv. 800]" or Mon == "Monkey [Lv. 14]" or Mon == "Gorilla [Lv. 20]" or Mon == "Dragon Crew Warrior [Lv. 1575]" or Mon == "Dragon Crew Archer [Lv. 1600]" or Mon == "Mercenary [Lv. 725]")
+                        local dist = (hrp.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                        if (isSpecial and dist <= 220) or (not isSpecial and dist <= _G.BringMode) then
+                            TweenEnemyToTarget(enemy, PosMon)
+                            brought += 1
                         end
                     end
                 end
@@ -4203,435 +5201,17 @@ spawn(function()
     end
 end)
 
-spawn(function()
-    while task.wait() do
-        pcall(function()
-            if _G.BringMonster then
-                local brought = 0 -- đếm số quái đã gom
-
-                for _, enemy in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                    if brought >= 3 then
-                        break
-                    end
-                    
-                
-                    if (_G.Ectoplasm and StartEctoplasmMagnet) then
-                        if (string.find(enemy.Name, "Ship") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0) and ((enemy.HumanoidRootPart.Position - EctoplasmMon.Position).Magnitude <= _G.BringMode)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.HumanoidRootPart.CFrame = EctoplasmMon;
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (_G.Rengoku and StartRengokuMagnet) then
-                        if (((enemy.Name == "Snow Lurker") or (enemy.Name == "Arctic Warrior")) and ((enemy.HumanoidRootPart.Position - RengokuMon.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(1500, 1500, 1500);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = RengokuMon;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                        
-                    if (_G.MusketeerHat and StartMagnetMusketeerhat) then
-                        if ((enemy.Name == "Forest Pirate") and ((enemy.HumanoidRootPart.Position - MusketeerHatMon.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = MusketeerHatMon;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (_G.ObservationHakiV2 and Mangnetcitzenmon) then
-                        if ((enemy.Name == "Forest Pirate") and ((enemy.HumanoidRootPart.Position - MusketeerHatMon.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = PosHee;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (_G.EvoRace and StartEvoMagnet) then
-                        if ((enemy.Name == "Zombie") and ((enemy.HumanoidRootPart.Position - PosMonEvo.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = PosMonEvo;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (_G.Bartilo and AutoBartiloBring) then
-                        if ((enemy.Name == "Swan Pirate") and ((enemy.HumanoidRootPart.Position - PosMonBarto.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = PosMonBarto;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    if (_G.AutoMaterial and StartMaterialMagnet) then
-                        if (((enemy.Name == "Factory Staff") or (enemy.Name == "Water Fighter") or (enemy.Name == "Military Spy") or (enemy.Name == "Magma Ninja") or (enemy.Name == "God's Guard") or (enemy.Name == "Brute") or (enemy.Name == "Marine Captain") or (enemy.Name == "Jungle Pirate") or (enemy.Name == "Swan Pirate") or (enemy.Name == "Fishman Raider") or (enemy.Name == "Fishman Warrior") or (enemy.Name == "Demonic Soul") or (enemy.Name == "Vampire") or (enemy.Name == "Chocolate Bar Battler") or (enemy.Name == "Dragon Crew Archer") or (enemy.Name == "Pistol Billionaire") or (enemy.Name == "Hydra Enforcer") or (enemy.Name == "Venomous Assailant") or (enemy.Name == "Mythological Pirate") or (enemy.Name == "Ship Deckhand") or (enemy.Name == "Ship Engineer") or (enemy.Name == "Ship Steward") or (enemy.Name == "Ship Officer")) and ((enemy.HumanoidRootPart.Position - PosMonMaterial.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = PosMonMaterial;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    if (_G.FarmFruitMastery and StartMasteryFruitMagnet) then
-                        if (enemy.Name == "Monkey") then
-                            if (((enemy.HumanoidRootPart.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                                enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                                enemy.Humanoid:ChangeState(14);
-                                enemy.HumanoidRootPart.CanCollide = false;
-                                enemy.Head.CanCollide = false;
-                                enemy.HumanoidRootPart.CFrame = PosMonMasteryFruit;
-                                if enemy.Humanoid:FindFirstChild("Animator") then
-                                    enemy.Humanoid.Animator:Destroy();
-                                end
-                                sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                                brought = brought + 1
-                            end
-                        elseif (enemy.Name == "Factory Staff") then
-                            if (((enemy.HumanoidRootPart.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                                enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                                enemy.Humanoid:ChangeState(14);
-                                enemy.HumanoidRootPart.CanCollide = false;
-                                enemy.Head.CanCollide = false;
-                                enemy.HumanoidRootPart.CFrame = PosMonMasteryFruit;
-                                if enemy.Humanoid:FindFirstChild("Animator") then
-                                    enemy.Humanoid.Animator:Destroy();
-                                end
-                                sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                                brought = brought + 1
-                            end
-                        elseif (enemy.Name == Mon) then
-                            if (((enemy.HumanoidRootPart.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                                enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                                enemy.Humanoid:ChangeState(14);
-                                enemy.HumanoidRootPart.CanCollide = false;
-                                enemy.Head.CanCollide = false;
-                                enemy.HumanoidRootPart.CFrame = PosMonMasteryFruit;
-                                if enemy.Humanoid:FindFirstChild("Animator") then
-                                    enemy.Humanoid.Animator:Destroy();
-                                end
-                                sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                                brought = brought + 1
-                            end
-                        end
-                    end
-                    
-                    if (_G.FarmGunMastery and StartMasteryGunMagnet) then
-                        if (enemy.Name == "Monkey") then
-                            if (((enemy.HumanoidRootPart.Position - PosMonMasteryGun.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                                enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                                enemy.Humanoid:ChangeState(14);
-                                enemy.HumanoidRootPart.CanCollide = false;
-                                enemy.Head.CanCollide = false;
-                                enemy.HumanoidRootPart.CFrame = PosMonMasteryGun;
-                                if enemy.Humanoid:FindFirstChild("Animator") then
-                                    enemy.Humanoid.Animator:Destroy();
-                                end
-                                sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                                brought = brought + 1
-                            end
-                        elseif (enemy.Name == "Factory Staff") then
-                            if (((enemy.HumanoidRootPart.Position - PosMonMasteryGun.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                                enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                                enemy.Humanoid:ChangeState(14);
-                                enemy.HumanoidRootPart.CanCollide = false;
-                                enemy.Head.CanCollide = false;
-                                enemy.HumanoidRootPart.CFrame = PosMonMasteryGun;
-                                if enemy.Humanoid:FindFirstChild("Animator") then
-                                    enemy.Humanoid.Animator:Destroy();
-                                end
-                                sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                                brought = brought + 1
-                            end
-                        elseif (enemy.Name == Mon) then
-                            if (((enemy.HumanoidRootPart.Position - PosMonMasteryGun.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                                enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                                enemy.Humanoid:ChangeState(14);
-                                enemy.HumanoidRootPart.CanCollide = false;
-                                enemy.Head.CanCollide = false;
-                                enemy.HumanoidRootPart.CFrame = PosMonMasteryGun;
-                                if enemy.Humanoid:FindFirstChild("Animator") then
-                                    enemy.Humanoid.Animator:Destroy();
-                                end
-                                sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                                brought = brought + 1
-                            end
-                        end
-                    end
-                    
-                    if (_G.Bone and StartMagnetBoneMon) then
-                        if (((enemy.Name == "Reborn Skeleton") or (enemy.Name == "Living Zombie") or (enemy.Name == "Demonic Soul") or (enemy.Name == "Posessed Mummy")) and ((enemy.HumanoidRootPart.Position - PosMonBone.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = PosMonBone;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (_G.FarmCandy and StartCandyMagnet) then
-                        if (((enemy.Name == "Ice Cream Chef") or (enemy.Name == "Ice Cream Commander")) and ((enemy.HumanoidRootPart.Position - CandyMon.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = CandyMon;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (StardFarm and FarmMag) then
-                        if (((enemy.Name == "Cocoa Warrior") or (enemy.Name == "Chocolate Bar Battler") or (enemy.Name == "Sweet Thief") or (enemy.Name == "Candy Rebel")) and ((enemy.HumanoidRootPart.Position - PosGG.Position).Magnitude <= 250) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = PosGG;
-                            if enemy.Humanoid:FindFirstCity("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (_G.Farmfast and StardMag) then
-                        if (((enemy.Name == "Shanda") or (enemy.Name == "Shanda")) and ((enemy.HumanoidRootPart.Position - FastMon.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = FastMon;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                    
-                    if (_G.DoughtBoss and MagnetDought) then
-                        if (((enemy.Name == "Cookie Crafter") or (enemy.Name == "Cake Guard") or (enemy.Name == "Baking Staff") or (enemy.Name == "Head Baker")) and ((enemy.HumanoidRootPart.Position - PosMonDoughtOpenDoor.Position).Magnitude <= _G.BringMode) and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and (enemy.Humanoid.Health > 0)) then
-                            enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
-                            enemy.Humanoid:ChangeState(14);
-                            enemy.HumanoidRootPart.CanCollide = false;
-                            enemy.Head.CanCollide = false;
-                            enemy.HumanoidRootPart.CFrame = PosMonDoughtOpenDoor;
-                            if enemy.Humanoid:FindFirstChild("Animator") then
-                                enemy.Humanoid.Animator:Destroy();
-                            end
-                            sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
-                            brought = brought + 1
-                        end
-                    end
-                end
-            end
-        end);
-    end
-end);
--- Tối ưu hóa script gom quái
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local LocalPlayer = Players.LocalPlayer
-
--- Thiết lập SimulationRadius một lần
-task.spawn(function()
-    while true do
-        wait(1) -- Giảm tần suất check xuống 1 giây
-        if setscriptable then
-            setscriptable(LocalPlayer, "SimulationRadius", true)
-        end
-        if sethiddenproperty then
-            sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
-        end
-    end
-end)
-
--- Tối ưu function InMyNetWork
-local function InMyNetWork(part)
-    if isnetworkowner then
-        return isnetworkowner(part)
-    end
-    -- Tính toán khoảng cách một lần
-    local distance = (part.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-    return distance <= _G.BringMode
-end
-
--- Function tối ưu để modify quái
-local function ModifyEnemy(enemy, targetPos)
-    local humanoidRootPart = enemy.HumanoidRootPart
-    local humanoid = enemy.Humanoid
-    
-    -- Batch modify properties
-    humanoidRootPart.CFrame = targetPos
-    humanoidRootPart.Size = Vector3.new(60, 60, 60)
-    humanoidRootPart.Transparency = 1
-    humanoidRootPart.CanCollide = false
-    
-    humanoid.JumpPower = 0
-    humanoid.WalkSpeed = 0
-    
-    enemy.Head.CanCollide = false
-    
-    -- Remove animator if exists
-    local animator = humanoid:FindFirstChild("Animator")
-    if animator then
-        animator:Destroy()
-    end
-    
-    -- Change states
-    humanoid:ChangeState(11)
-    humanoid:ChangeState(14)
-end
-
--- Function chính để bring monsters
-local function BringMonsters()
-    local mobCount = 0
-    local targetPos = nil
-    local shouldBring = false
-    
-    -- Xác định target position và điều kiện
-    if MakoriGayMag and _G.BringMonster then
-        targetPos = PosGay
-        shouldBring = true
-    elseif Anchor and _G.BringMonster then
-        targetPos = PosNarathiwat  
-        shouldBring = true
-    elseif (_G.FarmNearest and AutoFarmNearestMagnet) or (SelectMag and _G.BringMonster) then
-        targetPos = PosMon
-        shouldBring = true
-    end
-    
-    if not shouldBring or not targetPos then return end
-    
-    -- Cache player position để tránh tính toán lặp lại
-    local playerPos = LocalPlayer.Character.HumanoidRootPart.Position
-    local enemies = Workspace.Enemies:GetChildren()
-    
-    -- Duyệt qua enemies
-    for i = 1, #enemies do
-        if mobCount >= 3 then break end
-        
-        local enemy = enemies[i]
-        
-        -- Kiểm tra tồn tại các components cần thiết
-        if enemy.HumanoidRootPart and enemy.Humanoid and enemy.Head then
-            -- Kiểm tra không phải boss
-            if not string.find(enemy.Name, "Boss") then
-                -- Tính khoảng cách một lần
-                local distance = (enemy.HumanoidRootPart.Position - playerPos).Magnitude
-                
-                if distance <= _G.BringMode and InMyNetWork(enemy.HumanoidRootPart) then
-                    mobCount = mobCount + 1
-                    ModifyEnemy(enemy, targetPos)
-                end
-            end
-        end
-    end
-end
-
--- Main loop tối ưu
-task.spawn(function()
-    while task.wait(0.1) do -- Giảm tần suất xuống 0.1s
-        pcall(BringMonsters)
-    end
-end)
-
-local v93 = {"150", "250", "350"}
-local v4035 = v16.Setting:AddDropdown("DropdownBringMode", {
-    Title = "Bring Mode Distance",
-    Description = "",
-    Values = v93,
-    Multi = false,
-    Default = 1
-});
-if World1 then
-    v4035:SetValue("250")
-elseif World2 or World3 then
-    v4035:SetValue("250")
-end
-v4035:OnChanged(function(v4036)
-    _G.BringMode = v4036;
-end);
-spawn(function()
-    while wait(0.1) do
-        if _G.BringMode then
-            pcall(function()
-                if (_G.BringMode == "150") then
-                    _G.BringMode = 150;
-                elseif (_G.BringMode == "250") then
-                    _G.BringMode = 250;
-                elseif (_G.BringMode == "350") then
-                    _G.BringMode = 350;
-                end
-            end);
-        end
-    end
-end);
-
-
-local v4037 = v16.Setting:AddToggle("ToggleBuso", {
+local AutoBuso = v16.Setting:AddToggle("AutoBuso", {
     Title = "Buso Haki",
     Description = "",
-    Default = true
+    Default = GetConfig("AutoBuso", true)
 });
-v4037:OnChanged(function(v4038)
-    _G.Haki = v4038;
+AutoBuso:OnChanged(function(v)
+    _G.Haki = v;
+    SetConfig("AutoBuso", v)
 end);
+_G.Haki = GetConfig("AutoBuso", true)
+AutoBuso:SetValue(_G.Haki)
 spawn(function()
     while wait(0.1) do
         if _G.Haki then
@@ -4644,24 +5224,179 @@ spawn(function()
         end
     end
 end);
-local v3039 = v16.Setting:AddToggle("ToggleAutoClick", {
-    Title = "Auto Click",
+
+local NoClip = v16.Setting:AddToggle("NoClip", {
+    Title = "NoClip",
     Description = "",
-    Default = false
-});
-v3039:OnChanged(function(v3040)
-    _G.AutoClick = v3040;
+    Default = GetConfig("NoClip", true)
+})
+NoClip:OnChanged(function(v)
+    _G.Noclip = v;
+    SetConfig("NoClip", v)
 end);
-local v3041 = v16.Setting:AddToggle("ToggleRemoveNotifications", {
+_G.Noclip = GetConfig("NoClip", true)
+NoClip:SetValue(_G.Noclip)
+
+spawn(function()
+    while _G.Noclip do
+        task.wait()
+        local char = player.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide == true then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+local AutoObservation = v16.Setting:AddToggle("AutoObservation", {
+    Title = "Auto Turn On Observation",
+    Description = "",
+    Default = GetConfig("AutoObservation", false)
+})
+AutoObservation:OnChanged(function()
+    _G.Observation = v
+    SetConfig("AutoObservation", v)
+end)
+_G.Observation = GetConfig("AutoObservation", false)
+AutoObservation:SetValue(_G.Observation)
+
+spawn(function()
+    while wait(0.2) do
+        if _G.Observation then
+            if not (game:GetService("Players")).LocalPlayer.PlayerGui.ScreenGui:FindFirstChild("ImageLabel") then
+                (game:GetService("VirtualUser")):CaptureController();
+                (game:GetService("VirtualUser")):SetKeyDown("0x65");
+                task.wait();
+                (game:GetService("VirtualUser")):SetKeyUp("0x65");
+            end;
+        end;
+    end;
+end);
+
+local TurnOnV3 = v16.Setting:AddToggle("TurnOnV3", {
+    Title = "Auto Turn On V3",
+    Description = "",
+    Default = GetConfig("TurnOnV3", false)
+})
+TurnOnV3:OnChanged(function(v)
+    _G.AutoTurnOnV3 = v;
+    SetConfig("TurnOnV3", v)
+end)
+_G.AutoTurnOnV3 = GetConfig("TurnOnV3", false)
+TurnOnV3:SetValue(_G.AutoTurnOnV3)
+
+task.spawn(function()
+    local prevState = false    
+    while true do
+        task.wait(0.1)        
+        pcall(function()
+            if _G.AutoTurnOnV3 ~= prevState then
+                if _G.AutoTurnOnV3 then
+                    game:GetService("ReplicatedStorage").Remotes.CommE:FireServer("ActivateAbility")
+                end
+                prevState = _G.AutoTurnOnV3
+            end
+        end)
+    end
+end)
+
+local TurnOnV4 = v16.Setting:AddToggle("TurnOnV4", {
+    Title = "Auto Turn On V4",
+    Description = "",
+    Default = GetConfig("TurnOnV4", false)
+})
+TurnOnV4:OnChanged(function(v)
+    _G.AutoTurnOnV4 = v;
+    SetConfig("TurnOnV4", v)
+end)
+_G.AutoTurnOnV4 = GetConfig("TurnOnV4", false)
+TurnOnV4:SetValue(_G.AutoTurnOnV4)
+
+task.spawn(function()
+    local lastCheckTime = 0
+    while true do
+        task.wait(0.1)
+        if _G.AutoTurnOnV4 then
+            local currentTime = tick()
+            if currentTime - lastCheckTime >= 0.5 then
+                lastCheckTime = currentTime
+                local character = game.Players.LocalPlayer.Character
+                if character and character:FindFirstChild("RaceEnergy") and
+                   character.RaceEnergy.Value >= 1 and
+                   not character.RaceTransformed.Value then
+                    local be = game:GetService("VirtualInputManager")
+                    be:SendKeyEvent(true, "Y", false, game)
+                    task.wait(0.1)
+                    be:SendKeyEvent(false, "Y", false, game)
+                end
+            end
+        end
+    end
+end)
+local AutoSetSpawn = v16.Setting:AddToggle("AutoSetSpawn", {
+    Title = "Auto Set Spawn Point",
+    Description = "",
+    Default = GetConfig("AutoSetSpawn", false)
+})
+local lastSetState = false
+AutoSetSpawn:OnChanged(function(v)
+    _G.Set = v
+    SetConfig("AutoSetSpawn", v)
+    if Value ~= lastSetState then
+        lastSetState = Value
+        if v then
+            pcall(function()
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetSpawnPoint")
+            end)
+        end
+    end
+end)
+_G.Set = GetConfig("AutoSetSpawn", false)
+AutoSetSpawn:SetValue(_G.Set)
+
+local AutoRejoin = v16.Setting:AddToggle("AutoRejoin", {
+    Title = "Auto Rejoin if Kicked",
+    Description = "",
+    Default = GetConfig("AutoRejoin", false)
+})
+AutoRejoin:OnChanged(function(v)
+    _G.AutoRejoin = v
+    SetConfig("AutoRejoin", v)
+end)
+_G.AutoRejoin = GetConfig("AutoRejoin", false)
+AutoRejoin:SetValue(_G.AutoRejoin)
+
+spawn(function()
+    while task.wait(0.2) do
+        if _G.AutoRejoin then
+            getgenv().rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+                if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+                    game:GetService("TeleportService"):Teleport(game.PlaceId)
+                end
+            end)
+        end
+    end
+end)
+local SettingGrapficLabel = v16.Setting:AddSection("Graphics Settings")
+
+local RVNF = v16.Setting:AddToggle("RVNF", {
     Title = "Remove Notifications",
     Description = "",
-    Default = false
+    Default = GetConfig("RVNF", false)
 });
-v3041:OnChanged(function(v3042)
-    _G.Remove_trct = v3042;
+
+RVNF:OnChanged(function(v)
+    _G.Remove_trct = v;
+    SetConfig("RVNF", v)
 end);
+_G.Remove_trct = GetConfig("RVNF", false)
+RVNF:SetValue(_G.Remove_trct)
+
 spawn(function()
-    while wait() do
+    while task.wait(0.2) do
         if _G.Remove_trct then
             game.Players.LocalPlayer.PlayerGui.Notifications.Enabled = false;
         else
@@ -4670,8 +5405,26 @@ spawn(function()
     end
 end);
 
+
+local WhiteScreen = v16.Setting:AddToggle("WhiteScreen", {
+    Title = "White Screen",
+    Description = "",
+    Default = GetConfig("WhiteScreen", false)
+});
+WhiteScreen:OnChanged(function(v)
+    _G.WhiteScreen = v;
+    SetConfig("WhiteScreen", v)
+    if (_G.WhiteScreen == true) then
+        game:GetService("RunService"):Set3dRenderingEnabled(false);
+    elseif (_G.WhiteScreen == false) then
+        game:GetService("RunService"):Set3dRenderingEnabled(true);
+    end
+end);   
+_G.WhiteScreen = GetConfig("WhiteScreen", false)
+WhiteScreen:SetValue(_G.WhiteScreen)
+
 spawn(function()
-    while wait() do
+    while task.wait(0.2) do
         if _G.WhiteScreen then
             for v2141, v2142 in pairs(game.Workspace['_WorldOrigin']:GetChildren()) do
                 if ((v2142.Name == "CurvedRing") or (v2142.Name == "SlashHit") or (v2142.Name == "DamageCounter") or (v2142.Name == "SwordSlash") or (v2142.Name == "SlashTail") or (v2142.Name == "Sounds")) then
@@ -4680,27 +5433,16 @@ spawn(function()
             end
         end
     end
-end);
-local v3043 = v16.Setting:AddToggle("ToggleWhiteScreen", {
-    Title = "White Screen",
-    Description = "",
-    Default = false
-});
-v3043:OnChanged(function(v3044)
-    _G.WhiteScreen = v3044;
-    if (_G.WhiteScreen == true) then
-        game:GetService("RunService"):Set3dRenderingEnabled(false);
-    elseif (_G.WhiteScreen == false) then
-        game:GetService("RunService"):Set3dRenderingEnabled(true);
-    end
-end);    
-local v3045 = v16.Setting:AddToggle("ToggleHideMob", {
+end); 
+
+local HideMob = v16.Setting:AddToggle("HideMob", {
     Title = "Hide Mob",
     Description = "",
-    Default = false
+    Default = GetConfig("HideMob", false)
 });
-v3045:OnChanged(function(v)
+HideMob:OnChanged(function(v)
     _G.inv = v
+    SetConfig("HideMob", v)
     while wait() do
         if _G.inv then
             pcall(function()
@@ -4728,3 +5470,5 @@ v3045:OnChanged(function(v)
         end
     end
 end);
+_G.inv = GetConfig("HideMob", false)
+HideMob:SetValue(_G.inv)

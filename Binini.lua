@@ -2804,7 +2804,7 @@ spawn(function()
                             Fastattack = true;
                             v2128.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
                             AutoFarmNearestMagnet = true;
-                            PosMon = v2128.HumanoidRootPart.CFrame;
+                            PosMonNear = v2128.HumanoidRootPart.CFrame;
                         until  not _G.FarmNearest or  not v2128.Parent or (v2128.Humanoid.Health <= 0)
                         AutoFarmNearestMagnet = false;
                         Fastattack = false;
@@ -5092,12 +5092,12 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         hum:ChangeState(14)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-        -- ✅ Tween đúng yêu cầu
         local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = targetCFrame})
         tween:Play()
     end)
 end
+
 
 spawn(function()
     while task.wait() do
@@ -5112,6 +5112,8 @@ spawn(function()
                     local hrp = enemy:FindFirstChild("HumanoidRootPart")
                     local hum = enemy:FindFirstChild("Humanoid")
                     if not hrp or not hum or hum.Health <= 0 then continue end
+
+                    local distanceToPlayer = (hrp.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
 
                     -- Ectoplasm (Ship)
                     if _G.Ectoplasm and StartEctoplasmMagnet and string.find(enemy.Name, "Ship") then
@@ -5147,48 +5149,75 @@ spawn(function()
                             TweenEnemyToTarget(enemy, PosMonEvo)
                             brought += 1
                         end
-                    ---Bartilo Quest
-                    elseif _G.Bartilo and AutoBartiloBring and enemy.Name == "Swan Pirate" then 
+
+                    -- Bartilo Quest (Swan Pirate)
+                    elseif _G.Bartilo and AutoBartiloBring and enemy.Name == "Swan Pirate" then
                         if (hrp.Position - PosMonBarto.Position).Magnitude <= _G.BringMode then
                             TweenEnemyToTarget(enemy, PosMonBarto)
                             brought += 1
                         end
-                    ---Material
-                    elseif _G.AutoMaterial and StartMaterialMagnet and ((enemy.Name == "Factory Staff") or (enemy.Name == "Water Fighter") or (enemy.Name == "Military Spy") or (enemy.Name == "Magma Ninja") or (enemy.Name == "God's Guard") or (enemy.Name == "Brute") or (enemy.Name == "Marine Captain") or (enemy.Name == "Jungle Pirate") or (enemy.Name == "Swan Pirate") or (enemy.Name == "Fishman Raider") or (enemy.Name == "Fishman Warrior") or (enemy.Name == "Demonic Soul") or (enemy.Name == "Vampire") or (enemy.Name == "Chocolate Bar Battler") or (enemy.Name == "Dragon Crew Archer") or (enemy.Name == "Pistol Billionaire") or (enemy.Name == "Hydra Enforcer") or (enemy.Name == "Venomous Assailant") or (enemy.Name == "Mythological Pirate") or (enemy.Name == "Ship Deckhand") or (enemy.Name == "Ship Engineer") or (enemy.Name == "Ship Steward") or (enemy.Name == "Ship Officer")) then
-                        if (hrp.Position - PosMonMaterial.Position).Magnitude <= _G.BringMode then 
+
+                    -- Auto Material
+                    elseif _G.AutoMaterial and StartMaterialMagnet and table.find({
+                        "Factory Staff", "Water Fighter", "Military Spy", "Magma Ninja",
+                        "God's Guard", "Brute", "Marine Captain", "Jungle Pirate",
+                        "Swan Pirate", "Fishman Raider", "Fishman Warrior",
+                        "Demonic Soul", "Vampire", "Chocolate Bar Battler",
+                        "Dragon Crew Archer", "Pistol Billionaire", "Hydra Enforcer",
+                        "Venomous Assailant", "Mythological Pirate",
+                        "Ship Deckhand", "Ship Engineer", "Ship Steward", "Ship Officer"
+                    }, enemy.Name) then
+                        if (hrp.Position - PosMonMaterial.Position).Magnitude <= _G.BringMode then
                             TweenEnemyToTarget(enemy, PosMonMaterial)
                             brought += 1
-                        end 
-                    ---Mastery Fruit
-                    elseif _G.FarmFruitMastery and StartMasteryFruitMagnet and (enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon) then
-                        if (hrp.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode then 
+                        end
+
+                    -- Mastery Fruit
+                    elseif _G.FarmFruitMastery and StartMasteryFruitMagnet and ((enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon)) then
+                        if (hrp.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode then
                             TweenEnemyToTarget(enemy, PosMonMasteryFruit)
                             brought += 1
                         end
-                    elseif _G.FarmGunMastery and StartMasteryGunMagnet and (enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon) then
 
+                    -- Mastery Gun
+                    elseif _G.FarmGunMastery and StartMasteryGunMagnet and ((enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon)) then
                         if (hrp.Position - PosMonMasteryGun.Position).Magnitude <= _G.BringMode then
                             TweenEnemyToTarget(enemy, PosMonMasteryGun)
                             brought += 1
                         end
-                    elseif _G.Bone and StartMagnetBoneMon and ((enemy.Name == "Reborn Skeleton") or (enemy.Name == "Living Zombie") or (enemy.Name == "Demonic Soul") or (enemy.Name == "Posessed Mummy")) then
-                        if (hrp.Position - PosMonBone.Position).Magnitude <= _G.BringMode then 
+
+                    -- Bone Farm
+                    elseif _G.Bone and StartMagnetBoneMon and table.find({
+                        "Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"
+                    }, enemy.Name) then
+                        if (hrp.Position - PosMonBone.Position).Magnitude <= _G.BringMode then
                             TweenEnemyToTarget(enemy, PosMonBone)
                             brought += 1
                         end
-                    elseif _G.DoughtBoss and MagnetDought and  ((enemy.Name == "Cookie Crafter") or (enemy.Name == "Cake Guard") or (enemy.Name == "Baking Staff") or (enemy.Name == "Head Baker")) then
-                        if (hrp.Position - PosMonDoughtOpenDoor.Position).Magnitude <= _G.BringMode then 
+
+                    -- DoughtBoss
+                    elseif _G.DoughtBoss and MagnetDought and table.find({
+                        "Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"
+                    }, enemy.Name) then
+                        if (hrp.Position - PosMonDoughtOpenDoor.Position).Magnitude <= _G.BringMode then
                             TweenEnemyToTarget(enemy, PosMonDoughtOpenDoor)
                             brought += 1
                         end
+
+                    -- Nearest Mode
                     elseif _G.FarmNearest and AutoFarmNearestMagnet then
-                        if (hrp.Position - PosMon.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMon)
+                        if (hrp.Position - PosMonNear.Position).Magnitude <= _G.BringMode then
+                            TweenEnemyToTarget(enemy, PosMonNear)
                             brought += 1
                         end
-                    -- Default BringMonster (theo Mon)
+
+                    -- Default BringMonster by Level & Mon
                     elseif _G.Level and StartMagnet and enemy.Name == Mon then
-                        local isSpecial = (Mon == "Factory Staff [Lv. 800]" or Mon == "Monkey [Lv. 14]" or Mon == "Gorilla [Lv. 20]" or Mon == "Dragon Crew Warrior [Lv. 1575]" or Mon == "Dragon Crew Archer [Lv. 1600]" or Mon == "Mercenary [Lv. 725]")
+                        local isSpecial = table.find({
+                            "Factory Staff [Lv. 800]", "Monkey [Lv. 14]", "Gorilla [Lv. 20]",
+                            "Dragon Crew Warrior [Lv. 1575]", "Dragon Crew Archer [Lv. 1600]",
+                            "Mercenary [Lv. 725]"
+                        }, Mon)
                         local dist = (hrp.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
                         if (isSpecial and dist <= 220) or (not isSpecial and dist <= _G.BringMode) then
                             TweenEnemyToTarget(enemy, PosMon)
@@ -5200,6 +5229,7 @@ spawn(function()
         end)
     end
 end)
+
 
 local AutoBuso = v16.Setting:AddToggle("AutoBuso", {
     Title = "Buso Haki",

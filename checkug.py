@@ -28,7 +28,7 @@ except Exception as e:
 data = response.json()
 servers = data.get("servers", {})
 last_updated = data.get("last_updated", {})
-# Lọc server còn hàng
+
 available = {srv: stt for srv, stt in servers.items() if stt != "Out of Stock"}
 
 if available:
@@ -37,5 +37,5 @@ if available:
         print(Fore.GREEN + f"  {server}: {status}")
 else:
     print(Fore.RED + "Tất cả server đã Out of Stock")
-
 print(Fore.BLUE + f"Cập Nhật Mới Nhất: {last_updated}" )
+

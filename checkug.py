@@ -1,7 +1,6 @@
 import subprocess
 import sys
 
-# Danh sách thư viện cần dùng
 required_packages = ["requests", "colorama"]
 
 for package in required_packages:
@@ -11,9 +10,7 @@ for package in required_packages:
         print(f"{package} chưa được cài, đang cài đặt...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 
-# ---------------------------
-# Phần code chính của bạn
-# ---------------------------
+
 import requests
 from colorama import init, Fore
 
@@ -30,7 +27,7 @@ except Exception as e:
 
 data = response.json()
 servers = data.get("servers", {})
-
+last_updated = data.get("last_updated", {})
 # Lọc server còn hàng
 available = {srv: stt for srv, stt in servers.items() if stt != "Out of Stock"}
 
@@ -40,3 +37,5 @@ if available:
         print(Fore.GREEN + f"  {server}: {status}")
 else:
     print(Fore.RED + "Tất cả server đã Out of Stock")
+
+print(Fore.BLUE + f"Cập Nhật Mới Nhất: {last_updated}" )

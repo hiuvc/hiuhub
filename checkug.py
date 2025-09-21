@@ -19,6 +19,3 @@ if response.status_code == 200:
         print("Tất cả server đã Out of Stock")
 else:
     print("Lỗi:", response.status_code)
-
-print("Chương trình đã chạy xong!")
-input("Nhấn Enter để thoát...")

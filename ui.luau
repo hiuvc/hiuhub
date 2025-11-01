@@ -258,3 +258,10 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 return UI
+
+local UI = require(path_to_wrapper)
+
+local Main = UI:AddTab("Main")
+Main:AddToggle("Auto Farm",false,function(v) print("Auto Farm:",v) end)
+Main:AddSlider("Distance",1,50,20,function(v) print("Distance:",v) end)
+Main:AddDropdown("Weapon",{"Melee","Sword","Fruit"},"Melee",function(v) print("Weapon:",v) end)

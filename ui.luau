@@ -257,7 +257,6 @@ UserInputService.InputChanged:Connect(function(input)
     if input==dragInput and dragging then update(input) end
 end)
 
-return UI
 
 local UI = require(path_to_wrapper)
 

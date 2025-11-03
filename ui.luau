@@ -720,9 +720,8 @@ function CheckQuest()
     end
 end
 ------------------------------------------------------------------------------------------------------------------------
-
 --// Services
-_G.Seriality = true
+getgenv().Seriality = getgenv().Seriality or false
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -878,7 +877,7 @@ end
 task.spawn(function()
     RunService.Heartbeat:Connect(function()
         pcall(function()
-            if not _G.Seriality then return end
+            if not getgenv().Seriality then return end
             AttackNoCoolDown()
             local Pretool = player.Character:FindFirstChildOfClass("Tool")
             if Pretool then
@@ -897,64 +896,6 @@ task.spawn(function()
     end)
 end)
 
-local plr = game.Players.LocalPlayer
-local TweenService = game:GetService("TweenService")
-local function TweenObject(Object, Pos, Speed)
-    Speed = Speed or 350
-    if not Object or not Pos then return end
-    local Distance = (Pos.Position - Object.Position).Magnitude
-    local info = TweenInfo.new(Distance / Speed, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(Object, info, {CFrame = Pos})
-    tween:Play()
-end
-local function GetMobPosition(EnemiesName)
-    local pos = Vector3.zero
-    local count = 0
-    for _, v in pairs(workspace.Enemies:GetChildren()) do
-        if v.Name == EnemiesName and v:FindFirstChild("HumanoidRootPart") then
-            pos += v.HumanoidRootPart.Position
-            count += 1
-        end
-    end
-    if count == 0 then
-        return nil
-    end
-    return pos / count
-end
--- Gom mob lại gần nhau
-local function BringMob(enable)
-    if not enable then return end
-    local enemies = workspace.Enemies:GetChildren()
-    if #enemies == 0 then return end
-    local totalpos = {}
-    -- Lấy vị trí trung bình từng loại mob
-    for _, v in pairs(enemies) do
-        if not totalpos[v.Name] then
-            totalpos[v.Name] = GetMobPosition(v.Name)
-        end
-    end
-    -- Gom mob lại
-    for _, v in pairs(workspace.Enemies:GetChildren()) do
-        if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-            local hrp = v.HumanoidRootPart
-            local humanoid = v.Humanoid
-            if humanoid.Health > 0 and (hrp.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 250 then
-                local mobPos = totalpos[v.Name]
-                if mobPos then
-                    local TargetCFrame = CFrame.new(mobPos.X, mobPos.Y, mobPos.Z)
-                    local Distance = (hrp.Position - TargetCFrame.Position).Magnitude
-                    if Distance > 3 and Distance <= 280 then
-                        TweenObject(hrp, TargetCFrame, 300)
-                        hrp.CanCollide = false
-                        pcall(function()
-                            sethiddenproperty(plr, "SimulationRadius", math.huge)
-                        end)
-                    end
-                end
-            end
-        end
-    end
-end
 
 
 ----------------Save Config--------------------------------
@@ -2596,7 +2537,7 @@ if EffectContainer then
 end
 
 
-PosY = 10;
+PosY = 20;
 Kill_At = 28;
 local ServerStatusLabel = v16.Server_Status:AddSection("Server Status")
 local FullMoonStatus = v16.Server_Status:AddParagraph({Title = "Moon", Content = "", })
@@ -2942,197 +2883,72 @@ end);
 _G.Level = GetConfig("ToggleLevel", false)
 AutoLevel:SetValue(_G.Level)
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-
-local player = Players.LocalPlayer
-local questRemote = ReplicatedStorage.Remotes.CommF_
-
--- Cache các biến thường dùng
-local QUEST_CHECK_DELAY = 2
-local COMBAT_DELAY = 0.1
-local SEARCH_DELAY = 0.5
-local ENEMY_SIZE = Vector3.new(50, 50, 50)
-
--- Hàm kiểm tra quest UI
-local function getQuestUI()
-    local success, result = pcall(function()
-        return player.PlayerGui.Main.Quest
-    end)
-    return success and result or nil
-end
-
--- Hàm lấy quest title
-local function getQuestTitle()
-    local questUI = getQuestUI()
-    if questUI then
-        local success, title = pcall(function()
-            return questUI.Container.QuestTitle.Title.Text
-        end)
-        return success and title or ""
-    end
-    return ""
-end
-
--- Hàm kiểm tra quest hợp lệ
-local function isQuestValid(title)
-    return title ~= "" and string.find(title, NameMon) ~= nil
-end
-
--- Hàm abandon quest
-local function abandonQuest()
-    pcall(function()
-        questRemote:InvokeServer("AbandonQuest")
-    end)
-end
-
--- Hàm start quest
-local function startQuest()
-    pcall(function()
-        questRemote:InvokeServer("StartQuest", NameQuest, LevelQuest)
-    end)
-end
-
--- Hàm kiểm tra khoảng cách
-local function isInRange(pos1, pos2, range)
-    return (pos1 - pos2).Magnitude <= range
-end
-
--- Hàm kiểm tra enemy hợp lệ
-local function isValidEnemy(enemy)
-    if not enemy or not enemy.Parent then return false end
-    
-    local humanoid = enemy:FindFirstChild("Humanoid")
-    local rootPart = enemy:FindFirstChild("HumanoidRootPart")
-    
-    return humanoid and rootPart and humanoid.Health > 0
-end
-
--- Hàm tìm enemy
-local function findEnemy()
-    for _, enemy in pairs(Workspace.Enemies:GetChildren()) do
-        if enemy.Name == Mon and isValidEnemy(enemy) then
-            return enemy
-        end
-    end
-    return nil
-end
-
--- Hàm setup enemy để combat
-local function setupEnemy(enemy)
-    pcall(function()
-        local rootPart = enemy.HumanoidRootPart
-        local head = enemy.Head
-        
-        rootPart.CanCollide = false
-        rootPart.Size = ENEMY_SIZE
-        head.CanCollide = false
-        enemy.Humanoid.WalkSpeed = 0
-    end)
-end
-
--- Hàm combat với enemy
-local function combatEnemy(enemy, questTitle)
-    if not isQuestValid(questTitle) then
-        abandonQuest()
-        return
-    end
-    
-    repeat
-        task.wait(COMBAT_DELAY)
-        
-        if not isValidEnemy(enemy) then break end
-        
-        pcall(function()
-            EquipWeapon(_G.SelectWeapon)
-            AutoHaki()
-            PosMon = enemy.HumanoidRootPart.CFrame
-            TP1(enemy.HumanoidRootPart.CFrame * Pos)
-            setupEnemy(enemy)
-            BringMob(true)
-        end)
-        
-    until not _G.Level or not isValidEnemy(enemy) or not getQuestUI() or not getQuestUI().Visible
-end
-
--- Hàm xử lý khi không có enemy
-local function handleNoEnemy()
-    pcall(function()
-        TP1(CFrameMon)
-        
-        -- Kiểm tra enemy trong ReplicatedStorage
-        local futureEnemy = ReplicatedStorage:FindFirstChild(Mon)
-        if futureEnemy then
-            local rootPart = futureEnemy:FindFirstChild("HumanoidRootPart")
-            if rootPart then
-                TP1(rootPart.CFrame * CFrame.new(15, 10, 2))
-            end
-        end
-    end)
-end
-
--- Hàm xử lý khi quest visible
-local function handleQuestVisible()
-    CheckQuest()
-    
-    local questTitle = getQuestTitle()
-    local enemy = findEnemy()
-    
-    if enemy then
-        if isQuestValid(questTitle) then
-            combatEnemy(enemy, questTitle)
-        else
-            abandonQuest()
-        end
-    else
-        task.wait(SEARCH_DELAY)
-        handleNoEnemy()
-    end
-end
-
--- Hàm xử lý khi quest không visible
-local function handleQuestNotVisible()
-    CheckQuest()
-    TP1(CFrameQuest)
-    task.wait(QUEST_CHECK_DELAY)
-    
-    pcall(function()
-        local character = player.Character
-        if character then
-            local rootPart = character:FindFirstChild("HumanoidRootPart")
-            if rootPart and isInRange(rootPart.Position, CFrameQuest.Position, 5) then
-                startQuest()
-            end
-        end
-    end)
-end
-
--- Main loop
 spawn(function()
-    while task.wait() do
-        if not _G.Level then continue end
-        
-        pcall(function()
-            local questUI = getQuestUI()
-            
-            if not questUI then return end
-            
-            -- Kiểm tra quest title ngay từ đầu
-            local questTitle = getQuestTitle()
-            if questUI.Visible and questTitle ~= "" and not isQuestValid(questTitle) then
-                abandonQuest()
-                task.wait(0.5)
-                return
-            end
-            
-            -- Xử lý theo trạng thái quest UI
-            if questUI.Visible then
-                handleQuestVisible()
-            else
-                handleQuestNotVisible()
-            end
-        end)
+    while wait() do
+        if _G.Level then
+            pcall(function()
+                local player = game:GetService("Players").LocalPlayer
+                local questUI = player.PlayerGui.Main.Quest
+                local questTitle = questUI.Container.QuestTitle.Title.Text
+
+                if not string.find(questTitle, NameMon) then
+                    StartMagnet = false
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                end
+
+                if not questUI.Visible then
+                    StartMagnet = false
+                    CheckQuest()
+
+                    -- Bỏ BypassTP: Chỉ dùng TP1
+                    TP1(CFrameQuest)
+
+                    if (player.Character.HumanoidRootPart.Position - CFrameQuest.Position).Magnitude <= 5 then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+                    end
+
+                elseif questUI.Visible then
+                    CheckQuest()
+                    local foundEnemy = false
+
+                    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                        if enemy.Name == Mon and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                            if string.find(questTitle, NameMon) then
+                                foundEnemy = true
+                                repeat
+                                    task.wait()
+                                    EquipWeapon(_G.SelectWeapon)
+                                    AutoHaki()
+                                    getgenv().Seriality = true
+                                    PosMon = enemy.HumanoidRootPart.CFrame
+                                    TP1(enemy.HumanoidRootPart.CFrame * Pos)
+                                    enemy.HumanoidRootPart.CanCollide = false
+                                    enemy.Humanoid.WalkSpeed = 0
+                                    enemy.Head.CanCollide = false
+                                    enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+                                    StartMagnet = true
+                                until not _G.Level or enemy.Humanoid.Health <= 0 or not enemy.Parent or not questUI.Visible
+                            else
+                                StartMagnet = false
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                            end
+                        end
+                    end
+
+                    if not foundEnemy then
+                        -- Nếu không có quái -> Tween về vị trí farm
+                        TP1(CFrameMon)
+                        StartMagnet = false
+
+                        -- Optional: nếu có trong ReplicatedStorage (chưa spawn), chuẩn bị sẵn vị trí
+                        local futureEnemy = game:GetService("ReplicatedStorage"):FindFirstChild(Mon)
+                        if futureEnemy and futureEnemy:FindFirstChild("HumanoidRootPart") then
+                            TP1(futureEnemy.HumanoidRootPart.CFrame * CFrame.new(15, 10, 2))
+                        end
+                    end
+                end
+            end)
+        end
     end
 end)
 
@@ -3168,6 +2984,7 @@ spawn(function()
                             end
                             topos(v2128.HumanoidRootPart.CFrame * Pos );
                             v2128.HumanoidRootPart.CanCollide = false;
+                            getgenv().Seriality = true
                             v2128.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
                             AutoFarmNearestMagnet = true;
                             PosMonNear = v2128.HumanoidRootPart.CFrame;
@@ -3322,6 +3139,7 @@ if World2 then
                                             task.wait();
                                             AutoHaki();
                                             EquipWeapon(_G.SelectWeapon);
+                                            getgenv().Seriality = true
                                             topos(v3033.HumanoidRootPart.CFrame * Pos );
                                             v3033.HumanoidRootPart.CFrame = OldCFrameThird;
                                             v3033.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
@@ -3366,6 +3184,7 @@ if World2 then
                                                 task.wait();
                                                 sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
                                                 EquipWeapon(_G.SelectWeapon);
+                                                getgenv().Seriality = true
                                                 AutoHaki();
                                                 v2920.HumanoidRootPart.Transparency = 1;
                                                 v2920.HumanoidRootPart.CanCollide = false;
@@ -3402,6 +3221,7 @@ if World2 then
                                         task.wait();
                                         sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
                                         EquipWeapon(_G.SelectWeapon);
+                                        getgenv().Seriality = true
                                         AutoHaki();
                                         v2922.HumanoidRootPart.Transparency = 1;
                                         v2922.HumanoidRootPart.CanCollide = false;
@@ -3497,6 +3317,7 @@ if World2 then
                                     task.wait();
                                     AutoHaki();
                                     EquipWeapon(_G.SelectWeapon);
+                                    getgenv().Seriality = true
                                     topos(CFrame.new(448.46756, 199.356781, -441.389252));
                                 until (v2722.Humanoid.Health <= 0) or (_G.Factory == false)
                             end
@@ -3842,6 +3663,7 @@ spawn(function()
                                     AutoHaki()
                                     StartMaterialMagnet = true
                                     EquipWeapon(_G.SelectWeapon)
+                                    getgenv().Seriality = true
                                     TP1(enemy.HumanoidRootPart.CFrame * Pos)
                                     enemy.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
                                     enemy.HumanoidRootPart.Transparency = 1
@@ -4191,6 +4013,7 @@ spawn(function()
                                     task.wait()
                                     AutoHaki();
                                     EquipWeapon(_G.SelectWeapon)
+                                    getgenv().Seriality = true
                                     v1035.HumanoidRootPart.CanCollide = false;
                                     v1035.Humanoid.WalkSpeed = 0;
                                     v1035.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
@@ -4285,6 +4108,7 @@ if World1 then
                                                 task.wait()
                                                 AutoHaki()
                                                 EquipWeapon(_G.SelectWeapon)
+                                                getgenv().Seriality = true
                                                 mobLeader.HumanoidRootPart.CanCollide = false
                                                 mobLeader.Humanoid.WalkSpeed = 0
                                                 topos(mobLeader.HumanoidRootPart.CFrame * Pos)
@@ -4318,6 +4142,7 @@ if World1 then
                             repeat
                                 task.wait()
                                 EquipWeapon(_G.SelectWeapon)
+                                getgenv().Seriality = true
                                 topos(saberExpert.HumanoidRootPart.CFrame * Pos)
                                 saberExpert.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
                                 saberExpert.HumanoidRootPart.Transparency = 1
@@ -4371,6 +4196,7 @@ if World1 then
                                 task.wait()
                                 AutoHaki()
                                 EquipWeapon(_G.SelectWeapon)
+                                getgenv().Seriality = true
                                 saw.HumanoidRootPart.CanCollide = false
                                 saw.Humanoid.WalkSpeed = 0
                                 saw.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
@@ -4419,6 +4245,7 @@ if World1 then
                             task.wait()
                             AutoHaki()
                             EquipWeapon(_G.SelectWeapon)
+                            getgenv().Seriality = true
                             thunderGod.HumanoidRootPart.CanCollide = false
                             thunderGod.Humanoid.WalkSpeed = 0
                             thunderGod.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
@@ -5606,29 +5433,51 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         local hum = enemy:FindFirstChild("Humanoid")
         if not hrp or not hum or hum.Health <= 0 then return end
 
+        -- Cấu hình cơ bản
         hrp.Size = size or Vector3.new(50, 50, 50)
         hrp.CanCollide = false
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
-        if enemy.Humanoid:FindFirstChild("Animator") then
-            enemy.Humanoid.Animator:Destroy();
+        if hum:FindFirstChild("Animator") then
+            hum.Animator:Destroy()
         end
         hum:ChangeState(14)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
+        -- Tween quái đến vị trí trước người chơi
         local player = game.Players.LocalPlayer
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if not root then return end
 
         local posBelowPlayer = root.CFrame * CFrame.new(0, -21, 0)
-
         local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
         local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = posBelowPlayer})
+
         tween:Play()
+
+        -- Khi tween kết thúc, giữ quái cố định tại vị trí cuối
+        tween.Completed:Connect(function()
+            if not hrp.Parent or hum.Health <= 0 then return end
+            hrp.CFrame = CFrame.new(posBelowPlayer.Position)
+            hrp.Velocity = Vector3.zero
+            hrp.RotVelocity = Vector3.zero
+
+            -- Tạo kết nối để giữ mob anchored nếu cần trong thời gian dài
+            local RunService = game:GetService("RunService")
+            local conn
+            conn = RunService.Stepped:Connect(function()
+                if not hrp.Parent or hum.Health <= 0 then
+                    conn:Disconnect()
+                    return
+                end
+                hrp.CFrame = CFrame.new(posBelowPlayer.Position)
+                hrp.Velocity = Vector3.zero
+                hrp.RotVelocity = Vector3.zero
+            end)
+        end)
     end)
 end
-
 
 
 spawn(function()

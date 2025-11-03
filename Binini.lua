@@ -720,45 +720,63 @@ function CheckQuest()
     end
 end
 ------------------------------------------------------------------------------------------------------------------------
-local player = game.Players.LocalPlayer
+--// Services
+getgenv().Seriality = getgenv().Seriality or false
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
-local attacking = true  -- Toggle biến này để bật/tắt FastAttack
+
+--// Player
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+--// CameraShaker
+local CameraShakerR = require(ReplicatedStorage.Util.CameraShaker)
+CameraShakerR:Stop()
+
+--// Check if entity alive
 local function IsEntityAlive(entity)
-    if not entity then return false end
-    local humanoid = entity:FindFirstChild("Humanoid")
+    local humanoid = entity:FindFirstChildOfClass("Humanoid")
     return humanoid and humanoid.Health > 0
 end
+
+--// Get enemies and players in range
 local function GetEnemiesInRange(character, range)
-    local enemies = game:GetService("Workspace").Enemies:GetChildren()
-    local players = game:GetService("Players"):GetPlayers()
+    local enemies = Workspace.Enemies:GetChildren()
+    local players = Players:GetPlayers()
     local targets = {}
     local playerPos = character:GetPivot().Position
+
     for _, enemy in ipairs(enemies) do
         local rootPart = enemy:FindFirstChild("HumanoidRootPart")
         if rootPart and IsEntityAlive(enemy) then
-            local distance = (rootPart.Position - playerPos).Magnitude
-            if distance <= range then
+            if (rootPart.Position - playerPos).Magnitude <= range then
                 table.insert(targets, enemy)
             end
         end
     end
+
     for _, otherPlayer in ipairs(players) do
         if otherPlayer ~= player and otherPlayer.Character then
             local rootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
             if rootPart and IsEntityAlive(otherPlayer.Character) then
-                local distance = (rootPart.Position - playerPos).Magnitude
-                if distance <= range then
+                if (rootPart.Position - playerPos).Magnitude <= range then
                     table.insert(targets, otherPlayer.Character)
                 end
             end
         end
     end
+
     return targets
 end
-function AttackNoCoolDown()
+
+--// Attack function no cooldown
+local function AttackNoCoolDown()
     local character = player.Character
     if not character then return end
-    local equippedWeapon
+
+    local equippedWeapon = nil
     for _, item in ipairs(character:GetChildren()) do
         if item:IsA("Tool") then
             equippedWeapon = item
@@ -766,39 +784,117 @@ function AttackNoCoolDown()
         end
     end
     if not equippedWeapon then return end
+
     local enemiesInRange = GetEnemiesInRange(character, 60)
-    if equippedWeapon:FindFirstChild("LeftClickRemote") then
-        local attackCount = 1  
-        for _, enemy in ipairs(enemiesInRange) do
-            local rootPart = enemy:FindFirstChild("HumanoidRootPart")
-            if rootPart then
-                local direction = (rootPart.Position - character:GetPivot().Position).Unit
-                equippedWeapon.LeftClickRemote:FireServer(direction, attackCount)
-                attackCount = attackCount + 1
+    if #enemiesInRange == 0 then return end
+
+    local modules = ReplicatedStorage:FindFirstChild("Modules")
+    if not modules then return end
+
+    local attackEvent = modules:WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
+    local hitEvent = modules:WaitForChild("Net"):WaitForChild("RE/RegisterHit")
+    if not attackEvent or not hitEvent then return end
+
+    local targets, mainTarget = {}, nil
+    for _, enemy in ipairs(enemiesInRange) do
+        if not enemy:GetAttribute("IsBoat") then
+            local HitboxLimbs = {"RightLowerArm","RightUpperArm","LeftLowerArm","LeftUpperArm","RightHand","LeftHand"}
+            local hitPart = enemy:FindFirstChild(HitboxLimbs[math.random(#HitboxLimbs)]) or enemy.PrimaryPart
+            if hitPart then
+                table.insert(targets, {enemy, hitPart})
+                mainTarget = hitPart
             end
         end
-    else
-        local targets, mainTarget = {}, nil
-        for _, enemy in ipairs(enemiesInRange) do
-            if not enemy:GetAttribute("IsBoat") then
-                local head = enemy:FindFirstChild("Head")
-                if head then
-                    table.insert(targets, { enemy, head })
-                    mainTarget = head
-                end
+    end
+    if not mainTarget then return end
+
+    attackEvent:FireServer(0)
+
+    local playerScripts = player:FindFirstChild("PlayerScripts")
+    if not playerScripts then return end
+
+    local localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+    while not localScript do
+        playerScripts.ChildAdded:Wait()
+        localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+    end
+
+    local hitFunction
+    if getsenv then
+        local success, scriptEnv = pcall(getsenv, localScript)
+        if success and scriptEnv then
+            hitFunction = scriptEnv._G.SendHitsToServer
+        end
+    end
+
+    local successFlags, combatRemoteThread = pcall(function()
+        return require(modules.Flags).COMBAT_REMOTE_THREAD or false
+    end)
+
+    if successFlags and combatRemoteThread and hitFunction then
+        hitFunction(mainTarget, targets)
+    elseif successFlags and not combatRemoteThread then
+        hitEvent:FireServer(mainTarget, targets)
+    end
+end
+
+--// Get monster near player
+local function get_Monster()
+    for _, enemy in pairs(Workspace.Enemies:GetChildren()) do
+        local c = enemy:FindFirstChild("UpperTorso") or enemy:FindFirstChild("Head")
+        if enemy:FindFirstChild("HumanoidRootPart", true) and c then
+            if (c.Position - player.Character.HumanoidRootPart.Position).Magnitude <= 50 then
+                return true, c.Position
             end
         end
-        if mainTarget then
-            local storage = game:GetService("ReplicatedStorage")
-            local attackEvent = storage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
-            local hitEvent = storage:WaitForChild("Modules"):WaitForChild("Net"):WaitForChild("RE/RegisterHit")
-            pcall(function()
-                attackEvent:FireServer(0.15)
-                hitEvent:FireServer(mainTarget, targets)
-            end)
+    end
+    for _, beast in pairs(Workspace.SeaBeasts:GetChildren()) do
+        if beast:FindFirstChild("HumanoidRootPart") and beast:FindFirstChild("Health") and beast.Health.Value > 0 then
+            return true, beast.HumanoidRootPart.Position
+        end
+    end
+    for _, vehicle in pairs(Workspace.Enemies:GetChildren()) do
+        if vehicle:FindFirstChild("Health") and vehicle.Health.Value > 0 and vehicle:FindFirstChild("VehicleSeat") then
+            return true, vehicle.Engine.Position
+        end
+    end
+    return false, nil
+end
+
+--// Activate tool functions
+local function Actived()
+    local tool = player.Character:FindFirstChildOfClass("Tool")
+    if tool then
+        for _, c in next, getconnections(tool.Activated) do
+            if typeof(c.Function) == 'function' then
+                getupvalues(c.Function)
+            end
         end
     end
 end
+
+--// Main loop
+task.spawn(function()
+    RunService.Heartbeat:Connect(function()
+        pcall(function()
+            if not getgenv().Seriality then return end
+            AttackNoCoolDown()
+            local Pretool = player.Character:FindFirstChildOfClass("Tool")
+            if Pretool then
+                local ToolTip = Pretool.ToolTip
+                local MobAura, Mon = get_Monster()
+                if ToolTip == "Blox Fruit" and MobAura then
+                    local LeftClickRemote = Pretool:FindFirstChild('LeftClickRemote')
+                    if LeftClickRemote then
+                        Actived()
+                        LeftClickRemote:FireServer(Vector3.new(0.01, -500, 0.01), 1, true)
+                        LeftClickRemote:FireServer(false)
+                    end
+                end
+            end
+        end)
+    end)
+end)
 
 
 
@@ -2823,7 +2919,7 @@ spawn(function()
                                     task.wait()
                                     EquipWeapon(_G.SelectWeapon)
                                     AutoHaki()
-                                    AttackNoCoolDown()
+                                    getgenv().Seriality = true
                                     PosMon = enemy.HumanoidRootPart.CFrame
                                     TP1(enemy.HumanoidRootPart.CFrame * Pos)
                                     enemy.HumanoidRootPart.CanCollide = false
@@ -2888,7 +2984,7 @@ spawn(function()
                             end
                             topos(v2128.HumanoidRootPart.CFrame * Pos );
                             v2128.HumanoidRootPart.CanCollide = false;
-                            AttackNoCoolDown()
+                            getgenv().Seriality = true
                             v2128.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
                             AutoFarmNearestMagnet = true;
                             PosMonNear = v2128.HumanoidRootPart.CFrame;
@@ -3043,7 +3139,7 @@ if World2 then
                                             task.wait();
                                             AutoHaki();
                                             EquipWeapon(_G.SelectWeapon);
-                                            AttackNoCoolDown()
+                                            getgenv().Seriality = true
                                             topos(v3033.HumanoidRootPart.CFrame * Pos );
                                             v3033.HumanoidRootPart.CFrame = OldCFrameThird;
                                             v3033.HumanoidRootPart.Size = Vector3.new(50, 50, 50);
@@ -3088,7 +3184,7 @@ if World2 then
                                                 task.wait();
                                                 sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
                                                 EquipWeapon(_G.SelectWeapon);
-                                                AttackNoCoolDown()
+                                                getgenv().Seriality = true
                                                 AutoHaki();
                                                 v2920.HumanoidRootPart.Transparency = 1;
                                                 v2920.HumanoidRootPart.CanCollide = false;
@@ -3125,7 +3221,7 @@ if World2 then
                                         task.wait();
                                         sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
                                         EquipWeapon(_G.SelectWeapon);
-                                        AttackNoCoolDown()
+                                        getgenv().Seriality = true
                                         AutoHaki();
                                         v2922.HumanoidRootPart.Transparency = 1;
                                         v2922.HumanoidRootPart.CanCollide = false;
@@ -3221,7 +3317,7 @@ if World2 then
                                     task.wait();
                                     AutoHaki();
                                     EquipWeapon(_G.SelectWeapon);
-                                    AttackNoCoolDown()
+                                    getgenv().Seriality = true
                                     topos(CFrame.new(448.46756, 199.356781, -441.389252));
                                 until (v2722.Humanoid.Health <= 0) or (_G.Factory == false)
                             end
@@ -3567,7 +3663,7 @@ spawn(function()
                                     AutoHaki()
                                     StartMaterialMagnet = true
                                     EquipWeapon(_G.SelectWeapon)
-                                    AttackNoCoolDown()
+                                    getgenv().Seriality = true
                                     TP1(enemy.HumanoidRootPart.CFrame * Pos)
                                     enemy.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
                                     enemy.HumanoidRootPart.Transparency = 1
@@ -3917,7 +4013,7 @@ spawn(function()
                                     task.wait()
                                     AutoHaki();
                                     EquipWeapon(_G.SelectWeapon)
-                                    AttackNoCoolDown()
+                                    getgenv().Seriality = true
                                     v1035.HumanoidRootPart.CanCollide = false;
                                     v1035.Humanoid.WalkSpeed = 0;
                                     v1035.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
@@ -4012,7 +4108,7 @@ if World1 then
                                                 task.wait()
                                                 AutoHaki()
                                                 EquipWeapon(_G.SelectWeapon)
-                                                AttackNoCoolDown()
+                                                getgenv().Seriality = true
                                                 mobLeader.HumanoidRootPart.CanCollide = false
                                                 mobLeader.Humanoid.WalkSpeed = 0
                                                 topos(mobLeader.HumanoidRootPart.CFrame * Pos)
@@ -4046,7 +4142,7 @@ if World1 then
                             repeat
                                 task.wait()
                                 EquipWeapon(_G.SelectWeapon)
-                                AttackNoCoolDown()
+                                getgenv().Seriality = true
                                 topos(saberExpert.HumanoidRootPart.CFrame * Pos)
                                 saberExpert.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
                                 saberExpert.HumanoidRootPart.Transparency = 1
@@ -4100,7 +4196,7 @@ if World1 then
                                 task.wait()
                                 AutoHaki()
                                 EquipWeapon(_G.SelectWeapon)
-                                AttackNoCoolDown()
+                                getgenv().Seriality = true
                                 saw.HumanoidRootPart.CanCollide = false
                                 saw.Humanoid.WalkSpeed = 0
                                 saw.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
@@ -4149,7 +4245,7 @@ if World1 then
                             task.wait()
                             AutoHaki()
                             EquipWeapon(_G.SelectWeapon)
-                            AttackNoCoolDown()
+                            getgenv().Seriality = true
                             thunderGod.HumanoidRootPart.CanCollide = false
                             thunderGod.Humanoid.WalkSpeed = 0
                             thunderGod.HumanoidRootPart.Size = Vector3.new(50, 50, 50)

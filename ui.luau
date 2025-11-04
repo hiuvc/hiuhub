@@ -2842,9 +2842,8 @@ task.spawn(function()
             for _, fruit in ipairs(mirageStock) do
                 StocksStatus:SetDesc(" -", fruit.name)
             end
+            task.wait(1)
         end
-
-        task.wait(30) 
     end
 end)
 -----------------Server-------------------------------------------------------------------------------

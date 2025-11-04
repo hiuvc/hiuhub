@@ -2801,62 +2801,56 @@ local StocksStatus = v16.Server_Status:AddParagraph({
 local HttpService = game:GetService("HttpService")
 
 local function fetchFruitsStock()
-    local url = "https://www.gamersberg.com/api/blox-fruits/stock"
-
-    local success, response = pcall(function()
-        return HttpService:GetAsync(url)
+    local url = "https://fruitsstockapi.onrender.com/fruitstock"
+    local response
+    local success, err = pcall(function()
+        response = game:HttpGet(url)
     end)
     if not success then
-        warn("[API ERROR]", response)
+        warn("[HTTP ERROR]:", err)
         return nil, nil
     end
 
-    local decodeSuccess, data = pcall(function()
-        return HttpService:JSONDecode(response)
+    local data
+    local decodeSuccess, decodeErr = pcall(function()
+        data = HttpService:JSONDecode(response)
     end)
     if not decodeSuccess then
-        warn("[JSON ERROR]", data)
+        warn("[JSON ERROR]:", decodeErr)
         return nil, nil
     end
 
-    if not data.success or not data.data then
-        warn("[INVALID DATA STRUCTURE]")
+    if data.status ~= "success" then
+        warn("[INVALID DATA]: status not success")
         return nil, nil
     end
 
-    local stock = data.data[1]
-    local normalStock = stock.normalStock or {}
-    local mirageStock = stock.mirageStock or {}
+    local normalStock = data.normalStock or {}
+    local mirageStock = data.mirageStock or {}
 
     return normalStock, mirageStock
 end
 
-task.spawn(function()
-    while true do
+spawn(function()
+    while task.wait(30) do -- cập nhật 30s/lần
         local normalStock, mirageStock = fetchFruitsStock()
         if normalStock and mirageStock then
-            local contentLines = {}
-
-            table.insert(contentLines, "🌍 Normal Stock:")
+            local lines = {}
+            table.insert(lines, "🌍 Normal Stock:")
             for _, fruit in ipairs(normalStock) do
-                table.insert(contentLines, " - "..fruit.name.." | Giá: "..fruit.price)
+                table.insert(lines, " - "..fruit.name.." | Giá: "..fruit.price)
             end
 
-            table.insert(contentLines, "🌌 Mirage Stock:")
+            table.insert(lines, "🌌 Mirage Stock:")
             for _, fruit in ipairs(mirageStock) do
-                table.insert(contentLines, " - "..fruit.name.." | Giá: "..fruit.price)
+                table.insert(lines, " - "..fruit.name.." | Giá: "..fruit.price)
             end
 
-            -- Gộp thành 1 string, ngăn cách bằng newline
-            local finalContent = table.concat(contentLines, "\n")
-
-            -- Cập nhật paragraph
-            StocksStatus:SetDesc(finalContent)
+            StocksStatus:SetDesc(table.concat(lines, "\n"))
         end
-
-        task.wait(30) -- 30s update một lần
     end
 end)
+
 
 -----------------Server-------------------------------------------------------------------------------
 local ServerLabel = v16.Server_Status:AddSection("Server")

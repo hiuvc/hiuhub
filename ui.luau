@@ -5439,10 +5439,6 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
-        if hum:FindFirstChild("Animator") then
-            hum.Animator:Destroy()
-        end
-        hum:ChangeState(14)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
         -- Tween quái đến vị trí trước người chơi

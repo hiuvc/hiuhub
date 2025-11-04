@@ -2797,6 +2797,7 @@ local StocksStatus = v16.Server_Status:AddParagraph({
     Title = "Current Fruits Stock:",
     Content = "",
 })
+
 local HttpService = game:GetService("HttpService")
 
 local function fetchFruitsStock()
@@ -2830,22 +2831,33 @@ local function fetchFruitsStock()
     return normalStock, mirageStock
 end
 
-
 task.spawn(function()
     while true do
         local normalStock, mirageStock = fetchFruitsStock()
         if normalStock and mirageStock then
+            local contentLines = {}
+
+            table.insert(contentLines, "🌍 Normal Stock:")
             for _, fruit in ipairs(normalStock) do
-                StocksStatus:SetDesc(" -", fruit.name)
+                table.insert(contentLines, " - "..fruit.name.." | Giá: "..fruit.price)
             end
 
+            table.insert(contentLines, "🌌 Mirage Stock:")
             for _, fruit in ipairs(mirageStock) do
-                StocksStatus:SetDesc(" -", fruit.name)
+                table.insert(contentLines, " - "..fruit.name.." | Giá: "..fruit.price)
             end
-            task.wait(1)
+
+            -- Gộp thành 1 string, ngăn cách bằng newline
+            local finalContent = table.concat(contentLines, "\n")
+
+            -- Cập nhật paragraph
+            StocksStatus:SetDesc(finalContent)
         end
+
+        task.wait(30) -- 30s update một lần
     end
 end)
+
 -----------------Server-------------------------------------------------------------------------------
 local ServerLabel = v16.Server_Status:AddSection("Server")
 local JobId = v16.Server_Status:AddParagraph({Title = "Job ID", Content = "", })

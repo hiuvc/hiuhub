@@ -2793,7 +2793,60 @@ spawn(function()
     end
 end)
 
+local StocksStatus = v16.Server_Status:AddParagraph({
+    Title = "Current Fruits Stock:",
+    Content = "",
+})
+local HttpService = game:GetService("HttpService")
 
+local function fetchFruitsStock()
+    local url = "https://www.gamersberg.com/api/blox-fruits/stock"
+
+    local success, response = pcall(function()
+        return HttpService:GetAsync(url)
+    end)
+    if not success then
+        warn("[API ERROR]", response)
+        return nil, nil
+    end
+
+    local decodeSuccess, data = pcall(function()
+        return HttpService:JSONDecode(response)
+    end)
+    if not decodeSuccess then
+        warn("[JSON ERROR]", data)
+        return nil, nil
+    end
+
+    if not data.success or not data.data then
+        warn("[INVALID DATA STRUCTURE]")
+        return nil, nil
+    end
+
+    local stock = data.data[1]
+    local normalStock = stock.normalStock or {}
+    local mirageStock = stock.mirageStock or {}
+
+    return normalStock, mirageStock
+end
+
+
+task.spawn(function()
+    while true do
+        local normalStock, mirageStock = fetchFruitsStock()
+        if normalStock and mirageStock then
+            for _, fruit in ipairs(normalStock) do
+                StocksStatus:SetDesc(" -", fruit.name)
+            end
+
+            for _, fruit in ipairs(mirageStock) do
+                StocksStatus:SetDesc(" -", fruit.name)
+            end
+        end
+
+        task.wait(30) 
+    end
+end)
 -----------------Server-------------------------------------------------------------------------------
 local ServerLabel = v16.Server_Status:AddSection("Server")
 local JobId = v16.Server_Status:AddParagraph({Title = "Job ID", Content = "", })

@@ -2774,7 +2774,7 @@ local FruitStatus = v16.Server_Status:AddParagraph({
 
 -- Vòng lặp tự động kiểm tra trái cây mỗi giây
 spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         pcall(function()
             local foundFruits = {}
 
@@ -2832,38 +2832,32 @@ local function fetchFruitsStock()
 end
 
 spawn(function()
-    local updating = false
     while task.wait(0.5) do 
-        if not updating then
-            updating = true
-            local normalStock, mirageStock = fetchFruitsStock()
-            if normalStock and mirageStock then
-                local ignoreList = {
-                    ["Rocket-Rocket"] = true,
-                    ["Spin-Spin"] = true
-                }
+        local normalStock, mirageStock = fetchFruitsStock()
+        if normalStock and mirageStock then
+            local ignoreList = {
+                ["Rocket-Rocket"] = true,
+                ["Spin-Spin"] = true
+            }
 
-                local lines = {}
-                table.insert(lines, "🌍 Normal Stock:")
-                for _, fruit in ipairs(normalStock) do
-                    if not ignoreList[fruit.name] then
-                        table.insert(lines, " - " .. fruit.name)
-                    end
+            local lines = {}
+            table.insert(lines, "🌍 Normal Stock:")
+            for _, fruit in ipairs(normalStock) do
+                if not ignoreList[fruit.name] then
+                    table.insert(lines, " - " .. fruit.name)
                 end
-
-                table.insert(lines, "🏝 Mirage Stock:")
-                for _, fruit in ipairs(mirageStock) do
-                    if not ignoreList[fruit.name] then
-                        table.insert(lines, " - " .. fruit.name)
-                    end
-                end
-
-                StocksStatus:SetDesc(table.concat(lines, "\n"))
-            else
-                StocksStatus:SetDesc("⚠️ Failed to fetch data. Retrying...")
             end
 
-            updating = false
+            table.insert(lines, "🏝 Mirage Stock:")
+            for _, fruit in ipairs(mirageStock) do
+                if not ignoreList[fruit.name] then
+                    table.insert(lines, " - " .. fruit.name)
+                end
+            end
+
+            StocksStatus:SetDesc(table.concat(lines, "\n"))
+        else
+            StocksStatus:SetDesc("⚠️ Failed to fetch data. Retrying...")
         end
     end
 end)

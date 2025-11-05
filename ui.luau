@@ -2832,24 +2832,44 @@ local function fetchFruitsStock()
 end
 
 spawn(function()
-    while task.wait(30) do -- cập nhật 30s/lần
-        local normalStock, mirageStock = fetchFruitsStock()
-        if normalStock and mirageStock then
-            local lines = {}
-            table.insert(lines, "🌍 Normal Stock:")
-            for _, fruit in ipairs(normalStock) do
-                table.insert(lines, " - "..fruit.name.." | Giá: "..fruit.price)
+    local updating = false
+    while task.wait(0.5) do 
+        if not updating then
+            updating = true
+            StocksStatus:SetDesc("🔄 Updating...")
+
+            local normalStock, mirageStock = fetchFruitsStock()
+            if normalStock and mirageStock then
+                local ignoreList = {
+                    ["Rocket-Rocket"] = true,
+                    ["Spin-Spin"] = true
+                }
+
+                local lines = {}
+                table.insert(lines, "🌍 Normal Stock:")
+                for _, fruit in ipairs(normalStock) do
+                    if not ignoreList[fruit.name] then
+                        table.insert(lines, " - " .. fruit.name)
+                    end
+                end
+
+                table.insert(lines, "🏝 Mirage Stock:")
+                for _, fruit in ipairs(mirageStock) do
+                    if not ignoreList[fruit.name] then
+                        table.insert(lines, " - " .. fruit.name)
+                    end
+                end
+
+                StocksStatus:SetDesc(table.concat(lines, "\n"))
+            else
+                StocksStatus:SetDesc("⚠️ Failed to fetch data. Retrying...")
             end
 
-            table.insert(lines, "🌌 Mirage Stock:")
-            for _, fruit in ipairs(mirageStock) do
-                table.insert(lines, " - "..fruit.name.." | Giá: "..fruit.price)
-            end
-
-            StocksStatus:SetDesc(table.concat(lines, "\n"))
+            updating = false
         end
     end
 end)
+
 
 
 -----------------Server-------------------------------------------------------------------------------

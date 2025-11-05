@@ -5504,39 +5504,37 @@ v4033:OnChanged(function(v4034)
     _G.BringMonster = v4034;
 end);
 
-function TweenEnemyToTarget(enemy, targetCFrame, size)
+local function TweenEnemyToPredictedPlayer(enemy, player, size)
     pcall(function()
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local hum = enemy:FindFirstChild("Humanoid")
         if not hrp or not hum or hum.Health <= 0 then return end
 
-        -- Cấu hình cơ bản
-        hrp.Size = size or Vector3.new(50, 50, 50)
+        hrp.Size = size or Vector3.new(50,50,50)
         hrp.CanCollide = false
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-        -- Tween quái đến vị trí trước người chơi
-        local player = game.Players.LocalPlayer
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if not root then return end
 
-        local posBelowPlayer = root.CFrame * CFrame.new(0, -21, 0)
-        local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
-        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = posBelowPlayer})
+        -- Dự đoán vị trí player
+        local deltaTime = 0.25
+        local predictedPos = root.Position + root.Velocity * deltaTime
+        local posBelowPlayer = predictedPos - Vector3.new(0,21,0)
+        local tweenInfo = TweenInfo.new(deltaTime, Enum.EasingStyle.Linear)
+        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = CFrame.new(posBelowPlayer)})
 
         tween:Play()
 
-        -- Khi tween kết thúc, giữ quái cố định tại vị trí cuối
         tween.Completed:Connect(function()
             if not hrp.Parent or hum.Health <= 0 then return end
-            hrp.CFrame = CFrame.new(posBelowPlayer.Position)
+            hrp.CFrame = CFrame.new(posBelowPlayer)
             hrp.Velocity = Vector3.zero
             hrp.RotVelocity = Vector3.zero
 
-            -- Tạo kết nối để giữ mob anchored nếu cần trong thời gian dài
             local RunService = game:GetService("RunService")
             local conn
             conn = RunService.Stepped:Connect(function()
@@ -5544,13 +5542,14 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
                     conn:Disconnect()
                     return
                 end
-                hrp.CFrame = CFrame.new(posBelowPlayer.Position)
+                hrp.CFrame = CFrame.new(posBelowPlayer)
                 hrp.Velocity = Vector3.zero
                 hrp.RotVelocity = Vector3.zero
             end)
         end)
     end)
 end
+
 
 
 spawn(function()

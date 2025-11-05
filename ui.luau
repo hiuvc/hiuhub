@@ -5504,13 +5504,15 @@ v4033:OnChanged(function(v4034)
     _G.BringMonster = v4034;
 end);
 
-function TweenEnemyToTarget(enemy, size)
+local TweenService = game:GetService("TweenService")
+
+function TweenEnemyToTarget(enemy, targetCFrame, size)
     pcall(function()
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local hum = enemy:FindFirstChild("Humanoid")
         if not hrp or not hum or hum.Health <= 0 then return end
 
-        hrp.Size = size or Vector3.new(4, 4, 4) -- để vừa phải
+        hrp.Size = size or Vector3.new(4, 4, 4) -- kích thước vừa phải
         hrp.CanCollide = false
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
@@ -5522,19 +5524,29 @@ function TweenEnemyToTarget(enemy, size)
         hum:ChangeState(Enum.HumanoidStateType.Physics)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-        local player = game.Players.LocalPlayer
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if not root then return end
+        -- Xác định vị trí mục tiêu
+        local finalCFrame
+        if targetCFrame then
+            -- Nếu truyền targetCFrame thì dùng luôn
+            finalCFrame = targetCFrame
+        else
+            -- Nếu không có, đặt dưới người chơi nhưng không lún xuống
+            local player = game.Players.LocalPlayer
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if not root then return end
 
-        -- offset theo HRP của quái để không lún xuống
-        local offsetY = hrp.Size.Y / 2 + 2 -- +2 studs trên đầu để tránh chạm đất
-        local targetPos = root.Position - Vector3.new(0, offsetY, 0)
+            local offsetY = hrp.Size.Y / 2 + 2 -- +2 studs để tránh lún
+            local targetPos = root.Position - Vector3.new(0, offsetY, 0)
+            finalCFrame = CFrame.new(targetPos)
+        end
 
+        -- Tween tới vị trí mục tiêu
         local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
-        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = finalCFrame})
         tween:Play()
     end)
 end
+
 
 
 spawn(function()

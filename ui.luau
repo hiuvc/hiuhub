@@ -5536,23 +5536,29 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         tween.Completed:Connect(function()
             if not hrp.Parent or hum.Health <= 0 then return end
 
-            -- Xóa BodyMover cũ nếu có
-            if hrp:FindFirstChild("BodyPosition") then
-                hrp.BodyPosition:Destroy()
+            -- Xóa AlignPosition cũ nếu có
+            if hrp:FindFirstChild("AlignPosition") then
+                hrp.AlignPosition:Destroy()
+            end
+            if hrp:FindFirstChild("Attachment") then
+                hrp.Attachment:Destroy()
             end
 
-            -- Tạo BodyPosition để giữ enemy đứng yên
-            local bp = Instance.new("BodyPosition")
-            bp.MaxForce = Vector3.new(1e9, 1e9, 1e9) -- lực cực lớn để giữ cố định
-            bp.P = 1e5
-            bp.D = 1e3
-            bp.Position = posBelowPlayer.Position
-            bp.Parent = hrp
+            -- Tạo Attachment để làm gốc neo
+            local attachment = Instance.new("Attachment")
+            attachment.Parent = hrp
+
+            -- Tạo AlignPosition để giữ enemy đứng yên
+            local alignPos = Instance.new("AlignPosition")
+            alignPos.Attachment0 = attachment
+            alignPos.Position = posBelowPlayer.Position
+            alignPos.MaxForce = 1e9
+            alignPos.Responsiveness = 200
+            alignPos.Mode = Enum.PositionAlignmentMode.OneAttachment
+            alignPos.Parent = hrp
         end)
     end)
 end
-
-
 
 
 spawn(function()

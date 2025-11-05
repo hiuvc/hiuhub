@@ -1,6 +1,4 @@
 
-repeat wait() until game:IsLoaded() and game.Players.LocalPlayer:FindFirstChild("DataLoaded")
-
 -- Reliable team selection method
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
@@ -61,57 +59,64 @@ local v16 = {
     })
 };
 v15:SelectTab(1)
-local v17 = Fluent.Options;
-local v22 = Instance.new("ScreenGui");
-local v23 = Instance.new("ImageButton");
-local v24 = Instance.new("UICorner");
-local v25 = Instance.new("ParticleEmitter");
-local v26 = game:GetService("TweenService");
-v22.Parent = game.CoreGui;
-v22.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
-v23.Parent = v22;
-v23.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
-v23.BorderSizePixel = 0;
-v23.Position = UDim2.new(0.120833337 - 0.1, 0, 0.0952890813 + 0.01, 0);
-v23.Size = UDim2.new(0, 50, 0, 50);
-v23.Draggable = true;
-v23.Image = "http://www.roblox.com/asset/?id=133979080007875";
-v24.Parent = v23;
-v24.CornerRadius = UDim.new(0, 12);
-v25.Parent = v23;
-v25.LightEmission = 1;
+local v17 = Fluent.Options
+local v22 = Instance.new("ScreenGui")
+local v23 = Instance.new("ImageButton")
+local v24 = Instance.new("UICorner")
+local v25 = Instance.new("ParticleEmitter")
+local v26 = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+v22.Parent = game.CoreGui
+v22.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+v23.Parent = v22
+v23.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+v23.BorderSizePixel = 0
+v23.Position = UDim2.new(0.120833337 - 0.1, 0, 0.0952890813 + 0.01, 0)
+v23.Size = UDim2.new(0, 50, 0, 50)
+v23.Draggable = true
+v23.Image = "http://www.roblox.com/asset/?id=133979080007875"
+v24.Parent = v23
+v24.CornerRadius = UDim.new(0, 12)
+v25.Parent = v23
+v25.LightEmission = 1
 v25.Size = NumberSequence.new({
     NumberSequenceKeypoint.new(0, 0.1),
     NumberSequenceKeypoint.new(1, 0)
-});
-v25.Lifetime = NumberRange.new(0.5, 1);
-v25.Rate = 0;
-v25.Speed = NumberRange.new(5, 10);
-v25.Color = ColorSequence.new(Color3.fromRGB(255, 85, 255), Color3.fromRGB(85, 255, 255));
-local v47 = v26:Create(v23, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-    Rotation = 360
-});
+})
+v25.Lifetime = NumberRange.new(0.5, 1)
+v25.Rate = 0
+v25.Speed = NumberRange.new(5, 10)
+v25.Color = ColorSequence.new(Color3.fromRGB(255, 85, 255), Color3.fromRGB(85, 255, 255))
+
+local spin = v26:Create(v23, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Rotation = 360 })
+
 v23.MouseButton1Down:Connect(function()
-    v25.Rate = 100;
+    v25.Rate = 100
     task.delay(1, function()
-        v25.Rate = 0;
-    end);
-    v47:Play();
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game);
-    v47.Completed:Connect(function()
-        v23.Rotation = 0;
-    end);
-    local v235 = v26:Create(v23, TweenInfo.new(0.2, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
+        v25.Rate = 0
+    end)
+
+    spin:Play()
+    spin.Completed:Connect(function()
+        v23.Rotation = 0
+    end)
+
+    local grow = v26:Create(v23, TweenInfo.new(0.2, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 60, 0, 60)
-    });
-    v235:Play();
-    v235.Completed:Connect(function()
-        local v483 = v26:Create(v23, TweenInfo.new(0.2, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
-            Size = UDim2.new(0, 50, 0, 50)
-        });
-        v483:Play();
-    end);
-end);
+    })
+    local shrink = v26:Create(v23, TweenInfo.new(0.2, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 50, 0, 50)
+    })
+    grow:Play()
+    grow.Completed:Connect(function()
+        shrink:Play()
+    end)
+
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)  -- nhấn
+    task.wait(0.1) -- giữ 0.1s
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game) -- nhả
+end)
 
 
 if (game.PlaceId == 2753915549) then
@@ -2774,7 +2779,7 @@ local FruitStatus = v16.Server_Status:AddParagraph({
 
 -- Vòng lặp tự động kiểm tra trái cây mỗi giây
 spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         pcall(function()
             local foundFruits = {}
 
@@ -2792,6 +2797,76 @@ spawn(function()
         end)
     end
 end)
+
+local StocksStatus = v16.Server_Status:AddParagraph({
+    Title = "Current Fruits Stock:",
+    Content = "",
+})
+
+local HttpService = game:GetService("HttpService")
+
+local function fetchFruitsStock()
+    local url = "https://fruitsstockapi.onrender.com/fruitstock"
+    local response
+    local success, err = pcall(function()
+        response = game:HttpGet(url)
+    end)
+    if not success then
+        warn("[HTTP ERROR]:", err)
+        return nil, nil
+    end
+
+    local data
+    local decodeSuccess, decodeErr = pcall(function()
+        data = HttpService:JSONDecode(response)
+    end)
+    if not decodeSuccess then
+        warn("[JSON ERROR]:", decodeErr)
+        return nil, nil
+    end
+
+    if data.status ~= "success" then
+        warn("[INVALID DATA]: status not success")
+        return nil, nil
+    end
+
+    local normalStock = data.normalStock or {}
+    local mirageStock = data.mirageStock or {}
+
+    return normalStock, mirageStock
+end
+
+spawn(function()
+    while task.wait(0.5) do 
+        local normalStock, mirageStock = fetchFruitsStock()
+        if normalStock and mirageStock then
+            local ignoreList = {
+                ["Rocket-Rocket"] = true,
+                ["Spin-Spin"] = true
+            }
+
+            local lines = {}
+            table.insert(lines, "🌍 Normal Stock:")
+            for _, fruit in ipairs(normalStock) do
+                if not ignoreList[fruit.name] then
+                    table.insert(lines, " - " .. fruit.name)
+                end
+            end
+
+            table.insert(lines, "🏝 Mirage Stock:")
+            for _, fruit in ipairs(mirageStock) do
+                if not ignoreList[fruit.name] then
+                    table.insert(lines, " - " .. fruit.name)
+                end
+            end
+
+            StocksStatus:SetDesc(table.concat(lines, "\n"))
+        else
+            StocksStatus:SetDesc("⚠️ Failed to fetch data. Retrying...")
+        end
+    end
+end)
+
 
 
 -----------------Server-------------------------------------------------------------------------------
@@ -5427,34 +5502,62 @@ v4033:OnChanged(function(v4034)
     _G.BringMonster = v4034;
 end);
 
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
 function TweenEnemyToTarget(enemy, targetCFrame, size)
     pcall(function()
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
-        local hum = enemy:FindFirstChild("Humanoid")
-        if not hrp or not hum or hum.Health <= 0 then return end
+        local humanoid = enemy:FindFirstChild("Humanoid")
+        if not hrp or not humanoid or humanoid.Health <= 0 then return end
 
-        hrp.Size = size or Vector3.new(50, 50, 50)
+        -- Thiết lập HRP
+        hrp.Size = size or Vector3.new(4, 4, 4)
         hrp.CanCollide = false
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
-        if enemy.Humanoid:FindFirstChild("Animator") then
-            enemy.Humanoid.Animator:Destroy();
+        if humanoid:FindFirstChild("Animator") then
+            humanoid.Animator:Destroy()
         end
-        hum:ChangeState(14)
+
+        humanoid:ChangeState(Enum.HumanoidStateType.Physics)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-        local player = game.Players.LocalPlayer
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if not root then return end
+        -- Xác định targetCFrame
+        local finalCFrame
+        if targetCFrame then
+            finalCFrame = targetCFrame
+        else
+            -- Mặc định: dưới người chơi
+            local player = game.Players.LocalPlayer
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if not root then return end
 
-        local posBelowPlayer = root.CFrame * CFrame.new(0, -21, 0)
+            local offsetY = hrp.Size.Y / 2 + 2
+            finalCFrame = CFrame.new(root.Position - Vector3.new(0, offsetY, 0))
+        end
 
+        -- Tween đến targetCFrame
         local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
-        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = posBelowPlayer})
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = finalCFrame})
         tween:Play()
+
+        -- Giữ quái cố định tại targetCFrame
+        local anchorPos = finalCFrame.Position
+        local conn
+        conn = RunService.Stepped:Connect(function()
+            if not enemy.Parent or humanoid.Health <= 0 then
+                conn:Disconnect()
+                return
+            end
+            hrp.CFrame = CFrame.new(anchorPos)
+            hrp.Velocity = Vector3.zero
+            hrp.RotVelocity = Vector3.zero
+        end)
     end)
 end
+
 
 
 

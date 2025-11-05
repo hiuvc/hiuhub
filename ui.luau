@@ -5508,8 +5508,14 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
     pcall(function()
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local hum = enemy:FindFirstChild("Humanoid")
+        local animator = hum and hum:FindFirstChild("Animator")
 
         if not hrp or not hum or hum.Health <= 0 then return end
+
+        -- Xoá Animator để tránh animation can thiệp
+        if animator then
+            animator:Destroy()
+        end
 
         -- Cấu hình cơ bản
         hrp.Size = size or Vector3.new(50, 50, 50)
@@ -5517,8 +5523,6 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
-        local animator = humanoid:FindFirstChildOfClass("Animator")
-        if animator then animator:Destroy() end
 
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
@@ -5538,7 +5542,7 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         tween.Completed:Connect(function()
             if not hrp.Parent or hum.Health <= 0 then return end
 
-            -- Xóa AlignPosition cũ nếu có
+            -- Xoá AlignPosition cũ nếu có
             if hrp:FindFirstChild("AlignPosition") then
                 hrp.AlignPosition:Destroy()
             end
@@ -5561,7 +5565,6 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         end)
     end)
 end
-
 
 spawn(function()
     while task.wait() do

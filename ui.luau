@@ -5504,70 +5504,49 @@ v4033:OnChanged(function(v4034)
     _G.BringMonster = v4034;
 end);
 
-function TweenEnemyToTarget(enemies, player, size)
+local function TweenEnemyToPredictedPlayer(enemy, player, size)
     pcall(function()
-        -- Tính vị trí trung bình của tất cả quái còn sống
-        local sumPos = Vector3.new(0,0,0)
-        local count = 0
-        for _, enemy in ipairs(enemies) do
-            local hrp = enemy:FindFirstChild("HumanoidRootPart")
-            local hum = enemy:FindFirstChild("Humanoid")
-            if hrp and hum and hum.Health > 0 then
-                sumPos = sumPos + hrp.Position
-                count = count + 1
-            end
-        end
-        if count == 0 then return end
-        local averagePos = sumPos / count
+        local hrp = enemy:FindFirstChild("HumanoidRootPart")
+        local hum = enemy:FindFirstChild("Humanoid")
+        if not hrp or not hum or hum.Health <= 0 then return end
 
-        -- Lấy player root và dự đoán vị trí
+        hrp.Size = size or Vector3.new(50,50,50)
+        hrp.CanCollide = false
+        if enemy:FindFirstChild("Head") then
+            enemy.Head.CanCollide = false
+        end
+        sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if not root then return end
+
+        -- Dự đoán vị trí player
         local deltaTime = 0.25
-        local predictedPlayerPos = root.Position + root.Velocity * deltaTime
+        local predictedPos = root.Position + root.Velocity * deltaTime
+        local posBelowPlayer = predictedPos - Vector3.new(0,21,0)
+        local tweenInfo = TweenInfo.new(deltaTime, Enum.EasingStyle.Linear)
+        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = CFrame.new(posBelowPlayer)})
 
-        -- Tạo vị trí gom quái
-        local gatherPos = averagePos:Lerp(predictedPlayerPos, 0.8)
-        gatherPos = gatherPos - Vector3.new(0,21,0) -- giữ quái thấp hơn player
+        tween:Play()
 
-        -- Tween từng quái về vị trí gatherPos
-        local TweenService = game:GetService("TweenService")
-        for _, enemy in ipairs(enemies) do
-            local hrp = enemy:FindFirstChild("HumanoidRootPart")
-            local hum = enemy:FindFirstChild("Humanoid")
-            if hrp and hum and hum.Health > 0 then
-                hrp.Size = size or Vector3.new(50,50,50)
-                hrp.CanCollide = false
-                if enemy:FindFirstChild("Head") then
-                    enemy.Head.CanCollide = false
+        tween.Completed:Connect(function()
+            if not hrp.Parent or hum.Health <= 0 then return end
+            hrp.CFrame = CFrame.new(posBelowPlayer)
+            hrp.Velocity = Vector3.zero
+            hrp.RotVelocity = Vector3.zero
+
+            local RunService = game:GetService("RunService")
+            local conn
+            conn = RunService.Stepped:Connect(function()
+                if not hrp.Parent or hum.Health <= 0 then
+                    conn:Disconnect()
+                    return
                 end
-                sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
-
-                local tweenInfo = TweenInfo.new(deltaTime, Enum.EasingStyle.Linear)
-                local tween = TweenService:Create(hrp, tweenInfo, {CFrame = CFrame.new(gatherPos)})
-                tween:Play()
-
-                -- Giữ quái anchored sau khi tween kết thúc
-                tween.Completed:Connect(function()
-                    if not hrp.Parent or hum.Health <= 0 then return end
-                    hrp.CFrame = CFrame.new(gatherPos)
-                    hrp.Velocity = Vector3.zero
-                    hrp.RotVelocity = Vector3.zero
-
-                    local RunService = game:GetService("RunService")
-                    local conn
-                    conn = RunService.Stepped:Connect(function()
-                        if not hrp.Parent or hum.Health <= 0 then
-                            conn:Disconnect()
-                            return
-                        end
-                        hrp.CFrame = CFrame.new(gatherPos)
-                        hrp.Velocity = Vector3.zero
-                        hrp.RotVelocity = Vector3.zero
-                    end)
-                end)
-            end
-        end
+                hrp.CFrame = CFrame.new(posBelowPlayer)
+                hrp.Velocity = Vector3.zero
+                hrp.RotVelocity = Vector3.zero
+            end)
+        end)
     end)
 end
 
@@ -5695,7 +5674,7 @@ spawn(function()
                         }, Mon)
                         local dist = (hrp.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
                         if (isSpecial and dist <= 220) or (not isSpecial and dist <= _G.BringMode) then
-                            TweenEnemyToTarget(enemy, PosMon)
+                            TweenEnemyToPredictedPlayer(enemy, PosMon)
                             brought += 1
                         end
                     end

@@ -5517,6 +5517,8 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
+        local animator = humanoid:FindFirstChildOfClass("Animator")
+        if animator then animator:Destroy() end
 
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 

@@ -5505,47 +5505,61 @@ v4033:OnChanged(function(v4034)
 end);
 
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
 function TweenEnemyToTarget(enemy, targetCFrame, size)
     pcall(function()
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
-        local hum = enemy:FindFirstChild("Humanoid")
-        if not hrp or not hum or hum.Health <= 0 then return end
+        local humanoid = enemy:FindFirstChild("Humanoid")
+        if not hrp or not humanoid or humanoid.Health <= 0 then return end
 
-        hrp.Size = size or Vector3.new(4, 4, 4) -- kích thước vừa phải
+        -- Thiết lập HRP
+        hrp.Size = size or Vector3.new(4, 4, 4)
         hrp.CanCollide = false
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
-        if hum:FindFirstChild("Animator") then
-            hum.Animator:Destroy()
+        if humanoid:FindFirstChild("Animator") then
+            humanoid.Animator:Destroy()
         end
 
-        hum:ChangeState(Enum.HumanoidStateType.Physics)
+        humanoid:ChangeState(Enum.HumanoidStateType.Physics)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-        -- Xác định vị trí mục tiêu
+        -- Xác định targetCFrame
         local finalCFrame
         if targetCFrame then
-            -- Nếu truyền targetCFrame thì dùng luôn
             finalCFrame = targetCFrame
         else
-            -- Nếu không có, đặt dưới người chơi nhưng không lún xuống
+            -- Mặc định: dưới người chơi
             local player = game.Players.LocalPlayer
             local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if not root then return end
 
-            local offsetY = hrp.Size.Y / 2 + 2 -- +2 studs để tránh lún
-            local targetPos = root.Position - Vector3.new(0, offsetY, 0)
-            finalCFrame = CFrame.new(targetPos)
+            local offsetY = hrp.Size.Y / 2 + 2
+            finalCFrame = CFrame.new(root.Position - Vector3.new(0, offsetY, 0))
         end
 
-        -- Tween tới vị trí mục tiêu
+        -- Tween đến targetCFrame
         local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
         local tween = TweenService:Create(hrp, tweenInfo, {CFrame = finalCFrame})
         tween:Play()
+
+        -- Giữ quái cố định tại targetCFrame
+        local anchorPos = finalCFrame.Position
+        local conn
+        conn = RunService.Stepped:Connect(function()
+            if not enemy.Parent or humanoid.Health <= 0 then
+                conn:Disconnect()
+                return
+            end
+            hrp.CFrame = CFrame.new(anchorPos)
+            hrp.Velocity = Vector3.zero
+            hrp.RotVelocity = Vector3.zero
+        end)
     end)
 end
+
 
 
 

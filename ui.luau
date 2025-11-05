@@ -5504,67 +5504,38 @@ v4033:OnChanged(function(v4034)
     _G.BringMonster = v4034;
 end);
 
-function TweenEnemyToTarget(enemy, targetCFrame, size)
+function TweenEnemyToTarget(enemy, size)
     pcall(function()
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local hum = enemy:FindFirstChild("Humanoid")
-        local animator = hum and hum:FindFirstChild("Animator")
-
         if not hrp or not hum or hum.Health <= 0 then return end
 
-        -- Xoá Animator để tránh animation can thiệp
-        if animator then
-            animator:Destroy()
-        end
-
-        -- Cấu hình cơ bản
-        hrp.Size = size or Vector3.new(50, 50, 50)
+        hrp.Size = size or Vector3.new(4, 4, 4) -- để vừa phải
         hrp.CanCollide = false
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
+        if hum:FindFirstChild("Animator") then
+            hum.Animator:Destroy()
+        end
 
+        hum:ChangeState(Enum.HumanoidStateType.Physics)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-        -- Lấy nhân vật người chơi
         local player = game.Players.LocalPlayer
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if not root then return end
 
-        -- Vị trí mục tiêu
-        local posBelowPlayer = root.CFrame * CFrame.new(0, -21, 0)
+        -- offset theo HRP của quái để không lún xuống
+        local offsetY = hrp.Size.Y / 2 + 2 -- +2 studs trên đầu để tránh chạm đất
+        local targetPos = root.Position - Vector3.new(0, offsetY, 0)
 
-        -- Tween enemy đến vị trí
         local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
-        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = posBelowPlayer})
+        local tween = game:GetService("TweenService"):Create(hrp, tweenInfo, {CFrame = CFrame.new(targetPos)})
         tween:Play()
-
-        tween.Completed:Connect(function()
-            if not hrp.Parent or hum.Health <= 0 then return end
-
-            -- Xoá AlignPosition cũ nếu có
-            if hrp:FindFirstChild("AlignPosition") then
-                hrp.AlignPosition:Destroy()
-            end
-            if hrp:FindFirstChild("Attachment") then
-                hrp.Attachment:Destroy()
-            end
-
-            -- Tạo Attachment để làm gốc neo
-            local attachment = Instance.new("Attachment")
-            attachment.Parent = hrp
-
-            -- Tạo AlignPosition để giữ enemy đứng yên
-            local alignPos = Instance.new("AlignPosition")
-            alignPos.Attachment0 = attachment
-            alignPos.Position = posBelowPlayer.Position
-            alignPos.MaxForce = 1e9
-            alignPos.Responsiveness = 200
-            alignPos.Mode = Enum.PositionAlignmentMode.OneAttachment
-            alignPos.Parent = hrp
-        end)
     end)
 end
+
 
 spawn(function()
     while task.wait() do

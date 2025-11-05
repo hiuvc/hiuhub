@@ -13,6 +13,7 @@ local validGameLBIds = {
 -- Kiểm tra nếu ID game hợp lệ
 if validGameBFIds[Id] then
     -- Tải script nếu game hợp lệ Blox Fruits
+    repeat wait() until game:IsLoaded() and game.Players.LocalPlayer:FindFirstChild("DataLoaded")
     getgenv().team = "Marines"
     loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Binini.lua"))()
 elseif validGameLBIds[Id] then

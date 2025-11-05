@@ -2836,8 +2836,6 @@ spawn(function()
     while task.wait(0.5) do 
         if not updating then
             updating = true
-            StocksStatus:SetDesc("🔄 Updating...")
-
             local normalStock, mirageStock = fetchFruitsStock()
             if normalStock and mirageStock then
                 local ignoreList = {

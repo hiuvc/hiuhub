@@ -1,6 +1,4 @@
 
-repeat wait() until game:IsLoaded() and game.Players.LocalPlayer:FindFirstChild("DataLoaded")
-
 -- Reliable team selection method
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
@@ -948,169 +946,141 @@ local function ResetConfig()
     SaveConfig()
 end
 
-
 -- Run
 LoadConfig()
 
 
 
-local Player = game.Players.LocalPlayer    
-local Http = game:GetService("HttpService")
-local TPS = game:GetService("TeleportService")
+-- Khai báo biến chính
+local LocalPlayer = game.Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+
+local PlaceId = game.PlaceId
+local JobId = game.JobId
 local Api = "https://games.roblox.com/v1/games/"
+local ServersApi = Api .. PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
 
-local _place = game.PlaceId
-local _id = game.JobId
-local _servers = Api .. _place .. "/servers/Public?sortOrder=Desc&limit=100"
-
+-- Hàm lấy danh sách server
 local function ListServers(cursor)
-    local Raw = game:HttpGet(_servers .. ((cursor and "&cursor="..cursor) or ""))
-    return Http:JSONDecode(Raw)
+    local raw = game:HttpGet(ServersApi .. ((cursor and "&cursor=" .. cursor) or ""))
+    return HttpService:JSONDecode(raw)
 end
 
-function Hop()
-    local PlaceID = game.PlaceId
+-- Hàm hop server
+local function Hop()
     local AllIDs = {}
-    local foundAnything = ""
+    local foundCursor = ""
     local actualHour = os.date("!*t").hour
-    local Deleted = false
-    function TPReturner()
-        local Site;
-        if foundAnything == "" then
-            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
+
+    local function TPReturner()
+        local site
+        if foundCursor == "" then
+            site = HttpService:JSONDecode(game:HttpGet(Api .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
         else
-            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
-        end        
-        local ID = ""
-        if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
-            foundAnything = Site.nextPageCursor
-        end        
+            site = HttpService:JSONDecode(game:HttpGet(Api .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. foundCursor))
+        end
+
+        if site.nextPageCursor then
+            foundCursor = site.nextPageCursor
+        end
+
         local num = 0
-        for i,v in pairs(Site.data) do
-            local Possible = true
-            ID = tostring(v.id)            
-            if tonumber(v.maxPlayers) > tonumber(v.playing) then
-                for _,Existing in pairs(AllIDs) do
+        for _, v in pairs(site.data) do
+            local possible = true
+            local serverId = tostring(v.id)
+
+            if v.playing < v.maxPlayers then
+                for _, existing in pairs(AllIDs) do
                     if num ~= 0 then
-                        if ID == tostring(Existing) then
-                            Possible = false
+                        if serverId == tostring(existing) then
+                            possible = false
                         end
                     else
-                        if tonumber(actualHour) ~= tonumber(Existing) then
-                            local delFile = pcall(function()
-                                AllIDs = {}
-                                table.insert(AllIDs, actualHour)
-                            end)
+                        if actualHour ~= tonumber(existing) then
+                            AllIDs = {}
+                            table.insert(AllIDs, actualHour)
                         end
                     end
                     num = num + 1
                 end
-                if Possible == true then
-                    table.insert(AllIDs, ID)
-                    wait(0.1)
+
+                if possible then
+                    table.insert(AllIDs, serverId)
+                    task.wait(0.1)
                     pcall(function()
-                        game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
+                        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, LocalPlayer)
                     end)
-                    wait(1)
+                    task.wait(1)
                     break
                 end
             end
         end
     end
-    function Teleport() 
+
+    local function TeleportLoop()
         while true do
             pcall(function()
                 TPReturner()
-                if foundAnything ~= "" then
+                if foundCursor ~= "" then
                     TPReturner()
                 end
             end)
-            wait(2)
+            task.wait(2)
         end
     end
-    Teleport()
+
+    TeleportLoop()
+end
+
+-- Hàm tìm server tốt nhất
+local function FindBestServer()
+    local cursor = nil
+    local best = nil
+
+    repeat
+        local data = ListServers(cursor)
+        for _, server in ipairs(data.data) do
+            if server.playing > 0 and server.playing < server.maxPlayers then
+                if server.playing == 1 then
+                    return server -- Ưu tiên server 1 người
+                end
+                if not best or server.playing < best.playing then
+                    best = server
+                end
+            end
+        end
+        cursor = data.nextPageCursor
+    until not cursor or best
+
+    return best
+end
+
+-- Auto retry hop
+local function AutoRetryHop()
+    task.spawn(function()
+        while true do
+            local target = FindBestServer()
+            if target then
+                print("👉 Thử teleport tới server:", target.id, "Players:", target.playing)
+                local ok, err = pcall(function()
+                    TeleportService:TeleportToPlaceInstance(PlaceId, target.id, LocalPlayer)
+                end)
+                if ok then
+                    break -- nếu teleport thành công thì dừng
+                else
+                    warn("⚠️ Teleport thất bại:", err, "→ thử lại sau 5s")
+                end
+            else
+                warn("❌ Không tìm được server phù hợp → thử lại sau 5s")
+            end
+            task.wait(5)
+        end
+    end)
 end
 
 
 
-local PlaceID = game.PlaceId
-local AllIDs = {}
-local foundAnything = ""
-local actualHour = os.date("!*t").hour
-local Deleted = false
-
-local last
-
-local File = pcall(function()
-   AllIDs = game:GetService('HttpService'):JSONDecode(readfile("NotSameServers.json"))
-end)
-if not File then
-   table.insert(AllIDs, actualHour)
-   writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
-end
-function TPReturner()
-   local Site;
-   if foundAnything == "" then
-       Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
-   else
-       Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
-   end
-   local ID = ""
-   if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
-       foundAnything = Site.nextPageCursor
-   end
-   local num = 0;
-   local extranum = 0
-   for i,v in pairs(Site.data) do
-       extranum += 1
-       local Possible = true
-       ID = tostring(v.id)
-       if tonumber(v.maxPlayers) > tonumber(v.playing) then
-           if extranum ~= 1 and tonumber(v.playing) < last or extranum == 1 then
-               last = tonumber(v.playing)
-           elseif extranum ~= 1 then
-               continue
-           end
-           for _,Existing in pairs(AllIDs) do
-               if num ~= 0 then
-                   if ID == tostring(Existing) then
-                       Possible = false
-                   end
-               else
-                   if tonumber(actualHour) ~= tonumber(Existing) then
-                       local delFile = pcall(function()
-                           delfile("NotSameServers.json")
-                           AllIDs = {}
-                           table.insert(AllIDs, actualHour)
-                       end)
-                   end
-               end
-               num = num + 1
-           end
-           if Possible == true then
-               table.insert(AllIDs, ID)
-               wait()
-               pcall(function()
-                   writefile("NotSameServers.json", game:GetService('HttpService'):JSONEncode(AllIDs))
-                   wait()
-                   game:GetService("TeleportService"):TeleportToPlaceInstance(PlaceID, ID, game.Players.LocalPlayer)
-               end)
-               wait(4)
-           end
-       end
-   end
-end
-
-function HopLessPeople()
-   while wait() do
-       pcall(function()
-           TPReturner()
-           if foundAnything ~= "" then
-               TPReturner()
-           end
-       end)
-   end
-end
 
 function UpdateIslandESP()
     for v860, v861 in pairs(game:GetService("Workspace")['_WorldOrigin'].Locations:GetChildren()) do
@@ -2939,7 +2909,7 @@ v16.Server_Status:AddButton({
     Title = "Hop Server Less Player",
     Description = "",
     Callback = function()
-        HopLessPeople()
+        AutoRetryHop()
     end
 })
 ---------------Tab Main------------------------
@@ -2961,29 +2931,29 @@ _G.Level = GetConfig("ToggleLevel", false)
 AutoLevel:SetValue(_G.Level)
 
 spawn(function()
-    while wait() do
+    while task.wait() do
         if _G.Level then
             pcall(function()
                 local player = game:GetService("Players").LocalPlayer
                 local questUI = player.PlayerGui.Main.Quest
                 local questTitle = questUI.Container.QuestTitle.Title.Text
 
+                -- Nếu nhiệm vụ sai tên quái thì hủy
                 if not string.find(questTitle, NameMon) then
                     StartMagnet = false
                     game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
                 end
 
+                -- Nếu chưa có nhiệm vụ
                 if not questUI.Visible then
                     StartMagnet = false
                     CheckQuest()
-
-                    -- Bỏ BypassTP: Chỉ dùng TP1
                     TP1(CFrameQuest)
-
                     if (player.Character.HumanoidRootPart.Position - CFrameQuest.Position).Magnitude <= 5 then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
                     end
 
+                -- Nếu đang có nhiệm vụ
                 elseif questUI.Visible then
                     CheckQuest()
                     local foundEnemy = false
@@ -3012,15 +2982,23 @@ spawn(function()
                         end
                     end
 
+                    -- Nếu chưa thấy quái, bay quanh vị trí spawn
                     if not foundEnemy then
-                        -- Nếu không có quái -> Tween về vị trí farm
-                        TP1(CFrameMon)
                         StartMagnet = false
 
-                        -- Optional: nếu có trong ReplicatedStorage (chưa spawn), chuẩn bị sẵn vị trí
-                        local futureEnemy = game:GetService("ReplicatedStorage"):FindFirstChild(Mon)
-                        if futureEnemy and futureEnemy:FindFirstChild("HumanoidRootPart") then
-                            TP1(futureEnemy.HumanoidRootPart.CFrame * CFrame.new(15, 10, 2))
+                        -- Di chuyển quanh vị trí spawn để đợi quái
+                        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp and CFrameMon then
+                            -- Góc quay mỗi vòng
+                            for angle = 0, 360, 45 do
+                                if not _G.Level or questUI.Visible == false then break end
+                                local radius = 20
+                                local x = math.cos(math.rad(angle)) * radius
+                                local z = math.sin(math.rad(angle)) * radius
+                                local flyPos = CFrameMon * CFrame.new(x, 10, z)
+                                TP1(flyPos)
+                                task.wait(0.3)
+                            end
                         end
                     end
                 end
@@ -3660,7 +3638,7 @@ function MaterialMon()
 
     elseif (SelectMaterial == "Mini Tusk") then
         MMon = { "Mythological Pirate" }
-        MPos = CFrame.new(-13516.0458984375, 469.8182373046875, -6899.16064453125) -- cần cập nhật tọa độ nếu có
+        MPos = CFrame.new(-13516.0458984375, 469.8182373046875, -6899.16064453125) 
         SP = "Default"
 
     elseif (SelectMaterial == "Ectoplasm") then
@@ -4682,7 +4660,7 @@ spawn(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Flame-Flame", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Flame Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Falcon Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Falcon Fruit")) then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Falcon", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("alcon Fruit"));
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Falcon", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Falcon Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Ice Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Ice Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Ice-Ice", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Ice Fruit"));
@@ -4715,7 +4693,7 @@ spawn(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Magma-Magma", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Magma Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Portal Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Portal Fruit")) then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Door-Door", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Portal Fruit"));
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Portal-Portal", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Portal Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Quake Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Quake Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Quake-Quake", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Quake Fruit"));
@@ -4727,10 +4705,13 @@ spawn(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Spider-Spider", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Spider Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Bird: Phoenix Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Phoenix Fruit")) then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Phoenix", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Phoenix Fruit"));
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Phoenix-Phoenix", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Phoenix Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Rumble Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Rumble Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Rumble-Rumble", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Rumble Fruit"));
+                    end
+                    if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Lightning Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Lightning Fruit")) then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Lightning-Lightning", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Lightning Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Pain Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Pain Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Pain-Pain", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Pain Fruit"));
@@ -4767,6 +4748,12 @@ spawn(function()
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Mammoth Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Mammoth Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Mammoth-Mammoth", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Mammoth Fruit"));
+                    end
+                    if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Blizzard Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Blizzard Fruit")) then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Creation-Creation", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Blizzard Fruit"));
+                    end
+                    if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Creation Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Creation Fruit")) then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Blizzard-Blizzard", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Creation Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Dragon Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Dragon Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Dragon-Dragon", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Dragon Fruit"));

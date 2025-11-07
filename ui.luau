@@ -725,8 +725,12 @@ function CheckQuest()
     end
 end
 ------------------------------------------------------------------------------------------------------------------------
---// Services
+--// Global cooldown
 getgenv().Seriality = getgenv().Seriality or false
+getgenv().AttackCooldown = getgenv().AttackCooldown or 0.01 
+local lastAttackTime = 0
+
+--// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -776,21 +780,18 @@ local function GetEnemiesInRange(character, range)
     return targets
 end
 
---// Attack function no cooldown
-local function AttackNoCoolDown()
+--// Attack function with global cooldown
+local function Attack()
+    local currentTime = tick()
+    if currentTime - lastAttackTime < getgenv().AttackCooldown then return end
+
     local character = player.Character
     if not character then return end
 
-    local equippedWeapon = nil
-    for _, item in ipairs(character:GetChildren()) do
-        if item:IsA("Tool") then
-            equippedWeapon = item
-            break
-        end
-    end
+    local equippedWeapon = character:FindFirstChildOfClass("Tool")
     if not equippedWeapon then return end
 
-    local enemiesInRange = GetEnemiesInRange(character, 60)
+    local enemiesInRange = GetEnemiesInRange(character, 100)
     if #enemiesInRange == 0 then return end
 
     local modules = ReplicatedStorage:FindFirstChild("Modules")
@@ -816,31 +817,33 @@ local function AttackNoCoolDown()
     attackEvent:FireServer(0)
 
     local playerScripts = player:FindFirstChild("PlayerScripts")
-    if not playerScripts then return end
+    if playerScripts then
+        local localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+        while not localScript do
+            playerScripts.ChildAdded:Wait()
+            localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+        end
 
-    local localScript = playerScripts:FindFirstChildOfClass("LocalScript")
-    while not localScript do
-        playerScripts.ChildAdded:Wait()
-        localScript = playerScripts:FindFirstChildOfClass("LocalScript")
-    end
+        local hitFunction
+        if getsenv then
+            local success, scriptEnv = pcall(getsenv, localScript)
+            if success and scriptEnv then
+                hitFunction = scriptEnv._G.SendHitsToServer
+            end
+        end
 
-    local hitFunction
-    if getsenv then
-        local success, scriptEnv = pcall(getsenv, localScript)
-        if success and scriptEnv then
-            hitFunction = scriptEnv._G.SendHitsToServer
+        local successFlags, combatRemoteThread = pcall(function()
+            return require(modules.Flags).COMBAT_REMOTE_THREAD or false
+        end)
+
+        if successFlags and combatRemoteThread and hitFunction then
+            hitFunction(mainTarget, targets)
+        elseif successFlags and not combatRemoteThread then
+            hitEvent:FireServer(mainTarget, targets)
         end
     end
 
-    local successFlags, combatRemoteThread = pcall(function()
-        return require(modules.Flags).COMBAT_REMOTE_THREAD or false
-    end)
-
-    if successFlags and combatRemoteThread and hitFunction then
-        hitFunction(mainTarget, targets)
-    elseif successFlags and not combatRemoteThread then
-        hitEvent:FireServer(mainTarget, targets)
-    end
+    lastAttackTime = tick()
 end
 
 --// Get monster near player
@@ -866,7 +869,7 @@ local function get_Monster()
     return false, nil
 end
 
---// Activate tool functions
+--// Activate tool function
 local function Actived()
     local tool = player.Character:FindFirstChildOfClass("Tool")
     if tool then
@@ -883,17 +886,25 @@ task.spawn(function()
     RunService.Heartbeat:Connect(function()
         pcall(function()
             if not getgenv().Seriality then return end
-            AttackNoCoolDown()
-            local Pretool = player.Character:FindFirstChildOfClass("Tool")
-            if Pretool then
-                local ToolTip = Pretool.ToolTip
+
+            -- Attack normal enemies
+            Attack()
+
+            -- MobAura/Blox Fruit attack
+            local tool = player.Character:FindFirstChildOfClass("Tool")
+            if tool then
+                local ToolTip = tool.ToolTip
                 local MobAura, Mon = get_Monster()
                 if ToolTip == "Blox Fruit" and MobAura then
-                    local LeftClickRemote = Pretool:FindFirstChild('LeftClickRemote')
-                    if LeftClickRemote then
-                        Actived()
-                        LeftClickRemote:FireServer(Vector3.new(0.01, -500, 0.01), 1, true)
-                        LeftClickRemote:FireServer(false)
+                    local currentTime = tick()
+                    if currentTime - lastAttackTime >= getgenv().AttackCooldown then
+                        local LeftClickRemote = tool:FindFirstChild('LeftClickRemote')
+                        if LeftClickRemote then
+                            Actived()
+                            LeftClickRemote:FireServer(Vector3.new(0.01, -500, 0.01), 1, true)
+                            LeftClickRemote:FireServer(false)
+                            lastAttackTime = tick()
+                        end
                     end
                 end
             end
@@ -951,135 +962,97 @@ LoadConfig()
 
 
 
--- Khai báo biến chính
-local LocalPlayer = game.Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
+local LocalPlayer = game.Players.LocalPlayer
 
 local PlaceId = game.PlaceId
 local JobId = game.JobId
-local Api = "https://games.roblox.com/v1/games/"
-local ServersApi = Api .. PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
 
--- Hàm lấy danh sách server
-local function ListServers(cursor)
-    local raw = game:HttpGet(ServersApi .. ((cursor and "&cursor=" .. cursor) or ""))
-    return HttpService:JSONDecode(raw)
-end
+function HopAnyServer()
+    print("🟢 HopAnyServer() → Searching for available servers...")
 
--- Hàm hop server
-local function Hop()
-    local AllIDs = {}
-    local foundCursor = ""
-    local actualHour = os.date("!*t").hour
+    local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+    local UsedServers = {}
 
-    local function TPReturner()
-        local site
-        if foundCursor == "" then
-            site = HttpService:JSONDecode(game:HttpGet(Api .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
-        else
-            site = HttpService:JSONDecode(game:HttpGet(Api .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100&cursor=" .. foundCursor))
-        end
+    while task.wait(0.5) do
+        local success, servers = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet(url))
+        end)
 
-        if site.nextPageCursor then
-            foundCursor = site.nextPageCursor
-        end
+        if success and servers and servers.data then
+            for _, server in ipairs(servers.data) do
+                if server.id ~= JobId and server.playing < server.maxPlayers then
+                    if not table.find(UsedServers, server.id) then
+                        table.insert(UsedServers, server.id)
 
-        local num = 0
-        for _, v in pairs(site.data) do
-            local possible = true
-            local serverId = tostring(v.id)
+                        print("🔁 Hopping to random server:", server.id, "| Players:", server.playing)
 
-            if v.playing < v.maxPlayers then
-                for _, existing in pairs(AllIDs) do
-                    if num ~= 0 then
-                        if serverId == tostring(existing) then
-                            possible = false
-                        end
-                    else
-                        if actualHour ~= tonumber(existing) then
-                            AllIDs = {}
-                            table.insert(AllIDs, actualHour)
-                        end
+                        local ok, err = pcall(function()
+                            TeleportService:TeleportToPlaceInstance(PlaceId, server.id, LocalPlayer)
+                        end)
+
+                        if not ok then warn("⚠️ Teleport error:", err) end
+                        return
                     end
-                    num = num + 1
-                end
-
-                if possible then
-                    table.insert(AllIDs, serverId)
-                    task.wait(0.1)
-                    pcall(function()
-                        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, LocalPlayer)
-                    end)
-                    task.wait(1)
-                    break
                 end
             end
+        else
+            warn("🚫 Failed to fetch server list (HTTP error). Retrying...")
         end
     end
-
-    local function TeleportLoop()
-        while true do
-            pcall(function()
-                TPReturner()
-                if foundCursor ~= "" then
-                    TPReturner()
-                end
-            end)
-            task.wait(2)
-        end
-    end
-
-    TeleportLoop()
 end
 
--- Hàm tìm server tốt nhất
-local function FindBestServer()
+
+
+
+function HopLowPlayer()
+    print("🟡 HopLowPlayer() → Scanning for lowest player server (priority: 1 player)...")
+
     local cursor = nil
-    local best = nil
+    local bestServer = nil
 
-    repeat
-        local data = ListServers(cursor)
-        for _, server in ipairs(data.data) do
-            if server.playing > 0 and server.playing < server.maxPlayers then
-                if server.playing == 1 then
-                    return server -- Ưu tiên server 1 người
-                end
-                if not best or server.playing < best.playing then
-                    best = server
+    while true do
+        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+        if cursor then url = url .. "&cursor=" .. cursor end
+
+        local success, servers = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet(url))
+        end)
+
+        if success and servers and servers.data then
+            for _, server in ipairs(servers.data) do
+                if server.id ~= JobId and server.playing < server.maxPlayers then
+                    
+                    -- ✅ Ưu tiên server chỉ có đúng 1 người chơi
+                    if server.playing == 1 then
+                        print("🔥 Found 1-player server! Hopping:", server.id)
+                        TeleportService:TeleportToPlaceInstance(PlaceId, server.id, LocalPlayer)
+                        return
+                    end
+
+                    -- Ngược lại → chọn server ít người nhất
+                    if not bestServer or server.playing < bestServer.playing then
+                        bestServer = server
+                    end
                 end
             end
+
+            cursor = servers.nextPageCursor
+            if not cursor then break end
+        else
+            warn("🚫 Failed to fetch server list. Retrying...")
+            break
         end
-        cursor = data.nextPageCursor
-    until not cursor or best
+    end
 
-    return best
+    if bestServer then
+        print("📌 No 1-player server found → hopping to lowest player server:", bestServer.id, "| Players:", bestServer.playing)
+        TeleportService:TeleportToPlaceInstance(PlaceId, bestServer.id, LocalPlayer)
+    else
+        warn("❌ No suitable server found.")
+    end
 end
-
--- Auto retry hop
-local function AutoRetryHop()
-    task.spawn(function()
-        while true do
-            local target = FindBestServer()
-            if target then
-                print("👉 Thử teleport tới server:", target.id, "Players:", target.playing)
-                local ok, err = pcall(function()
-                    TeleportService:TeleportToPlaceInstance(PlaceId, target.id, LocalPlayer)
-                end)
-                if ok then
-                    break -- nếu teleport thành công thì dừng
-                else
-                    warn("⚠️ Teleport thất bại:", err, "→ thử lại sau 5s")
-                end
-            else
-                warn("❌ Không tìm được server phù hợp → thử lại sau 5s")
-            end
-            task.wait(5)
-        end
-    end)
-end
-
-
 
 
 function UpdateIslandESP()
@@ -2902,14 +2875,14 @@ v16.Server_Status:AddButton({
     Title = "Hop Server",
     Description = "",
     Callback = function()
-        Hop()
+        HopAnyServer()
     end
 });
 v16.Server_Status:AddButton({
     Title = "Hop Server Less Player",
     Description = "",
     Callback = function()
-        AutoRetryHop()
+        HopLowPlayer()
     end
 })
 ---------------Tab Main------------------------
@@ -4638,6 +4611,9 @@ spawn(function()
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Spin Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Spin Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Spin-Spin", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Spin Fruit"));
                     end
+                    if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Eagle Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Eagle Fruit")) then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Eagle-Eagle", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Eagle Fruit"));
+                    end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Spike Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Spike Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Spike-Spike", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Spike Fruit"));
                     end
@@ -5506,19 +5482,15 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
-        if humanoid:FindFirstChild("Animator") then
-            humanoid.Animator:Destroy()
-        end
-
         humanoid:ChangeState(Enum.HumanoidStateType.Physics)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-        -- Xác định targetCFrame
+
         local finalCFrame
         if targetCFrame then
             finalCFrame = targetCFrame
         else
-            -- Mặc định: dưới người chơi
+
             local player = game.Players.LocalPlayer
             local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if not root then return end

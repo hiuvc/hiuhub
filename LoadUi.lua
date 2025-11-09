@@ -1449,52 +1449,69 @@ function Update:Window(Config)
 			end);
 		end;
 		function main:Textbox(text, disappear, callback)
-			local Textbox = Instance.new("Frame");
-			local TextboxCorner = Instance.new("UICorner");
-			local TextboxLabel = Instance.new("TextLabel");
-			local RealTextbox = Instance.new("TextBox");
-			local UICorner = Instance.new("UICorner");
-			local TextBoxIcon = Instance.new("ImageLabel");
-			Textbox.Name = "Textbox";
-			Textbox.Parent = MainFramePage;
-			Textbox.BackgroundColor3 = _G.Primary;
-			Textbox.BackgroundTransparency = 0.8;
-			Textbox.Size = UDim2.new(1, 0, 0, 35);
-			TextboxCorner.CornerRadius = UDim.new(0, 5);
-			TextboxCorner.Name = "TextboxCorner";
-			TextboxCorner.Parent = Textbox;
-			TextboxLabel.Name = "TextboxLabel";
-			TextboxLabel.Parent = Textbox;
-			TextboxLabel.BackgroundColor3 = _G.Primary;
-			TextboxLabel.BackgroundTransparency = 1;
-			TextboxLabel.Position = UDim2.new(0, 15, 0.5, 0);
-			TextboxLabel.Text = text;
-			TextboxLabel.Size = UDim2.new(1, 0, 0, 35);
-			TextboxLabel.Font = Enum.Font.Nunito;
-			TextboxLabel.AnchorPoint = Vector2.new(0, 0.5);
-			TextboxLabel.TextColor3 = Color3.fromRGB(255, 255, 255);
-			TextboxLabel.TextSize = 15;
-			TextboxLabel.TextTransparency = 0;
-			TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left;
-			RealTextbox.Name = "RealTextbox";
-			RealTextbox.Parent = Textbox;
-			RealTextbox.BackgroundColor3 = Color3.fromRGB(200, 200, 200);
-			RealTextbox.BackgroundTransparency = 0.8;
-			RealTextbox.Position = UDim2.new(1, -5, 0.5, 0);
-			RealTextbox.AnchorPoint = Vector2.new(1, 0.5);
-			RealTextbox.Size = UDim2.new(0, 80, 0, 25);
-			RealTextbox.Font = Enum.Font.Gotham;
-			RealTextbox.Text = "";
-			RealTextbox.TextColor3 = Color3.fromRGB(225, 225, 225);
-			RealTextbox.TextSize = 11;
-			RealTextbox.TextTransparency = 0;
-			RealTextbox.ClipsDescendants = true;
-			RealTextbox.FocusLost:Connect(function()
-				callback(RealTextbox.Text);
-			end);
-			UICorner.CornerRadius = UDim.new(0, 5);
-			UICorner.Parent = RealTextbox;
-		end;
+		    local Textbox = Instance.new("Frame")
+		    local TextboxCorner = Instance.new("UICorner")
+		    local TextboxLabel = Instance.new("TextLabel")
+		    local RealTextbox = Instance.new("TextBox")
+		    local UICorner = Instance.new("UICorner")
+		    local TextBoxIcon = Instance.new("ImageLabel")
+		
+		    Textbox.Name = "Textbox"
+		    Textbox.Parent = MainFramePage
+		    Textbox.BackgroundColor3 = _G.Primary
+		    Textbox.BackgroundTransparency = 0.8
+		    Textbox.Size = UDim2.new(1, 0, 0, 35)
+		
+		    TextboxCorner.CornerRadius = UDim.new(0, 5)
+		    TextboxCorner.Parent = Textbox
+		
+		    TextboxLabel.Name = "TextboxLabel"
+		    TextboxLabel.Parent = Textbox
+		    TextboxLabel.BackgroundTransparency = 1
+		    TextboxLabel.Position = UDim2.new(0, 15, 0.5, 0)
+		    TextboxLabel.Text = text
+		    TextboxLabel.Size = UDim2.new(1, 0, 0, 35)
+		    TextboxLabel.Font = Enum.Font.Nunito
+		    TextboxLabel.AnchorPoint = Vector2.new(0, 0.5)
+		    TextboxLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		    TextboxLabel.TextSize = 15
+		    TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+		
+		    RealTextbox.Name = "RealTextbox"
+		    RealTextbox.Parent = Textbox
+		    RealTextbox.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+		    RealTextbox.BackgroundTransparency = 0.8
+		    RealTextbox.Position = UDim2.new(1, -5, 0.5, 0)
+		    RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
+		    RealTextbox.Size = UDim2.new(0, 80, 0, 25)
+		    RealTextbox.Font = Enum.Font.Gotham
+		    RealTextbox.Text = ""
+		    RealTextbox.TextColor3 = Color3.fromRGB(225, 225, 225)
+		    RealTextbox.TextSize = 11
+		
+		    UICorner.CornerRadius = UDim.new(0, 5)
+		    UICorner.Parent = RealTextbox
+		
+		    RealTextbox.FocusLost:Connect(function()
+		        callback(RealTextbox.Text)
+		        if disappear then
+		            RealTextbox.Text = ""
+		        end
+		    end)
+		
+		    -- ✅ Thêm đoạn này để hỗ trợ SetValue và GetValue
+		    local TextboxAPI = {}
+		
+		    function TextboxAPI:SetValue(txt)
+		        RealTextbox.Text = tostring(txt)
+		    end
+		
+		    function TextboxAPI:GetValue()
+		        return RealTextbox.Text
+		    end
+		
+		    return TextboxAPI
+		end
 		function main:Label(text)
 			local Frame = Instance.new("Frame");
 			local Label = Instance.new("TextLabel");

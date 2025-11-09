@@ -7,7 +7,7 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
 
-local HiuUi =  loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/Custom.lua"))()
+local HiuUi =  loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/CustomUi.lua"))()
 
 local isMobile = game:GetService("UserInputService").TouchEnabled
 

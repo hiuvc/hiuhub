@@ -99,10 +99,6 @@ spawn(function()
 	end;
 end);
 local Update = {};
-local MAX_NOTIFICATIONS = 5
-local NOTIFY_COOLDOWN = 1.5
-local lastNotifyTime = 0
-
 function Update:Notify(desc)
 	local Frame = Instance.new("Frame");
 	local Image = Instance.new("ImageLabel");
@@ -160,17 +156,6 @@ function Update:Notify(desc)
 		OutlineFrame,
 		title
 	});
-	if tick() - lastNotifyTime < NOTIFY_COOLDOWN then return end
-    lastNotifyTime = tick()
-
-    for i, v in ipairs(NotificationList) do
-        if v[2].Text == desc then return end
-    end
-
-    if #NotificationList >= MAX_NOTIFICATIONS then
-        RemoveOldestNotification()
-    end
-
 end;
 function Update:StartLoad()
 	local Loader = Instance.new("ScreenGui");

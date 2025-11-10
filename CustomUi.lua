@@ -99,6 +99,9 @@ spawn(function()
 	end;
 end);
 local Update = {};
+local MAX_NOTIFICATIONS = 3
+local NOTIFY_COOLDOWN = 1.5
+local lastNotifyTime = 0
 function Update:Notify(desc)
 	local Frame = Instance.new("Frame");
 	local Image = Instance.new("ImageLabel");
@@ -110,7 +113,7 @@ function Update:Notify(desc)
 	OutlineFrame.ClipsDescendants = true;
 	OutlineFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30);
 	OutlineFrame.AnchorPoint = Vector2.new(0.5, 1);
-	OutlineFrame.BackgroundTransparency = 0.4;
+	OutlineFrame.BackgroundTransparency = 0.8;
 	OutlineFrame.Position = UDim2.new(0.5, 0, -0.2, 0);
 	OutlineFrame.Size = UDim2.new(0, 412, 0, 72);
 	Frame.Name = "Frame";
@@ -118,7 +121,7 @@ function Update:Notify(desc)
 	Frame.ClipsDescendants = true;
 	Frame.AnchorPoint = Vector2.new(0.5, 0.5);
 	Frame.BackgroundColor3 = _G.Dark;
-	Frame.BackgroundTransparency = 0.1;
+	Frame.BackgroundTransparency = 0.8;
 	Frame.Position = UDim2.new(0.5, 0, 0.5, 0);
 	Frame.Size = UDim2.new(0, 400, 0, 60);
 	Image.Name = "Icon";
@@ -156,6 +159,16 @@ function Update:Notify(desc)
 		OutlineFrame,
 		title
 	});
+	if tick() - lastNotifyTime < NOTIFY_COOLDOWN then return end
+    lastNotifyTime = tick()
+
+    for i, v in ipairs(NotificationList) do
+        if v[2].Text == desc then return end
+    end
+
+    if #NotificationList >= MAX_NOTIFICATIONS then
+        RemoveOldestNotification()
+    end
 end;
 function Update:StartLoad()
 	local Loader = Instance.new("ScreenGui");

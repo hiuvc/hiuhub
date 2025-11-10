@@ -167,7 +167,7 @@ function Update:Notify(desc, duration)
 	Desc.TextXAlignment = Enum.TextXAlignment.Left;
 	CreateRounded(Frame, 10);
 	CreateRounded(OutlineFrame, 12);
-    table.insert(NotificationList, {OutlineFrame, Desc})
+    table.insert(NotificationList, {OutlineFrame, title})
     -- Tự động xóa sau duration
     spawn(function()
         wait(duration)

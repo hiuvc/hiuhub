@@ -349,7 +349,7 @@ function Update:Window(Config)
     BgImage.AnchorPoint = Vector2.new(0.5, 0.5)
     BgImage.Position = UDim2.new(0.5, 0, 0.5, 0)
     BgImage.Size = UDim2.new(1, 0, 1, 0)
-    BgImage.BackgroundTransparency = 1
+    BgImage.BackgroundTransparency = 0.8
     BgImage.Image = "rbxassetid://133979080007875" -- <-- thay ID ảnh tại đây
     BgImage.ImageTransparency = 0
     BgImage.ZIndex = 0   -- đặt dưới tất cả UI khác

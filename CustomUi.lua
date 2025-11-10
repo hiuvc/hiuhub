@@ -87,24 +87,23 @@ local NOTIFY_COOLDOWN = 1.5
 local lastNotifyTime = 0
 local function RemoveOldestNotification()
 	if #NotificationList > 0 then
-		local removed = table.remove(NotificationList, 1)
+		local removed = table.remove(NotificationList, 1);
 		removed[1]:TweenPosition(UDim2.new(0.5, 0, -0.2, 0), "Out", "Quad", 0.4, true, function()
-			removed[1]:Destroy()
-		end)
-	end
-end
+			removed[1]:Destroy();
+		end);
+	end;
+end;
 spawn(function()
 	while wait() do
 		if #NotificationList > 0 then
-			wait(1.5);
+			wait(2);
 			RemoveOldestNotification();
 		end;
 	end;
 end);
 local Update = {};
-function Update:Notify(desc, duration)
+function Update:Notify(desc)
 	if tick() - lastNotifyTime < NOTIFY_COOLDOWN then return end
-	duration = duration or 1.5
     lastNotifyTime = tick()
 
     -- Không tạo notify trùng nội dung
@@ -167,20 +166,11 @@ function Update:Notify(desc, duration)
 	Desc.TextXAlignment = Enum.TextXAlignment.Left;
 	CreateRounded(Frame, 10);
 	CreateRounded(OutlineFrame, 12);
-    table.insert(NotificationList, {OutlineFrame, title})
-    -- Tự động xóa sau duration
-    spawn(function()
-        wait(duration)
-        for i, v in ipairs(NotificationList) do
-            if v[1] == OutlineFrame then
-                table.remove(NotificationList, i)
-                break
-            end
-        end
-        OutlineFrame:TweenPosition(UDim2.new(0.5, 0, -0.2, 0), "Out", "Quad", 0.4, true, function()
-            OutlineFrame:Destroy()
-        end)
-    end)
+	OutlineFrame:TweenPosition(UDim2.new(0.5, 0, 0.1 + (#NotificationList) * 0.1, 0), "Out", "Quad", 0.4, true);
+	table.insert(NotificationList, {
+		OutlineFrame,
+		title
+	});
 end;
 function Update:StartLoad()
 	local Loader = Instance.new("ScreenGui");

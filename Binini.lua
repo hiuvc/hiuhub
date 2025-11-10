@@ -9,23 +9,12 @@ end
 
 local HiuUi =  loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/CustomUi.lua"))()
 
-local isMobile = game:GetService("UserInputService").TouchEnabled
 
-local windowSize
-local tabWidth
-
-if isMobile then
-    windowSize = UDim2.new(0.85, 0, 0.60, 0)  
-    tabWidth = 100
-else
-    windowSize = UDim2.new(0.3, 0, 0.45, 0)   
-    tabWidth = 150
-end
 
 local Window = HiuUi:Window({
     SubTitle = "Blox Kid",
-    Size = windowSize,
-    TabWidth = tabWidth
+    Size = UDim2.new(0, 500, 0, 320),
+    TabWidth = 150
 })
 
 if (game.PlaceId == 2753915549) then

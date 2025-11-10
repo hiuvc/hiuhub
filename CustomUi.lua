@@ -343,7 +343,9 @@ function Update:Window(Config)
 	Main.BackgroundTransparency = 0.6;
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0);
 	Main.Size = WindowConfig.Size;
-    local BgImage = Instance.new("ImageLabel")
+	OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
+	CreateRounded(Main, 12);
+	local BgImage = Instance.new("ImageLabel")
     BgImage.Name = "BackgroundImage"
     BgImage.Parent = OutlineMain  -- hoặc Main, tùy bạn muốn nền cho toàn UI hay chỉ phần chính
     BgImage.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -351,12 +353,10 @@ function Update:Window(Config)
     BgImage.Size = UDim2.new(1, 0, 1, 0)
     BgImage.BackgroundTransparency = 0.8
     BgImage.Image = "rbxassetid://133979080007875" -- <-- thay ID ảnh tại đây
-    BgImage.ImageTransparency = 0
+    BgImage.ImageTransparency = 0.8
     BgImage.ZIndex = 0   -- đặt dưới tất cả UI khác
     BgImage.ScaleType = Enum.ScaleType.Stretch  -- ảnh fit toàn UI
-
-	OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
-	CreateRounded(Main, 12);
+    
 	local BtnStroke = Instance.new("UIStroke");
 	local DragButton = Instance.new("Frame");
 	DragButton.Name = "DragButton";

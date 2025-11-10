@@ -343,6 +343,7 @@ function Update:Window(Config)
 	Main.BackgroundTransparency = 0.6;
 	Main.Position = UDim2.new(0.5, 0, 0.5, 0);
 	Main.Size = WindowConfig.Size;
+
 	OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
 	CreateRounded(Main, 12);
 	local BtnStroke = Instance.new("UIStroke");

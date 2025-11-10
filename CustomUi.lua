@@ -1626,3 +1626,4 @@ function Update:Window(Config)
 	end;
 	return uitab;
 end;
+return Update;

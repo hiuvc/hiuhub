@@ -82,24 +82,32 @@ NotificationFrame.Name = "NotificationFrame";
 NotificationFrame.Parent = game.CoreGui;
 NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global;
 local NotificationList = {};
+local MAX_NOTIFICATIONS = 5
+local NOTIFY_COOLDOWN = 1.5
+local lastNotifyTime = 0
 local function RemoveOldestNotification()
 	if #NotificationList > 0 then
-		local removed = table.remove(NotificationList, 1);
+		local removed = table.remove(NotificationList, 1)
 		removed[1]:TweenPosition(UDim2.new(0.5, 0, -0.2, 0), "Out", "Quad", 0.4, true, function()
-			removed[1]:Destroy();
-		end);
-	end;
-end;
-spawn(function()
-	while wait() do
-		if #NotificationList > 0 then
-			wait(2);
-			RemoveOldestNotification();
-		end;
-	end;
-end);
+			removed[1]:Destroy()
+		end)
+	end
+end
+
 local Update = {};
 function Update:Notify(desc)
+	if tick() - lastNotifyTime < NOTIFY_COOLDOWN then return end
+    lastNotifyTime = tick()
+
+    -- Không tạo notify trùng nội dung
+    for _, v in ipairs(NotificationList) do
+        if v[2].Text == desc then return end
+    end
+
+    -- Giới hạn số lượng notify
+    if #NotificationList >= MAX_NOTIFICATIONS then
+        RemoveOldestNotification()
+    end
 	local Frame = Instance.new("Frame");
 	local Image = Instance.new("ImageLabel");
 	local Title = Instance.new("TextLabel");

@@ -93,7 +93,14 @@ local function RemoveOldestNotification()
 		end)
 	end
 end
-
+spawn(function()
+	while wait() do
+		if #NotificationList > 0 then
+			wait(1.5);
+			RemoveOldestNotification();
+		end;
+	end;
+end);
 local Update = {};
 function Update:Notify(desc)
 	if tick() - lastNotifyTime < NOTIFY_COOLDOWN then return end

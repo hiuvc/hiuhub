@@ -1483,7 +1483,7 @@ function Update:Window(Config)
 		    RealTextbox.BackgroundTransparency = 0.8
 		    RealTextbox.Position = UDim2.new(1, -5, 0.5, 0)
 		    RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
-		    RealTextbox.Size = UDim2.new(0, 80, 0, 50)
+		    RealTextbox.Size = UDim2.new(0, 80, 0, 80)
 		    RealTextbox.Font = Enum.Font.Gotham
 		    RealTextbox.Text = ""
 		    RealTextbox.TextColor3 = Color3.fromRGB(225, 225, 225)
@@ -1627,4 +1627,5 @@ function Update:Window(Config)
 	return uitab;
 end;
 return Update;
+
 

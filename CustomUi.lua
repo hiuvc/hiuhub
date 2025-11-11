@@ -82,9 +82,6 @@ NotificationFrame.Name = "NotificationFrame";
 NotificationFrame.Parent = game.CoreGui;
 NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global;
 local NotificationList = {};
-local MAX_NOTIFICATIONS = 5
-local NOTIFY_COOLDOWN = 1.5
-local lastNotifyTime = 0
 local function RemoveOldestNotification()
 	if #NotificationList > 0 then
 		local removed = table.remove(NotificationList, 1);
@@ -103,18 +100,6 @@ spawn(function()
 end);
 local Update = {};
 function Update:Notify(desc)
-	if tick() - lastNotifyTime < NOTIFY_COOLDOWN then return end
-    lastNotifyTime = tick()
-
-    -- Không tạo notify trùng nội dung
-    for _, v in ipairs(NotificationList) do
-        if v[2].Text == desc then return end
-    end
-
-    -- Giới hạn số lượng notify
-    if #NotificationList >= MAX_NOTIFICATIONS then
-        RemoveOldestNotification()
-    end
 	local Frame = Instance.new("Frame");
 	local Image = Instance.new("ImageLabel");
 	local Title = Instance.new("TextLabel");
@@ -275,16 +260,16 @@ local SettingsLib = {
 };
 (getgenv()).LoadConfig = function()
 	if readfile and writefile and isfile and isfolder then
-		if not isfolder("Vxeze Hub Premium") then
-			makefolder("Vxeze Hub Premium");
+		if not isfolder("Nimo Hub ") then
+			makefolder("Nimo Hub ");
 		end;
-		if not isfolder("Vxeze Hub Premium/Library/") then
-			makefolder("Vxeze Hub Premium/Library/");
+		if not isfolder("Nimo Hub /Library/") then
+			makefolder("Nimo Hub /Library/");
 		end;
-		if not isfile(("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
-			writefile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib));
+		if not isfile(("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
+			writefile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib));
 		else
-			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json"));
 			for i, v in pairs(Decode) do
 				SettingsLib[i] = v;
 			end;
@@ -296,15 +281,15 @@ local SettingsLib = {
 end;
 (getgenv()).SaveConfig = function()
 	if readfile and writefile and isfile and isfolder then
-		if not isfile(("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
+		if not isfile(("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
 			(getgenv()).Load();
 		else
-			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json"));
 			local Array = {};
 			for i, v in pairs(SettingsLib) do
 				Array[i] = v;
 			end;
-			writefile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array));
+			writefile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array));
 		end;
 	else
 		return warn("Status : Undetected Executor");

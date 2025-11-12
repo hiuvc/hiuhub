@@ -1,3 +1,7 @@
+local HiuUi =  loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/CustomUi.lua"))()
+local ServerHop = loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/HopServerModule.lua"))()
+local HttpService = game:GetService("HttpService")
+
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -7,13 +11,9 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
 
-local HiuUi =  loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/CustomUi.lua"))()
-
-
-
 local Window = HiuUi:Window({
     SubTitle = "Blox Kid",
-    Size = UDim2.new(0, 500, 0, 320),
+    Size = UDim2.new(0, 500, 0, 350),
     TabWidth = 150
 })
 
@@ -619,13 +619,39 @@ function CheckQuest()
             NameMon = "Skull Slayer";
             CFrameQuest = CFrame.new( -16665, 105, 1580);
             CFrameMon = CFrame.new( -16849.9336, 147.005066, 1640.88354, 0.470148534, 0.491874039, -0.732816696, 1.72165e-8, 0.83030504, 0.55730921, 0.882587314, -0.262018114, 0.390366673);
+        elseif ((MyLevel == 2600) or (MyLevel <=2624)) then
+            Mon = "Reef Bandit";
+            LevelQuest = 1;
+            NameQuest = "SubmergedQuest1";
+            NameMon = "Reef Bandit";
+            CFrameQuest = CFrame.new(10882.264,-2086.322,10034.226)
+            CFrameMon = CFrame.new(10736.6191,-2087.8439,9338.4882)
+        elseif ((MyLevel == 2625) or (MyLevel <=2649)) then
+            Mon = "Coral Pirate";
+            LevelQuest = 2;
+            NameQuest = "SubmergedQuest1";
+            NameMon = "Coral Pirate";
+            CFrameQuest = CFrame.new(10882.264,-2086.322,10034.226)
+            CFrameMon = CFrame.new(10965.1025,-2158.8842,9177.2597)
+        elseif ((MyLevel == 2650) or (MyLevel <=2674)) then
+            Mon = "Sea Chanter";
+            LevelQuest = 1;
+            NameQuest = "SubmergedQuest2";
+            NameMon = "Sea Chanter";
+            CFrameQuest = CFrame.new(10882.264,-2086.322,10034.226)
+            CFrameMon = CFrame.new(10621.0342,-2087.8440,10102.0332)
+        elseif ((MyLevel == 2675) or (MyLevel <=2750)) then
+            Mon = "Ocean Prophet";
+            LevelQuest = 2;
+            NameQuest = "SubmergedQuest2";
+            NameMon = "Ocean Prophet";
+            CFrameQuest = CFrame.new(10882.264,-2086.322,10034.226)
+            CFrameMon = CFrame.new(11056.1445,-2001.6717,10117.4493)
         end
     end
 end
 
 local StockFruitTab = Window:Tab("Fruits Stock","")
-local HttpService = game:GetService("HttpService")
-
 
 local StockSeperator = StockFruitTab:Seperator("Current Fruits Stock")
 local StockLine = StockFruitTab:Line()
@@ -652,7 +678,7 @@ local function fetchFruitsStock()
     end
 
     if data.status ~= "success" then
-        warn("[INVALID DATA]: status not success")
+        warn("[INVALID DATA]: Failed to Get DATA")
         return nil, nil
     end
 
@@ -703,7 +729,7 @@ local ServerStatus_Se = ServerTab:Seperator("Server Status")
 local ServerStatus_Ln = ServerTab:Line()
 local MoonStatus_La = ServerTab:Label("Moon Status: Unknown")
 task.spawn(function()
-    while task.wait(1) do
+    while task.wait(0.5) do
         pcall(function()
             local lighting = game:GetService("Lighting")
             local moonTextureId = nil
@@ -737,8 +763,8 @@ task.spawn(function()
     end
 end)
 if World1 then
-	local TheSawStatus_La = ServerTab:Label("The Saw Status: Unknown")
-	task.spawn(function()
+    local TheSawStatus_La = ServerTab:Label("The Saw Status: Unknown")
+    task.spawn(function()
         while task.wait(1) do
             pcall(function()
                 if game:GetService("ReplicatedStorage"):FindFirstChild("The Saw") or game:GetService("Workspace").Enemies:FindFirstChild("The Saw") then
@@ -764,8 +790,8 @@ if World1 then
     end)
 end
 if World2 then
-	local CursedCaptainStatus_La = ServerTab:Label("Cursed Captain Status: Unknown")
-	task.spawn(function()
+    local CursedCaptainStatus_La = ServerTab:Label("Cursed Captain Status: Unknown")
+    task.spawn(function()
         while wait(1) do
             pcall(function()
                 if game:GetService("ReplicatedStorage"):FindFirstChild("Cursed Captain") or game:GetService("Workspace").Enemies:FindFirstChild("Cursed Captain") then
@@ -957,11 +983,42 @@ local JobIdText = ServerTab:Textbox("Enter JobId Here",false, function(n)
 end)
 
 local JoinButton = ServerTab:Button("Join Server With JobId", function()
-    game:GetService("TeleportService"):TeleportToPlaceInstance(game.placeId,getgenv().JobId, game.Players.LocalPlayer)
+    if getgenv().JobId == "PV" then
+        HiuUi:Notify("Teleporting to Vip Server, and Hello Boss: "..game.Players.LocalPlayer.Name)
+        task.wait(1.5)
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
+
+    elseif getgenv().JobId and getgenv().JobId ~= "" then
+        HiuUi:Notify("Teleporting to JobId: "..getgenv().JobId)
+        task.wait(1.5)
+        game:GetService("TeleportService"):TeleportToPlaceInstance(
+            game.PlaceId,
+            getgenv().JobId,
+            game.Players.LocalPlayer
+        )
+
+    else
+        HiuUi:Notify("Please Enter JobId First!")
+    end
 end)
 
+
 local ClearJobId = ServerTab:Button("Clear JobId", function()
+    if not getgenv().JobId or getgenv().JobId == "" then
+        return
+    end
     getgenv().JobId = nil
     JobIdText:SetValue("")
     HiuUi:Notify("JobId has been cleared!")
+end)
+
+local HopServerButton = ServerTab:Button("Hop Server", function ()
+    HiuUi:Notify("Teleporting to server: "..ServerHop:GetNextServerJobId())
+    task.wait(1.5)
+    ServerHop:Teleport()
+end)
+local HopLowPlayer = ServerTab:Button("Hop Server Less Player",function()
+    HiuUi:Notify("Teleporting to server")
+    task.wait(1.5)
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
 end)

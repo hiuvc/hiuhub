@@ -345,6 +345,17 @@ function Update:Window(Config)
 	Main.Size = WindowConfig.Size;
 	OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
 	CreateRounded(Main, 12);
+	local BackgroundImage = Instance.new("ImageLabel")
+	BackgroundImage.Name = "BackgroundImage"
+	BackgroundImage.Parent = Main
+	BackgroundImage.Size = UDim2.new(1, 0, 1, 0) 
+	BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
+	BackgroundImage.BackgroundTransparency = 1 
+	BackgroundImage.Image = "rbxassetid://84435441882847" 
+	BackgroundImage.ImageTransparency = 0.2
+	BackgroundImage.ScaleType = Enum.ScaleType.Stretch 
+	BackgroundImage.ZIndex = 0 
+	CreateRounded(BackgroundImage, 12)
 	local BtnStroke = Instance.new("UIStroke");
 	local DragButton = Instance.new("Frame");
 	DragButton.Name = "DragButton";
@@ -1484,6 +1495,7 @@ function Update:Window(Config)
 		    RealTextbox.Position = UDim2.new(1, -5, 0.5, 0)
 		    RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
 		    RealTextbox.Size = UDim2.new(0, 80, 0, 25)
+		    RealTextbox.TextTruncate = Enum.TextTruncate.AtEnd
 		    RealTextbox.Font = Enum.Font.Gotham
 		    RealTextbox.Text = ""
 		    RealTextbox.TextColor3 = Color3.fromRGB(225, 225, 225)
@@ -1499,6 +1511,7 @@ function Update:Window(Config)
 		        end
 		    end)
 		
+		    -- ✅ Thêm đoạn này để hỗ trợ SetValue và GetValue
 		    local TextboxAPI = {}
 		
 		    function TextboxAPI:SetValue(txt)
@@ -1626,5 +1639,3 @@ function Update:Window(Config)
 	return uitab;
 end;
 return Update;
-
-

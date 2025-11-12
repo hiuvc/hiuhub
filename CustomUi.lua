@@ -1,25 +1,7 @@
--- Lấy dịch vụ Người chơi và Người chơi Local
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-
--- Kiểm tra xem Người chơi Local đã tồn tại chưa (quan trọng)
-if not localPlayer then
-	-- Nếu script chạy quá sớm, hãy đợi tín hiệu LocalPlayer
-	localPlayer = Players.LocalPlayerAdded:Wait()
-end
-
--- Lấy PlayerGui từ Người chơi Local
-local playerGui = localPlayer.PlayerGui
-
--- Tìm các GUI
-local vxezeHub = playerGui:FindFirstChild("VxezeHub")
-local screenGui = playerGui:FindFirstChild("ScreenGui")
-
--- Kiểm tra xem cả hai có tồn tại không trước khi hủy
-if vxezeHub and screenGui then
-	vxezeHub:Destroy()
-	screenGui:Destroy()
-end
+if (game:GetService("CoreGui")):FindFirstChild("VxezeHub") and (game:GetService("CoreGui")):FindFirstChild("ScreenGui") then
+	(game:GetService("CoreGui")).VxezeHub:Destroy();
+	(game:GetService("CoreGui")).ScreenGui:Destroy();
+end;
 _G.Primary = Color3.fromRGB(100, 100, 100);
 _G.Dark = Color3.fromRGB(22, 22, 26);
 _G.Third = Color3.fromRGB(255, 255, 255);
@@ -68,7 +50,7 @@ function MakeDraggable(topbarobject, object)
 	end);
 end;
 local ScreenGui = Instance.new("ScreenGui");
-ScreenGui.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+ScreenGui.Parent = game.CoreGui;
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
 local OutlineButton = Instance.new("Frame");
 OutlineButton.Name = "OutlineButton";
@@ -93,14 +75,11 @@ ImageButton.AutoButtonColor = false;
 MakeDraggable(ImageButton, OutlineButton);
 CreateRounded(ImageButton, 10);
 ImageButton.MouseButton1Click:connect(function()
-	local vxezeHub = playerGui:FindFirstChild("VxezeHub")
-	if vxezeHub then
-		vxezeHub.Enabled = not vxezeHub.Enabled
-	end
+	(game.CoreGui:FindFirstChild("VxezeHub")).Enabled = not (game.CoreGui:FindFirstChild("VxezeHub")).Enabled;
 end);
 local NotificationFrame = Instance.new("ScreenGui");
 NotificationFrame.Name = "NotificationFrame";
-NotificationFrame.Parent = game:GetService("Players").LocalPlayer.PlayerGui;
+NotificationFrame.Parent = game.CoreGui;
 NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global;
 local NotificationList = {};
 local function RemoveOldestNotification()
@@ -180,7 +159,7 @@ function Update:Notify(desc)
 end;
 function Update:StartLoad()
 	local Loader = Instance.new("ScreenGui");
-	Loader.Parent = game:GetService("Players").LocalPlayer.PlayerGui
+	Loader.Parent = game.CoreGui;
 	Loader.ZIndexBehavior = Enum.ZIndexBehavior.Global;
 	Loader.DisplayOrder = 1000;
 	local LoaderFrame = Instance.new("Frame");
@@ -279,6 +258,44 @@ local SettingsLib = {
 	SaveSettings = true,
 	LoadAnimation = true
 };
+(getgenv()).LoadConfig = function()
+	if readfile and writefile and isfile and isfolder then
+		if not isfolder("Nimo Hub ") then
+			makefolder("Nimo Hub ");
+		end;
+		if not isfolder("Nimo Hub /Library/") then
+			makefolder("Nimo Hub /Library/");
+		end;
+		if not isfile(("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
+			writefile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib));
+		else
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json"));
+			for i, v in pairs(Decode) do
+				SettingsLib[i] = v;
+			end;
+		end;
+		print("Library Loaded!");
+	else
+		return warn("Status : Undetected Executor");
+	end;
+end;
+(getgenv()).SaveConfig = function()
+	if readfile and writefile and isfile and isfolder then
+		if not isfile(("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
+			(getgenv()).Load();
+		else
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json"));
+			local Array = {};
+			for i, v in pairs(SettingsLib) do
+				Array[i] = v;
+			end;
+			writefile("Nimo Hub /Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array));
+		end;
+	else
+		return warn("Status : Undetected Executor");
+	end;
+end;
+(getgenv()).LoadConfig();
 function Update:SaveSettings()
 	if SettingsLib.SaveSettings then
 		return true;
@@ -305,7 +322,7 @@ function Update:Window(Config)
 	local yoo = string.gsub(tostring(keybind), "Enum.KeyCode.", "");
 	local VxezeHub = Instance.new("ScreenGui");
 	VxezeHub.Name = "VxezeHub";
-	VxezeHub.Parent = game:GetService("Players").LocalPlayer.PlayerGui;
+	VxezeHub.Parent = game.CoreGui;
 	VxezeHub.DisplayOrder = 999;
 	local OutlineMain = Instance.new("Frame");
 	OutlineMain.Name = "OutlineMain";
@@ -328,7 +345,6 @@ function Update:Window(Config)
 	Main.Size = WindowConfig.Size;
 	OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
 	CreateRounded(Main, 12);
-	--Tạo ảnh trong nền
 	local BackgroundImage = Instance.new("ImageLabel")
 	BackgroundImage.Name = "BackgroundImage"
 	BackgroundImage.Parent = Main
@@ -336,11 +352,10 @@ function Update:Window(Config)
 	BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
 	BackgroundImage.BackgroundTransparency = 1 
 	BackgroundImage.Image = "rbxassetid://84435441882847" 
-	BackgroundImage.ImageTransparency = 0.3
+	BackgroundImage.ImageTransparency = 0.2
 	BackgroundImage.ScaleType = Enum.ScaleType.Stretch 
 	BackgroundImage.ZIndex = 0 
 	CreateRounded(BackgroundImage, 12)
-	
 	local BtnStroke = Instance.new("UIStroke");
 	local DragButton = Instance.new("Frame");
 	DragButton.Name = "DragButton";
@@ -407,10 +422,7 @@ function Update:Window(Config)
 	CloseButton.ImageColor3 = Color3.fromRGB(245, 245, 245);
 	CreateRounded(CloseButton, 3);
 	CloseButton.MouseButton1Click:connect(function()
-		local vxezeHub = playerGui:FindFirstChild("VxezeHub")
-		if vxezeHub then
-			vxezeHub.Enabled = not vxezeHub.Enabled
-		end
+		(game.CoreGui:FindFirstChild("VxezeHub")).Enabled = not (game.CoreGui:FindFirstChild("VxezeHub")).Enabled;
 	end);
 	local ResizeButton = Instance.new("ImageButton");
 	ResizeButton.Name = "ResizeButton";
@@ -671,11 +683,7 @@ function Update:Window(Config)
 	MakeDraggable(Top, OutlineMain);
 	UserInputService.InputBegan:Connect(function(input)
 		if input.KeyCode == Enum.KeyCode.Insert then
-			local vxezeHub = playerGui:FindFirstChild("VxezeHub")
-
-			if vxezeHub then
-				vxezeHub.Enabled = not vxezeHub.Enabled
-			end
+			(game.CoreGui:FindFirstChild("VxezeHub")).Enabled = not (game.CoreGui:FindFirstChild("VxezeHub")).Enabled;
 		end;
 	end);
 	local Dragging = false;
@@ -918,7 +926,7 @@ function Update:Window(Config)
 			TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255);
 			TextLabel.TextSize = 15;
 			TextLabel.ClipsDescendants = true;
-			local ArrowRight = Instance.new("ImageLabel");
+            local ArrowRight = Instance.new("ImageLabel");
 			ArrowRight.Name = "ArrowRight";
 			ArrowRight.Parent = Button;
 			ArrowRight.BackgroundColor3 = _G.Primary;
@@ -1239,9 +1247,9 @@ function Update:Window(Config)
 					(TweenService:Create(Dropdown, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 						Size = UDim2.new(1, 0, 0, 145)
 					})):Play();
-					(TweenService:Create(ArrowDown, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Rotation = 180
-					})):Play();
+                    (TweenService:Create(ArrowDown, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Rotation = 180
+                    })):Play();
 				else
 					isdropping = false;
 					(TweenService:Create(DropdownFrameScroll, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -1251,9 +1259,9 @@ function Update:Window(Config)
 					(TweenService:Create(Dropdown, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 						Size = UDim2.new(1, 0, 0, 40)
 					})):Play();
-					(TweenService:Create(ArrowDown, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-						Rotation = 0
-					})):Play();
+                    (TweenService:Create(ArrowDown, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        Rotation = 0
+                    })):Play();
 				end;
 			end);
 			local dropfunc = {};
@@ -1452,69 +1460,69 @@ function Update:Window(Config)
 			end);
 		end;
 		function main:Textbox(text, disappear, callback)
-			local Textbox = Instance.new("Frame")
-			local TextboxCorner = Instance.new("UICorner")
-			local TextboxLabel = Instance.new("TextLabel")
-			local RealTextbox = Instance.new("TextBox")
-			local UICorner = Instance.new("UICorner")
-			local TextBoxIcon = Instance.new("ImageLabel")
-
-			Textbox.Name = "Textbox"
-			Textbox.Parent = MainFramePage
-			Textbox.BackgroundColor3 = _G.Primary
-			Textbox.BackgroundTransparency = 0.8
-			Textbox.Size = UDim2.new(1, 0, 0, 35)
-
-			TextboxCorner.CornerRadius = UDim.new(0, 5)
-			TextboxCorner.Parent = Textbox
-
-			TextboxLabel.Name = "TextboxLabel"
-			TextboxLabel.Parent = Textbox
-			TextboxLabel.BackgroundTransparency = 1
-			TextboxLabel.Position = UDim2.new(0, 15, 0.5, 0)
-			TextboxLabel.Text = text
-			TextboxLabel.Size = UDim2.new(1, 0, 0, 35)
-			TextboxLabel.Font = Enum.Font.Nunito
-			TextboxLabel.AnchorPoint = Vector2.new(0, 0.5)
-			TextboxLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-			TextboxLabel.TextSize = 15
-			TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-			RealTextbox.Name = "RealTextbox"
-			RealTextbox.Parent = Textbox
-			RealTextbox.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-			RealTextbox.BackgroundTransparency = 0.8
-			RealTextbox.Position = UDim2.new(1, -5, 0.5, 0)
-			RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
-			RealTextbox.Size = UDim2.new(0, 100, 0, 25)
-			RealTextbox.TextTruncate = Enum.TextTruncate.AtEnd
-			RealTextbox.Font = Enum.Font.Gotham
-			RealTextbox.Text = ""
-			RealTextbox.TextColor3 = Color3.fromRGB(225, 225, 225)
-			RealTextbox.TextSize = 11
-
-			UICorner.CornerRadius = UDim.new(0, 5)
-			UICorner.Parent = RealTextbox
-
-			RealTextbox.FocusLost:Connect(function()
-				callback(RealTextbox.Text)
-				if disappear then
-					RealTextbox.Text = ""
-				end
-			end)
-
-			-- ✅ Thêm đoạn này để hỗ trợ SetValue và GetValue
-			local TextboxAPI = {}
-
-			function TextboxAPI:SetValue(txt)
-				RealTextbox.Text = tostring(txt)
-			end
-
-			function TextboxAPI:GetValue()
-				return RealTextbox.Text
-			end
-
-			return TextboxAPI
+		    local Textbox = Instance.new("Frame")
+		    local TextboxCorner = Instance.new("UICorner")
+		    local TextboxLabel = Instance.new("TextLabel")
+		    local RealTextbox = Instance.new("TextBox")
+		    local UICorner = Instance.new("UICorner")
+		    local TextBoxIcon = Instance.new("ImageLabel")
+		
+		    Textbox.Name = "Textbox"
+		    Textbox.Parent = MainFramePage
+		    Textbox.BackgroundColor3 = _G.Primary
+		    Textbox.BackgroundTransparency = 0.8
+		    Textbox.Size = UDim2.new(1, 0, 0, 35)
+		
+		    TextboxCorner.CornerRadius = UDim.new(0, 5)
+		    TextboxCorner.Parent = Textbox
+		
+		    TextboxLabel.Name = "TextboxLabel"
+		    TextboxLabel.Parent = Textbox
+		    TextboxLabel.BackgroundTransparency = 1
+		    TextboxLabel.Position = UDim2.new(0, 15, 0.5, 0)
+		    TextboxLabel.Text = text
+		    TextboxLabel.Size = UDim2.new(1, 0, 0, 35)
+		    TextboxLabel.Font = Enum.Font.Nunito
+		    TextboxLabel.AnchorPoint = Vector2.new(0, 0.5)
+		    TextboxLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+		    TextboxLabel.TextSize = 15
+		    TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+		
+		    RealTextbox.Name = "RealTextbox"
+		    RealTextbox.Parent = Textbox
+		    RealTextbox.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+		    RealTextbox.BackgroundTransparency = 0.8
+		    RealTextbox.Position = UDim2.new(1, -5, 0.5, 0)
+		    RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
+		    RealTextbox.Size = UDim2.new(0, 80, 0, 25)
+		    RealTextbox.TextTruncate = Enum.TextTruncate.AtEnd
+		    RealTextbox.Font = Enum.Font.Gotham
+		    RealTextbox.Text = ""
+		    RealTextbox.TextColor3 = Color3.fromRGB(225, 225, 225)
+		    RealTextbox.TextSize = 11
+		
+		    UICorner.CornerRadius = UDim.new(0, 5)
+		    UICorner.Parent = RealTextbox
+		
+		    RealTextbox.FocusLost:Connect(function()
+		        callback(RealTextbox.Text)
+		        if disappear then
+		            RealTextbox.Text = ""
+		        end
+		    end)
+		
+		    -- ✅ Thêm đoạn này để hỗ trợ SetValue và GetValue
+		    local TextboxAPI = {}
+		
+		    function TextboxAPI:SetValue(txt)
+		        RealTextbox.Text = tostring(txt)
+		    end
+		
+		    function TextboxAPI:GetValue()
+		        return RealTextbox.Text
+		    end
+		
+		    return TextboxAPI
 		end
 		function main:Label(text)
 			local Frame = Instance.new("Frame");

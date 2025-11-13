@@ -985,7 +985,7 @@ function Update:Window(Config)
 			Button.Name = "Button";
 			Button.Parent = MainFramePage;
 			Button.BackgroundColor3 = _G.Primary;
-			Button.BackgroundTransparency = 0.6;
+			Button.BackgroundTransparency = 0.8;
 			Button.AutoButtonColor = false;
 			Button.Font = Enum.Font.SourceSans;
 			Button.Text = "";

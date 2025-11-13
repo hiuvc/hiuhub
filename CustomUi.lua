@@ -82,6 +82,9 @@ NotificationFrame.Name = "NotificationFrame";
 NotificationFrame.Parent = game.CoreGui;
 NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global;
 local NotificationList = {};
+local MAX_NOTIFICATIONS = 5
+local NOTIFY_COOLDOWN = 1.5
+local lastNotifyTime = 0
 local function RemoveOldestNotification()
 	if #NotificationList > 0 then
 		local removed = table.remove(NotificationList, 1);
@@ -89,17 +92,28 @@ local function RemoveOldestNotification()
 			removed[1]:Destroy();
 		end);
 	end;
-end;
-spawn(function()
-	while wait() do
-		if #NotificationList > 0 then
-			wait(2);
-			RemoveOldestNotification();
-		end;
-	end;
-end);
+end
 local Update = {};
-function Update:Notify(desc)
+function Update:Notify(desc,duration)
+	duration = duration or 1.5
+	if tick() - lastNotifyTime < NOTIFY_COOLDOWN then return end
+	lastNotifyTime = tick()
+
+	for i, v in ipairs(NotificationList) do
+		if v[2].Text == desc then return end
+	end
+
+	if #NotificationList >= MAX_NOTIFICATIONS then
+		RemoveOldestNotification()
+	end
+	spawn(function()
+		while wait() do
+			if #NotificationList > 0 then
+				task.wait(duration)
+				RemoveOldestNotification();
+			end;
+		end;
+	end);
 	local Frame = Instance.new("Frame");
 	local Image = Instance.new("ImageLabel");
 	local Title = Instance.new("TextLabel");
@@ -1639,5 +1653,3 @@ function Update:Window(Config)
 	return uitab;
 end;
 return Update;
-
-

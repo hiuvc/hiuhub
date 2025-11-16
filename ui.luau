@@ -4,7 +4,7 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
     repeat
         wait()
         local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
-        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team)
+        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
         task.wait(3)
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
@@ -969,7 +969,7 @@ local LocalPlayer = game.Players.LocalPlayer
 local PlaceId = game.PlaceId
 local JobId = game.JobId
 
-function HopAnyServer()
+function Hop()
     print("🟢 HopAnyServer() → Searching for available servers...")
 
     local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
@@ -2882,7 +2882,7 @@ v16.Server_Status:AddButton({
     Title = "Hop Server Less Player",
     Description = "",
     Callback = function()
-        HopLowPlayer()
+        loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
     end
 })
 ---------------Tab Main------------------------
@@ -2903,10 +2903,11 @@ end);
 _G.Level = GetConfig("ToggleLevel", false)
 AutoLevel:SetValue(_G.Level)
 
-spawn(function()
-    while task.wait() do
+task.spawn(function()
+    while task.wait(0.1) do
         if _G.Level then
             pcall(function()
+
                 local player = game:GetService("Players").LocalPlayer
                 local questUI = player.PlayerGui.Main.Quest
                 local questTitle = questUI.Container.QuestTitle.Title.Text
@@ -2917,37 +2918,61 @@ spawn(function()
                     game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
                 end
 
+                ----------------------------------------------------
                 -- Nếu chưa có nhiệm vụ
+                ----------------------------------------------------
                 if not questUI.Visible then
                     StartMagnet = false
                     CheckQuest()
                     TP1(CFrameQuest)
+
                     if (player.Character.HumanoidRootPart.Position - CFrameQuest.Position).Magnitude <= 5 then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+                            "StartQuest",
+                            NameQuest,
+                            LevelQuest
+                        )
                     end
 
+                ----------------------------------------------------
                 -- Nếu đang có nhiệm vụ
+                ----------------------------------------------------
                 elseif questUI.Visible then
                     CheckQuest()
                     local foundEnemy = false
 
+                    ----------------------------------------------------
+                    -- Tìm quái đúng tên
+                    ----------------------------------------------------
                     for _, enemy in pairs(workspace.Enemies:GetChildren()) do
-                        if enemy.Name == Mon and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                        if enemy.Name == Mon
+                            and enemy:FindFirstChild("HumanoidRootPart")
+                            and enemy:FindFirstChild("Humanoid")
+                            and enemy.Humanoid.Health > 0 then
+
                             if string.find(questTitle, NameMon) then
                                 foundEnemy = true
+
                                 repeat
-                                    task.wait()
+                                    task.wait(0.5)
                                     EquipWeapon(_G.SelectWeapon)
                                     AutoHaki()
                                     getgenv().Seriality = true
+
                                     PosMon = enemy.HumanoidRootPart.CFrame
                                     TP1(enemy.HumanoidRootPart.CFrame * Pos)
+
                                     enemy.HumanoidRootPart.CanCollide = false
                                     enemy.Humanoid.WalkSpeed = 0
                                     enemy.Head.CanCollide = false
                                     enemy.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+
                                     StartMagnet = true
-                                until not _G.Level or enemy.Humanoid.Health <= 0 or not enemy.Parent or not questUI.Visible
+                                until not _G.Level
+                                    or enemy.Humanoid.Health <= 0
+                                    or not enemy.Parent
+                                    or not questUI.Visible
+
                             else
                                 StartMagnet = false
                                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
@@ -2955,22 +2980,35 @@ spawn(function()
                         end
                     end
 
-                    -- Nếu chưa thấy quái, bay quanh vị trí spawn
+                    ----------------------------------------------------
+                    -- Nếu chưa thấy quái → TP1() quét hình vuông 4 góc
+                    ----------------------------------------------------
                     if not foundEnemy then
                         StartMagnet = false
 
-                        -- Di chuyển quanh vị trí spawn để đợi quái
-                        local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
                         if hrp and CFrameMon then
-                            -- Góc quay mỗi vòng
-                            for angle = 0, 360, 45 do
-                                if not _G.Level or questUI.Visible == false then break end
-                                local radius = 20
-                                local x = math.cos(math.rad(angle)) * radius
-                                local z = math.sin(math.rad(angle)) * radius
-                                local flyPos = CFrameMon * CFrame.new(x, 10, z)
-                                TP1(flyPos)
-                                task.wait(0.3)
+
+                            local scanHeight = 20    -- độ cao để tránh bị đánh
+                            local scanRadius = 80    -- bán kính hình vuông
+
+                            -- 4 góc hình vuông
+                            local offsets = {
+                                Vector3.new(scanRadius, scanHeight, scanRadius),
+                                Vector3.new(-scanRadius, scanHeight, scanRadius),
+                                Vector3.new(scanRadius, scanHeight, -scanRadius),
+                                Vector3.new(-scanRadius, scanHeight, -scanRadius)
+                            }
+
+                            for _, offset in ipairs(offsets) do
+                                if not _G.Level or not questUI.Visible then break end
+
+                                local targetCF = CFrameMon * CFrame.new(offset)
+
+                                -- Di chuyển bằng TP1()
+                                TP1(targetCF)
+                                task.wait(1)
                             end
                         end
                     end
@@ -5425,37 +5463,6 @@ DropDownTween:OnChanged(function(v)
     SetConfig("TweenSpeed", v)
 end)
 
-local BringDistanceList = {"200", "250", "350"}
-
-local BringDistance = v16.Setting:AddDropdown("BringDistance", {
-    Title = "Bring Mode Distance",
-    Description = "",
-    Values = BringDistanceList,
-    Multi = false,
-    Default = GetConfig("BringDistance", nil)
-})
-
--- Phát hiện thiết bị
-local isMobile = game:GetService("UserInputService").TouchEnabled
-local defaultBring = isMobile and "200" or "200"
-
--- Ưu tiên giá trị đã lưu, nếu chưa có thì dùng mặc định theo thiết bị
-local savedBring = GetConfig("BringDistance", nil)
-if savedBring then
-    BringDistance:SetValue(savedBring)
-else
-    BringDistance:SetValue(defaultBring)
-    SetConfig("BringDistance", defaultBring)
-end
-
--- Khi người dùng chọn giá trị mới
-BringDistance:OnChanged(function(v)
-    _G.BringMode = tonumber(v)
-    SetConfig("BringDistance", v)
-end)
-
--- Gán giá trị ban đầu
-_G.BringMode = tonumber(BringDistance.Value)
 
 
 local v4033 = v16.Setting:AddToggle("ToggleBringMob", {
@@ -5520,7 +5527,7 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
 end
 
 
-
+_G.BringMode = 170
 
 spawn(function()
     while task.wait() do
@@ -5642,7 +5649,7 @@ spawn(function()
                             "Mercenary [Lv. 725]"
                         }, Mon)
                         local dist = (hrp.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-                        if (isSpecial and dist <= 220) or (not isSpecial and dist <= _G.BringMode) then
+                        if (isSpecial and dist <= 170) or (not isSpecial and dist <= _G.BringMode) then
                             TweenEnemyToTarget(enemy, PosMon)
                             brought += 1
                         end

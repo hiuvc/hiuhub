@@ -345,6 +345,7 @@ function Update:Window(Config)
     Main.Size = WindowConfig.Size;
     OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
     CreateRounded(Main, 12);
+    --Thêm theme trong nền
     local BackgroundImage = Instance.new("ImageLabel")
     BackgroundImage.Name = "BackgroundImage"
     BackgroundImage.Parent = Main

@@ -357,7 +357,7 @@ function Update:Window(Config)
     BackgroundImage.BackgroundTransparency = 1 
     BackgroundImage.Image = Config.Theme
     if not BackgroundImage.Image then return end 
-    BackgroundImage.ImageTransparency = 0.1
+    BackgroundImage.ImageTransparency = 0
     BackgroundImage.ScaleType = Enum.ScaleType.Stretch 
     BackgroundImage.ZIndex = 0 
     CreateRounded(BackgroundImage, 12)

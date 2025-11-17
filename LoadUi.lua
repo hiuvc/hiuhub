@@ -345,6 +345,17 @@ function Update:Window(Config)
     Main.Size = WindowConfig.Size;
     OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
     CreateRounded(Main, 12);
+    local BackgroundImage = Instance.new("ImageLabel")
+    BackgroundImage.Name = "BackgroundImage"
+    BackgroundImage.Parent = Main
+    BackgroundImage.Size = UDim2.new(1, 0, 1, 0) 
+    BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
+    BackgroundImage.BackgroundTransparency = 1 
+    BackgroundImage.Image = "rbxassetid://84435441882847" 
+    BackgroundImage.ImageTransparency = 0
+    BackgroundImage.ScaleType = Enum.ScaleType.Stretch 
+    BackgroundImage.ZIndex = 0 
+    CreateRounded(BackgroundImage, 12)
     local BtnStroke = Instance.new("UIStroke");
     local DragButton = Instance.new("Frame");
     DragButton.Name = "DragButton";

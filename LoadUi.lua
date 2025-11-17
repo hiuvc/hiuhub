@@ -184,7 +184,7 @@ function Update:StartLoad()
     MainLoaderFrame.BorderSizePixel = 0;
     local TitleLoader = Instance.new("TextLabel");
     TitleLoader.Parent = MainLoaderFrame;
-    TitleLoader.Text = "Nimo Hub";
+    TitleLoader.Text = Config.Title;
     TitleLoader.Font = Enum.Font.FredokaOne;
     TitleLoader.TextSize = 50;
     TitleLoader.TextColor3 = Color3.fromRGB(255, 255, 255);
@@ -310,6 +310,7 @@ function Update:LoadAnimation()
 end;
 function Update:Window(Config)
     assert(Config.SubTitle, "v4");
+    assert(Config.Title, "v4");
     local WindowConfig = {
         Size = Config.Size,
         TabWidth = Config.TabWidth
@@ -390,7 +391,7 @@ function Update:Window(Config)
     NameHub.AnchorPoint = Vector2.new(0, 0.5);
     NameHub.Size = UDim2.new(0, 1, 0, 25);
     NameHub.Font = Enum.Font.GothamBold;
-    NameHub.Text = "Nimo Hub [Vip Pro Max]";
+    NameHub.Text = Config.Title;
     NameHub.TextSize = 20;
     NameHub.TextColor3 = Color3.fromRGB(255, 255, 255);
     NameHub.TextXAlignment = Enum.TextXAlignment.Left;

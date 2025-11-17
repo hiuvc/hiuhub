@@ -1515,6 +1515,7 @@ function Update:Window(Config)
             RealTextbox.Position = UDim2.new(1, -5, 0.5, 0)
             RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
             RealTextbox.Size = UDim2.new(0, 80, 0, 25)
+            RealTextbox.TextTruncate = Enum.TextTruncate.AtEnd
             RealTextbox.Font = Enum.Font.Gotham
             RealTextbox.Text = ""
             RealTextbox.TextColor3 = Color3.fromRGB(225, 225, 225)
@@ -1530,7 +1531,6 @@ function Update:Window(Config)
                 end
             end)
         
-            -- ✅ Thêm đoạn này để hỗ trợ SetValue và GetValue
             local TextboxAPI = {}
         
             function TextboxAPI:SetValue(txt)

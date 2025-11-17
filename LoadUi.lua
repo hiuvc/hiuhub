@@ -353,7 +353,7 @@ function Update:Window(Config)
     BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
     BackgroundImage.BackgroundTransparency = 1 
     BackgroundImage.Image = "rbxassetid://84435441882847" 
-    BackgroundImage.ImageTransparency = 0
+    BackgroundImage.ImageTransparency = 0.3
     BackgroundImage.ScaleType = Enum.ScaleType.Stretch 
     BackgroundImage.ZIndex = 0 
     CreateRounded(BackgroundImage, 12)

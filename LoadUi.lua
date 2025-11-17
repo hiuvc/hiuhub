@@ -311,6 +311,7 @@ end;
 function Update:Window(Config)
     assert(Config.SubTitle, "v4");
     assert(Config.Title, "v4");
+    assert(Config.Theme,"v4");
     local WindowConfig = {
         Size = Config.Size,
         TabWidth = Config.TabWidth
@@ -353,7 +354,8 @@ function Update:Window(Config)
     BackgroundImage.Size = UDim2.new(1, 0, 1, 0) 
     BackgroundImage.Position = UDim2.new(0, 0, 0, 0)
     BackgroundImage.BackgroundTransparency = 1 
-    BackgroundImage.Image = "rbxassetid://84435441882847" 
+    BackgroundImage.Image = Config.Theme
+    if not BackgroundImage.Image then return end 
     BackgroundImage.ImageTransparency = 0.1
     BackgroundImage.ScaleType = Enum.ScaleType.Stretch 
     BackgroundImage.ZIndex = 0 

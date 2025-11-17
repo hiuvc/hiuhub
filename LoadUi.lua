@@ -332,7 +332,7 @@ function Update:Window(Config)
     OutlineMain.ClipsDescendants = true;
     OutlineMain.AnchorPoint = Vector2.new(0.5, 0.5);
     OutlineMain.BackgroundColor3 = Color3.fromRGB(30, 30, 30);
-    OutlineMain.BackgroundTransparency = 0.8;
+    OutlineMain.BackgroundTransparency = 0.6;
     OutlineMain.Position = UDim2.new(0.5, 0, 0.45, 0);
     OutlineMain.Size = UDim2.new(0, 0, 0, 0);
     CreateRounded(OutlineMain, 15);
@@ -342,7 +342,7 @@ function Update:Window(Config)
     Main.ClipsDescendants = true;
     Main.AnchorPoint = Vector2.new(0.5, 0.5);
     Main.BackgroundColor3 = Color3.fromRGB(24, 24, 26);
-    Main.BackgroundTransparency = 0.8;
+    Main.BackgroundTransparency = 0.6;
     Main.Position = UDim2.new(0.5, 0, 0.5, 0);
     Main.Size = WindowConfig.Size;
     OutlineMain:TweenSize(UDim2.new(0, WindowConfig.Size.X.Offset + 15, 0, WindowConfig.Size.Y.Offset + 15), "Out", "Quad", 0.4, true);
@@ -600,7 +600,7 @@ function Update:Window(Config)
         Button.Name = "Button";
         Button.Parent = Background;
         Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
-        Button.BackgroundTransparency = 0.8;
+        Button.BackgroundTransparency = 0.6;
         Button.Size = UDim2.new(0.8, 0, 0, 30);
         Button.Font = Enum.Font.Code;
         Button.Text = title or "Button";
@@ -731,7 +731,7 @@ function Update:Window(Config)
         SelectedTab.Name = "SelectedTab";
         SelectedTab.Parent = TabButton;
         SelectedTab.BackgroundColor3 = _G.Third;
-        SelectedTab.BackgroundTransparency = 0.8;
+        SelectedTab.BackgroundTransparency = 0.6;
         SelectedTab.Size = UDim2.new(0, 3, 0, 0);
         SelectedTab.Position = UDim2.new(0, 0, 0.5, 0);
         SelectedTab.AnchorPoint = Vector2.new(0, 0.5);
@@ -797,7 +797,7 @@ function Update:Window(Config)
                     })):Play();
                 end;
                 (TweenService:Create(TabButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = 0.8
+                    BackgroundTransparency = 0.6
                 })):Play();
                 (TweenService:Create(SelectedTab, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, 3, 0, 15)
@@ -833,7 +833,7 @@ function Update:Window(Config)
                     })):Play();
                 end;
                 (TweenService:Create(TabButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundTransparency = 0.8
+                    BackgroundTransparency = 0.6
                 })):Play();
                 (TweenService:Create(SelectedTab, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     Size = UDim2.new(0, 3, 0, 15)
@@ -907,7 +907,7 @@ function Update:Window(Config)
             TextButton.Name = "TextButton";
             TextButton.Parent = Button;
             TextButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200);
-            TextButton.BackgroundTransparency = 0.8;
+            TextButton.BackgroundTransparency = 0.6;
             TextButton.AnchorPoint = Vector2.new(1, 0.5);
             TextButton.Position = UDim2.new(1, -1, 0.5, 0);
             TextButton.Size = UDim2.new(0, 25, 0, 25);
@@ -975,7 +975,7 @@ function Update:Window(Config)
             Button.Name = "Button";
             Button.Parent = MainFramePage;
             Button.BackgroundColor3 = _G.Primary;
-            Button.BackgroundTransparency = 0.8;
+            Button.BackgroundTransparency = 0.6;
             Button.AutoButtonColor = false;
             Button.Font = Enum.Font.SourceSans;
             Button.Text = "";
@@ -1023,7 +1023,7 @@ function Update:Window(Config)
             ToggleImage.Name = "ToggleImage";
             ToggleImage.Parent = ToggleFrame;
             ToggleImage.BackgroundColor3 = Color3.fromRGB(200, 200, 200);
-            ToggleImage.BackgroundTransparency = 0.8;
+            ToggleImage.BackgroundTransparency = 0.6;
             ToggleImage.Position = UDim2.new(0, 0, 0, 0);
             ToggleImage.AnchorPoint = Vector2.new(0, 0);
             ToggleImage.Size = UDim2.new(1, 0, 1, 0);
@@ -1033,7 +1033,7 @@ function Update:Window(Config)
             Circle.Name = "Circle";
             Circle.Parent = ToggleImage;
             Circle.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
-            Circle.BackgroundTransparency = 0.8;
+            Circle.BackgroundTransparency = 0.6;
             Circle.Position = UDim2.new(0, 3, 0.5, 0);
             Circle.Size = UDim2.new(0, 14, 0, 14);
             Circle.AnchorPoint = Vector2.new(0, 0.5);
@@ -1045,14 +1045,14 @@ function Update:Window(Config)
                     Circle:TweenPosition(UDim2.new(0, 17, 0.5, 0), "Out", "Sine", 0.2, true);
                     (TweenService:Create(ToggleImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         BackgroundColor3 = _G.Third,
-                        BackgroundTransparency = 0.8
+                        BackgroundTransparency = 0.6
                     })):Play();
                 else
                     toggled = false;
                     Circle:TweenPosition(UDim2.new(0, 4, 0.5, 0), "Out", "Sine", 0.2, true);
                     (TweenService:Create(ToggleImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                         BackgroundColor3 = Color3.fromRGB(200, 200, 200),
-                        BackgroundTransparency = 0.8
+                        BackgroundTransparency = 0.6
                     })):Play();
                 end;
                 pcall(callback, toggled);
@@ -1062,7 +1062,7 @@ function Update:Window(Config)
                 Circle:TweenPosition(UDim2.new(0, 17, 0.5, 0), "Out", "Sine", 0.4, true);
                 (TweenService:Create(ToggleImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = _G.Third,
-                    BackgroundTransparency = 0.8
+                    BackgroundTransparency = 0.6
                 })):Play();
                 pcall(callback, toggled);
             end;
@@ -1087,7 +1087,7 @@ function Update:Window(Config)
             Dropdown.Name = "Dropdown";
             Dropdown.Parent = MainFramePage;
             Dropdown.BackgroundColor3 = _G.Primary;
-            Dropdown.BackgroundTransparency = 0.8;
+            Dropdown.BackgroundTransparency = 0.6;
             Dropdown.ClipsDescendants = false;
             Dropdown.Size = UDim2.new(1, 0, 0, 40);
             UICorner.CornerRadius = UDim.new(0, 5);
@@ -1108,7 +1108,7 @@ function Update:Window(Config)
             SelectItems.Parent = Dropdown;
             SelectItems.BackgroundColor3 = Color3.fromRGB(24, 24, 26);
             SelectItems.TextColor3 = Color3.fromRGB(255, 255, 255);
-            SelectItems.BackgroundTransparency = 0.8;
+            SelectItems.BackgroundTransparency = 0.6;
             SelectItems.Position = UDim2.new(1, -5, 0, 5);
             SelectItems.Size = UDim2.new(0, 100, 0, 30);
             SelectItems.AnchorPoint = Vector2.new(1, 0);
@@ -1135,7 +1135,7 @@ function Update:Window(Config)
             DropdownFrameScroll.Name = "DropdownFrameScroll";
             DropdownFrameScroll.Parent = Dropdown;
             DropdownFrameScroll.BackgroundColor3 = Color3.fromRGB(24, 24, 26);
-            DropdownFrameScroll.BackgroundTransparency = 0.8;
+            DropdownFrameScroll.BackgroundTransparency = 0.6;
             DropdownFrameScroll.ClipsDescendants = true;
             DropdownFrameScroll.Size = UDim2.new(1, 0, 0, 100);
             DropdownFrameScroll.Position = UDim2.new(0, 5, 0, 40);
@@ -1206,10 +1206,10 @@ function Update:Window(Config)
                         if v:IsA("TextButton") then
                             local SelectedItems = v:FindFirstChild("SelectedItems");
                             if activeItem == v.Text then
-                                v.BackgroundTransparency = 0.8;
+                                v.BackgroundTransparency = 0.6;
                                 v.TextTransparency = 0;
                                 if SelectedItems then
-                                    SelectedItems.BackgroundTransparency = 0.8;
+                                    SelectedItems.BackgroundTransparency = 0.6;
                                 end;
                             end;
                         end;
@@ -1223,10 +1223,10 @@ function Update:Window(Config)
                         if v:IsA("TextButton") then
                             local SelectedItems = v:FindFirstChild("SelectedItems");
                             if activeItem == v.Text then
-                                v.BackgroundTransparency = 0.8;
+                                v.BackgroundTransparency = 0.6;
                                 v.TextTransparency = 0;
                                 if SelectedItems then
-                                    SelectedItems.BackgroundTransparency = 0.8;
+                                    SelectedItems.BackgroundTransparency = 0.6;
                                 end;
                             else
                                 v.BackgroundTransparency = 1;
@@ -1308,10 +1308,10 @@ function Update:Window(Config)
                         if v:IsA("TextButton") then
                             local SelectedItems = v:FindFirstChild("SelectedItems");
                             if activeItem == v.Text then
-                                v.BackgroundTransparency = 0.8;
+                                v.BackgroundTransparency = 0.6;
                                 v.TextTransparency = 0;
                                 if SelectedItems then
-                                    SelectedItems.BackgroundTransparency = 0.8;
+                                    SelectedItems.BackgroundTransparency = 0.6;
                                 end;
                             else
                                 v.BackgroundTransparency = 1;
@@ -1370,7 +1370,7 @@ function Update:Window(Config)
             sliderr.Name = "sliderr";
             sliderr.Parent = Slider;
             sliderr.BackgroundColor3 = _G.Primary;
-            sliderr.BackgroundTransparency = 0.8;
+            sliderr.BackgroundTransparency = 0.6;
             sliderr.Position = UDim2.new(0, 0, 0, 0);
             sliderr.Size = UDim2.new(1, 0, 0, 35);
             sliderrcorner.CornerRadius = UDim.new(0, 5);
@@ -1403,12 +1403,12 @@ function Update:Window(Config)
             bar.BackgroundColor3 = Color3.fromRGB(200, 200, 200);
             bar.Size = UDim2.new(0, 100, 0, 4);
             bar.Position = UDim2.new(1, -10, 0.5, 0);
-            bar.BackgroundTransparency = 0.8;
+            bar.BackgroundTransparency = 0.6;
             bar.AnchorPoint = Vector2.new(1, 0.5);
             bar1.Name = "bar1";
             bar1.Parent = bar;
             bar1.BackgroundColor3 = _G.Third;
-            bar1.BackgroundTransparency = 0.8;
+            bar1.BackgroundTransparency = 0.6;
             bar1.Size = UDim2.new(set / max, 0, 0, 4);
             bar1corner.CornerRadius = UDim.new(0, 5);
             bar1corner.Name = "bar1corner";
@@ -1474,7 +1474,7 @@ function Update:Window(Config)
             Textbox.Name = "Textbox"
             Textbox.Parent = MainFramePage
             Textbox.BackgroundColor3 = _G.Primary
-            Textbox.BackgroundTransparency = 0.8
+            Textbox.BackgroundTransparency = 0.6
             Textbox.Size = UDim2.new(1, 0, 0, 35)
         
             TextboxCorner.CornerRadius = UDim.new(0, 5)
@@ -1495,7 +1495,7 @@ function Update:Window(Config)
             RealTextbox.Name = "RealTextbox"
             RealTextbox.Parent = Textbox
             RealTextbox.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-            RealTextbox.BackgroundTransparency = 0.8
+            RealTextbox.BackgroundTransparency = 0.6
             RealTextbox.Position = UDim2.new(1, -5, 0.5, 0)
             RealTextbox.AnchorPoint = Vector2.new(1, 0.5)
             RealTextbox.Size = UDim2.new(0, 80, 0, 25)

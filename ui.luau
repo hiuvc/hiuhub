@@ -1,5 +1,5 @@
 
--- Reliable team selection method
+
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -11,10 +11,11 @@ end
 
 print("-----Loading Ui-----")
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local ServerHop = loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/HopServerModule.lua"))()
 local v15 = Fluent:CreateWindow({
     Title = "Hiu Hub",
     SubTitle = "By hiuvc",
-    TabWidth = 160,
+    TabWidth = 120,
     Theme = "Darker",
     Acrylic = true,
     Size = UDim2.fromOffset(540, 350),
@@ -727,7 +728,7 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 --// Global cooldown
 getgenv().Seriality = getgenv().Seriality or false
-getgenv().AttackCooldown = getgenv().AttackCooldown or 0.01 
+getgenv().AttackCooldown = getgenv().AttackCooldown or 0.05 
 local lastAttackTime = 0
 
 --// Services
@@ -791,7 +792,7 @@ local function Attack()
     local equippedWeapon = character:FindFirstChildOfClass("Tool")
     if not equippedWeapon then return end
 
-    local enemiesInRange = GetEnemiesInRange(character, 100)
+    local enemiesInRange = GetEnemiesInRange(character, 60)
     if #enemiesInRange == 0 then return end
 
     local modules = ReplicatedStorage:FindFirstChild("Modules")
@@ -963,96 +964,7 @@ LoadConfig()
 
 
 local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-local LocalPlayer = game.Players.LocalPlayer
 
-local PlaceId = game.PlaceId
-local JobId = game.JobId
-
-function Hop()
-    print("🟢 HopAnyServer() → Searching for available servers...")
-
-    local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-    local UsedServers = {}
-
-    while task.wait(0.5) do
-        local success, servers = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(url))
-        end)
-
-        if success and servers and servers.data then
-            for _, server in ipairs(servers.data) do
-                if server.id ~= JobId and server.playing < server.maxPlayers then
-                    if not table.find(UsedServers, server.id) then
-                        table.insert(UsedServers, server.id)
-
-                        print("🔁 Hopping to random server:", server.id, "| Players:", server.playing)
-
-                        local ok, err = pcall(function()
-                            TeleportService:TeleportToPlaceInstance(PlaceId, server.id, LocalPlayer)
-                        end)
-
-                        if not ok then warn("⚠️ Teleport error:", err) end
-                        return
-                    end
-                end
-            end
-        else
-            warn("🚫 Failed to fetch server list (HTTP error). Retrying...")
-        end
-    end
-end
-
-
-
-
-function HopLowPlayer()
-    print("🟡 HopLowPlayer() → Scanning for lowest player server (priority: 1 player)...")
-
-    local cursor = nil
-    local bestServer = nil
-
-    while true do
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-        if cursor then url = url .. "&cursor=" .. cursor end
-
-        local success, servers = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(url))
-        end)
-
-        if success and servers and servers.data then
-            for _, server in ipairs(servers.data) do
-                if server.id ~= JobId and server.playing < server.maxPlayers then
-                    
-                    -- ✅ Ưu tiên server chỉ có đúng 1 người chơi
-                    if server.playing == 1 then
-                        print("🔥 Found 1-player server! Hopping:", server.id)
-                        TeleportService:TeleportToPlaceInstance(PlaceId, server.id, LocalPlayer)
-                        return
-                    end
-
-                    -- Ngược lại → chọn server ít người nhất
-                    if not bestServer or server.playing < bestServer.playing then
-                        bestServer = server
-                    end
-                end
-            end
-
-            cursor = servers.nextPageCursor
-            if not cursor then break end
-        else
-            warn("🚫 Failed to fetch server list. Retrying...")
-            break
-        end
-    end
-
-    if bestServer then
-        print("📌 No 1-player server found → hopping to lowest player server:", bestServer.id, "| Players:", bestServer.playing)
-        TeleportService:TeleportToPlaceInstance(PlaceId, bestServer.id, LocalPlayer)
-    else
-        warn("❌ No suitable server found.")
-    end
-end
 
 
 function UpdateIslandESP()
@@ -2875,7 +2787,7 @@ v16.Server_Status:AddButton({
     Title = "Hop Server",
     Description = "",
     Callback = function()
-        HopAnyServer()
+        ServerHop:Teleport()
     end
 });
 v16.Server_Status:AddButton({
@@ -2895,9 +2807,7 @@ AutoLevel:OnChanged(function(v)
     _G.Level = v;
     SetConfig("ToggleLevel", v)
     if (v == false) then
-        wait()
         StopTween(_G.Level)
-        wait()
     end
 end);
 _G.Level = GetConfig("ToggleLevel", false)
@@ -3006,7 +2916,6 @@ task.spawn(function()
 
                                 local targetCF = CFrameMon * CFrame.new(offset)
 
-                                -- Di chuyển bằng TP1()
                                 TP1(targetCF)
                                 task.wait(1)
                             end
@@ -3033,35 +2942,42 @@ end);
 _G.FarmNearest = GetConfig("ToggleMobAura", false)
 FramNear:SetValue(_G.FarmNearest)
 
-spawn(function()
-    while wait() do
+task.spawn(function()
+    while task.wait(0.1) do
         if _G.FarmNearest then
-            for v2127, v2128 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                if (v2128.Name and v2128:FindFirstChild("Humanoid")) then
-                    if (v2128.Humanoid.Health > 0) then
-                        repeat
-                            wait();
-                            EquipWeapon(_G.SelectWeapon);
-                            if  not game.Players.LocalPlayer.Character:FindFirstChild("HasBuso") then
-                                local v2907 = {
-                                    [1] = "Buso"
-                                };
-                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(v2907));
-                            end
-                            topos(v2128.HumanoidRootPart.CFrame * Pos );
-                            v2128.HumanoidRootPart.CanCollide = false;
-                            getgenv().Seriality = true
-                            v2128.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
-                            AutoFarmNearestMagnet = true;
-                            PosMonNear = v2128.HumanoidRootPart.CFrame;
-                        until  not _G.FarmNearest or  not v2128.Parent or (v2128.Humanoid.Health <= 0)
-                        AutoFarmNearestMagnet = false;
-                    end
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                
+                -- Kiểm tra enemy hợp lệ
+                if enemy:FindFirstChild("Humanoid") 
+                and enemy:FindFirstChild("HumanoidRootPart")
+                and enemy.Humanoid.Health > 0 then
+
+                    repeat
+                        task.wait(0.5)
+
+                        EquipWeapon(_G.SelectWeapon)
+                        AutoHaki()
+
+                        topos(enemy.HumanoidRootPart.CFrame * Pos)
+
+                        enemy.HumanoidRootPart.CanCollide = false
+                        enemy.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+
+                        getgenv().Seriality = true
+                        AutoFarmNearestMagnet = true
+                        PosMonNear = enemy.HumanoidRootPart.CFrame
+
+                    until 
+                        not _G.FarmNearest
+                        or not enemy.Parent
+                        or enemy.Humanoid.Health <= 0
+
+                    AutoFarmNearestMagnet = false
                 end
             end
         end
     end
-end);
+end)
 
 if World1 then
     local Sea2Quest = v16.Main:AddSection("Second Sea Quests")
@@ -3235,9 +3151,9 @@ if World2 then
         _G.Bartilo = v;
         StopTween(_G.Bartilo)
     end)
-    spawn(function()
+    task.spawn(function()
         pcall(function()
-            while wait(0.1) do
+            while task.wait(0.1) do
                 if _G.Bartilo then
                     if ((game:GetService("Players").LocalPlayer.Data.Level.Value >= 850) and (game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 0)) then
                         if (string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Swan Pirates") and string.find(game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "50") and (game:GetService("Players").LocalPlayer.PlayerGui.Main.Quest.Visible == true)) then
@@ -3247,7 +3163,7 @@ if World2 then
                                     if (v2920.Name == Ms) then
                                         pcall(function()
                                             repeat
-                                                task.wait();
+                                                task.wait(0.5);
                                                 sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
                                                 EquipWeapon(_G.SelectWeapon);
                                                 getgenv().Seriality = true
@@ -3266,13 +3182,13 @@ if World2 then
                             else
                                 repeat
                                     topos(CFrame.new(932.624451, 156.106079, 1180.27466, -0.973085582, 4.5513712e-8, -0.230443969, 2.6702471e-8, 1, 8.474911e-8, 0.230443969, 7.631471e-8, -0.973085582));
-                                    wait();
+                                    task.wait();
                                 until  not _G.Bartilo or ((game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(932.624451, 156.106079, 1180.27466, -0.973085582, 4.5513712e-8, -0.230443969, 2.6702471e-8, 1, 8.474911e-8, 0.230443969, 7.631471e-8, -0.973085582)).Magnitude <= 10)
                             end
                         else
                             repeat
                                 topos(CFrame.new( -456.28952, 73.0200958, 299.895966));
-                                wait();
+                                task.wait();
                             until  not _G.Bartilo or ((game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new( -456.28952, 73.0200958, 299.895966)).Magnitude <= 10)
                             wait(1.1);
                             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", "BartiloQuest", 1);
@@ -3301,20 +3217,20 @@ if World2 then
                         elseif game:GetService("ReplicatedStorage"):FindFirstChild("Jeremy [Lv. 850] [Boss]") then
                             repeat
                                 topos(CFrame.new( -456.28952, 73.0200958, 299.895966));
-                                wait();
+                                task.wait();
                             until  not _G.Bartilo or ((game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new( -456.28952, 73.0200958, 299.895966)).Magnitude <= 10)
                             wait(1.1);
                             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo");
                             wait(1);
                             repeat
                                 topos(CFrame.new(2099.88159, 448.931, 648.997375));
-                                wait();
+                                task.wait();
                             until  not _G.Bartilo or ((game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(2099.88159, 448.931, 648.997375)).Magnitude <= 10)
                             wait(2);
                         else
                             repeat
                                 topos(CFrame.new(2099.88159, 448.931, 648.997375));
-                                wait();
+                                task.wait();
                             until  not _G.Bartilo or ((game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(2099.88159, 448.931, 648.997375)).Magnitude <= 10)
                         end
                     elseif ((game:GetService("Players").LocalPlayer.Data.Level.Value >= 800) and (game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 2)) then
@@ -3467,7 +3383,7 @@ spawn(function()
                             Content = "Hop Server...",
                             Duration = 5
                         })
-                        Hop()
+                        ServerHop:Teleport()
                         return
                     end
                 else
@@ -3475,7 +3391,7 @@ spawn(function()
                     if failCount >= 3 then
                         _G.AutoCollectChest = false
                         _G.CollectedChestCount = 0
-                        Hop()
+                        ServerHop:Teleport()
                         return
                     end
                 end
@@ -3484,7 +3400,7 @@ spawn(function()
                 if failCount >= 3 then
                     _G.AutoCollectChest = false
                     _G.CollectedChestCount = 0
-                    Hop()
+                    ServerHop:Teleport()
                     return
                 end
             end
@@ -3713,8 +3629,8 @@ FramMaterial:OnChanged(function(v)
     _G.AutoMaterial = v
     StopTween(_G.AutoMaterial)
 end)
-spawn(function()
-    while task.wait() do
+task.spawn(function()
+    while task.wait(0.1) do
         if _G.AutoMaterial then
             pcall(function()
                 MaterialMon(SelectMaterial)
@@ -3725,7 +3641,7 @@ spawn(function()
                         if (enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") and enemy.Humanoid.Health > 0) then
                             if table.find(MMon, enemy.Name) then
                                 repeat
-                                    task.wait()
+                                    task.wait(0.5)
                                     AutoHaki()
                                     StartMaterialMagnet = true
                                     EquipWeapon(_G.SelectWeapon)
@@ -3744,11 +3660,23 @@ spawn(function()
                         end
                     end
                 else
-                    for _, spawnPoint in pairs(game:GetService("Workspace")['_WorldOrigin'].EnemySpawns:GetChildren()) do
-                        if string.find(spawnPoint.Name, MMon[1]) then
-                            if (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - spawnPoint.Position).Magnitude >= 10 then
-                                TP1(spawnPoint.HumanoidRootPart.CFrame * Pos)
-                            end
+                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp and MPos then 
+                        local scanHeight = 20    -- độ cao để tránh bị đánh
+                        local scanRadius = 80    -- bán kính hình vuông
+                        local offsets = {
+                            Vector3.new(scanRadius, scanHeight, scanRadius),
+                            Vector3.new(-scanRadius, scanHeight, scanRadius),
+                            Vector3.new(scanRadius, scanHeight, -scanRadius),
+                            Vector3.new(-scanRadius, scanHeight, -scanRadius)
+                        }
+                        for _, offset in ipairs(offsets) do
+                                if not _G.AutoMaterial then break end
+
+                                local targetCF = CFrameMon * CFrame.new(offset)
+
+                                TP1(targetCF)
+                                task.wait(1)
                         end
                     end
                 end
@@ -4084,9 +4012,6 @@ spawn(function()
                                     v1035.Humanoid.WalkSpeed = 0;
                                     v1035.HumanoidRootPart.Size = Vector3.new(60, 60, 60);
                                     TP1(v1035.HumanoidRootPart.CFrame * Pos);
-                                    if v1035.Humanoid:FindFirstChild("Animator") then
-                                        v1035.Humanoid.Animator:Destroy();
-                                    end
                                     sethiddenproperty(game:GetService("Players").LocalPlayer, "SimulationRadius", math.huge);
                                 until not _G.AutoBoss or not v1035.Parent or (v1035.Humanoid.Health <= 0)
                             end
@@ -4117,7 +4042,7 @@ if World1 then
     getgenv().AutoSaber = GetConfig("AutoSaber", false)
     AutoSaber:SetValue(getgenv().AutoSaber)
 
-    spawn(function()
+    task.spawn(function()
         while task.wait(0.5) do
             if getgenv().AutoSaber and game.Players.LocalPlayer.Data.Level.Value >= 200 then
                 pcall(function()
@@ -4245,8 +4170,8 @@ if World1 then
 
     local TheSawPos = CFrame.new(-690.33081054688, 15.09425163269, 1582.2380371094)
 
-    spawn(function()
-        while task.wait() do
+    task.spawn(function()
+        while task.wait(0.1) do
             if getgenv().saw and World1 then
                 pcall(function()
                     local enemies = game:GetService("Workspace").Enemies
@@ -4274,7 +4199,6 @@ if World1 then
                             topos(TheSawPos)
                         end
                     else
-                        -- Không có boss trong server → hop
                         topos(TheSawPos)
                     end
                 end)
@@ -4408,7 +4332,7 @@ spawn(function()
                             Duration = 5
                         })
                         task.wait(1)
-                        Hop()
+                        ServerHop:Teleport()
                     else
                         Fluent:Notify({
                             Title = "Hiu Hub",
@@ -4638,7 +4562,7 @@ end)
 getgenv().AutoStoreFruit = GetConfig("AutoStoreFruit", false)
 AutoStoreFruit:SetValue(getgenv().AutoStoreFruit)
 
-spawn(function()
+task.spawn(function()
     while task.wait() do
         if getgenv().AutoStoreFruit then
             pcall(function()
@@ -4713,7 +4637,7 @@ spawn(function()
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Quake-Quake", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Quake Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Buddha Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Buddha Fruit")) then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buddha", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Buddha Fruit"));
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Buddha-Buddha", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Buddha Fruit"));
                     end
                     if (game:GetService("Players").LocalPlayer.Character:FindFirstChild("Spider Fruit") or game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Spider Fruit")) then
                         game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", "Spider-Spider", game:GetService("Players").LocalPlayer.Backpack:FindFirstChild("Spider Fruit"));
@@ -4778,7 +4702,7 @@ spawn(function()
                 end
             end);
         end
-        wait();
+        task.wait(0.1);
     end
 end);
 
@@ -4794,9 +4718,9 @@ RandomFruit:OnChanged(function(v)
 end)
 _G.RandomFruit = GetConfig("RandomFruit", false)
 RandomFruit:SetValue(_G.RandomFruit)
-spawn(function()
+task.spawn(function()
     pcall(function()
-        while wait(0.2) do
+        while task.wait(0.1) do
             if _G.RandomFruit then
                 (game:GetService("ReplicatedStorage")).Remotes.CommF_:InvokeServer("Cousin", "Buy");
             end;
@@ -5430,7 +5354,7 @@ _G.SelectWeapon = nil
 
 -- Tự động chọn Weapon
 task.spawn(function()
-    while wait(0.2) do
+    while task.wait(0.1) do
         pcall(function()
             for _, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
                 if v.ToolTip == _G.SelectWeaponType then
@@ -5479,43 +5403,48 @@ local RunService = game:GetService("RunService")
 
 function TweenEnemyToTarget(enemy, targetCFrame, size)
     pcall(function()
+
+        -- Nếu quái đã được gom trước đó -> bỏ qua
+        if enemy:FindFirstChild("IsBeingBrought") then return end
+        Instance.new("BoolValue", enemy).Name = "IsBeingBrought"
+
         local hrp = enemy:FindFirstChild("HumanoidRootPart")
         local humanoid = enemy:FindFirstChild("Humanoid")
-        if not hrp or not humanoid or humanoid.Health <= 0 then return end
+        if not hrp or not humanoid or humanoid.Health <= 0 then
+            if enemy:FindFirstChild("IsBeingBrought") then enemy.IsBeingBrought:Destroy() end
+            return
+        end
 
-        -- Thiết lập HRP
         hrp.Size = size or Vector3.new(4, 4, 4)
         hrp.CanCollide = false
+
         if enemy:FindFirstChild("Head") then
             enemy.Head.CanCollide = false
         end
+
         humanoid:ChangeState(Enum.HumanoidStateType.Physics)
         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
 
-
-        local finalCFrame
-        if targetCFrame then
-            finalCFrame = targetCFrame
-        else
-
+        local finalCFrame = targetCFrame
+        if not finalCFrame then
             local player = game.Players.LocalPlayer
             local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if not root then return end
-
-            local offsetY = hrp.Size.Y / 2 + 2
-            finalCFrame = CFrame.new(root.Position - Vector3.new(0, offsetY, 0))
+            finalCFrame = CFrame.new(root.Position - Vector3.new(0, hrp.Size.Y / 2 + 2, 0))
         end
 
-        -- Tween đến targetCFrame
-        local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Linear)
-        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = finalCFrame})
+        local tween = TweenService:Create(
+            hrp,
+            TweenInfo.new(0.25, Enum.EasingStyle.Linear),
+            {CFrame = finalCFrame}
+        )
         tween:Play()
 
-        -- Giữ quái cố định tại targetCFrame
         local anchorPos = finalCFrame.Position
         local conn
         conn = RunService.Stepped:Connect(function()
             if not enemy.Parent or humanoid.Health <= 0 then
+                if enemy:FindFirstChild("IsBeingBrought") then enemy.IsBeingBrought:Destroy() end
                 conn:Disconnect()
                 return
             end
@@ -5527,138 +5456,158 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
 end
 
 
-_G.BringMode = 170
+_G.BringMode = 150
 
-spawn(function()
-    while task.wait() do
+task.spawn(function()
+    while task.wait(0.1) do
         pcall(function()
-            if _G.BringMonster then
-                CheckQuest()
-                local brought = 0
 
-                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
-                    if brought >= 2 then break end
+            if not _G.BringMonster then return end
 
-                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
-                    local hum = enemy:FindFirstChild("Humanoid")
-                    if not hrp or not hum or hum.Health <= 0 then continue end
+            CheckQuest()
+            local brought = 0
 
-                    local distanceToPlayer = (hrp.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                if brought >= 2 then break end
 
-                    -- Ectoplasm (Ship)
-                    if _G.Ectoplasm and StartEctoplasmMagnet and string.find(enemy.Name, "Ship") then
-                        if (hrp.Position - EctoplasmMon.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, EctoplasmMon)
-                            brought += 1
-                        end
+                local hrp = enemy:FindFirstChild("HumanoidRootPart")
+                local hum = enemy:FindFirstChild("Humanoid")
 
-                    -- Rengoku (Snow Lurker / Arctic Warrior)
-                    elseif _G.Rengoku and StartRengokuMagnet and (enemy.Name == "Snow Lurker" or enemy.Name == "Arctic Warrior") then
-                        if (hrp.Position - RengokuMon.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, RengokuMon, Vector3.new(1500, 1500, 1500))
-                            brought += 1
-                        end
+                -- ❌ Nếu quái đang được kéo -> bỏ qua
+                if enemy:FindFirstChild("IsBeingBrought") then
+                    continue
+                end
 
-                    -- Musketeer Hat
-                    elseif _G.MusketeerHat and StartMagnetMusketeerhat and enemy.Name == "Forest Pirate" then
-                        if (hrp.Position - MusketeerHatMon.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, MusketeerHatMon)
-                            brought += 1
-                        end
+                if not hrp or not hum or hum.Health <= 0 then continue end
 
-                    -- Observation Haki V2
-                    elseif _G.ObservationHakiV2 and Mangnetcitzenmon and enemy.Name == "Forest Pirate" then
-                        if (hrp.Position - PosHee.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosHee)
-                            brought += 1
-                        end
+                local player = game.Players.LocalPlayer
+                if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+                    continue
+                end
+                local root = player.Character.HumanoidRootPart
+                local distanceToPlayer = (hrp.Position - root.Position).Magnitude
 
-                    -- EvoRace (Zombie)
-                    elseif _G.EvoRace and StartEvoMagnet and enemy.Name == "Zombie" then
-                        if (hrp.Position - PosMonEvo.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonEvo)
-                            brought += 1
-                        end
 
-                    -- Bartilo Quest (Swan Pirate)
-                    elseif _G.Bartilo and AutoBartiloBring and enemy.Name == "Swan Pirate" then
-                        if (hrp.Position - PosMonBarto.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonBarto)
-                            brought += 1
-                        end
+                --=======================
+                -- CÁC LOẠI MAGNET
+                --=======================
 
-                    -- Auto Material
-                    elseif _G.AutoMaterial and StartMaterialMagnet and table.find({
-                        "Factory Staff", "Water Fighter", "Military Spy", "Magma Ninja",
-                        "God's Guard", "Brute", "Marine Captain", "Jungle Pirate",
-                        "Swan Pirate", "Fishman Raider", "Fishman Warrior",
-                        "Demonic Soul", "Vampire", "Chocolate Bar Battler",
-                        "Dragon Crew Archer", "Pistol Billionaire", "Hydra Enforcer",
-                        "Venomous Assailant", "Mythological Pirate",
-                        "Ship Deckhand", "Ship Engineer", "Ship Steward", "Ship Officer"
-                    }, enemy.Name) then
-                        if (hrp.Position - PosMonMaterial.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonMaterial)
-                            brought += 1
-                        end
+                -- ECTOPLASM
+                if _G.Ectoplasm and StartEctoplasmMagnet and string.find(enemy.Name, "Ship") then
+                    if (hrp.Position - EctoplasmMon.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, EctoplasmMon)
+                        brought += 1
+                    end
 
-                    -- Mastery Fruit
-                    elseif _G.FarmFruitMastery and StartMasteryFruitMagnet and ((enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon)) then
-                        if (hrp.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonMasteryFruit)
-                            brought += 1
-                        end
+                -- RENGOKU
+                elseif _G.Rengoku and StartRengokuMagnet and (enemy.Name == "Snow Lurker" or enemy.Name == "Arctic Warrior") then
+                    if (hrp.Position - RengokuMon.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, RengokuMon, Vector3.new(1500, 1500, 1500))
+                        brought += 1
+                    end
 
-                    -- Mastery Gun
-                    elseif _G.FarmGunMastery and StartMasteryGunMagnet and ((enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon)) then
-                        if (hrp.Position - PosMonMasteryGun.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonMasteryGun)
-                            brought += 1
-                        end
+                -- MUSKETEER HAT
+                elseif _G.MusketeerHat and StartMagnetMusketeerhat and enemy.Name == "Forest Pirate" then
+                    if (hrp.Position - MusketeerHatMon.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, MusketeerHatMon)
+                        brought += 1
+                    end
 
-                    -- Bone Farm
-                    elseif _G.Bone and StartMagnetBoneMon and table.find({
-                        "Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"
-                    }, enemy.Name) then
-                        if (hrp.Position - PosMonBone.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonBone)
-                            brought += 1
-                        end
+                -- OBSERVATION HAKI V2
+                elseif _G.ObservationHakiV2 and Mangnetcitzenmon and enemy.Name == "Forest Pirate" then
+                    if (hrp.Position - PosHee.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosHee)
+                        brought += 1
+                    end
 
-                    -- DoughtBoss
-                    elseif _G.DoughtBoss and MagnetDought and table.find({
-                        "Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"
-                    }, enemy.Name) then
-                        if (hrp.Position - PosMonDoughtOpenDoor.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonDoughtOpenDoor)
-                            brought += 1
-                        end
+                -- EVO RACE (Zombie)
+                elseif _G.EvoRace and StartEvoMagnet and enemy.Name == "Zombie" then
+                    if (hrp.Position - PosMonEvo.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonEvo)
+                        brought += 1
+                    end
 
-                    -- Nearest Mode
-                    elseif _G.FarmNearest and AutoFarmNearestMagnet then
-                        if (hrp.Position - PosMonNear.Position).Magnitude <= _G.BringMode then
-                            TweenEnemyToTarget(enemy, PosMonNear)
-                            brought += 1
-                        end
+                -- BARTILO QUEST
+                elseif _G.Bartilo and AutoBartiloBring and enemy.Name == "Swan Pirate" then
+                    if (hrp.Position - PosMonBarto.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonBarto)
+                        brought += 1
+                    end
 
-                    -- Default BringMonster by Level & Mon
-                    elseif _G.Level and StartMagnet and enemy.Name == Mon then
-                        local isSpecial = table.find({
-                            "Factory Staff [Lv. 800]", "Monkey [Lv. 14]", "Gorilla [Lv. 20]",
-                            "Dragon Crew Warrior [Lv. 1575]", "Dragon Crew Archer [Lv. 1600]",
-                            "Mercenary [Lv. 725]"
-                        }, Mon)
-                        local dist = (hrp.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-                        if (isSpecial and dist <= 170) or (not isSpecial and dist <= _G.BringMode) then
-                            TweenEnemyToTarget(enemy, PosMon)
-                            brought += 1
-                        end
+                -- MATERIAL FARM
+                elseif _G.AutoMaterial and StartMaterialMagnet and table.find({
+                    "Factory Staff", "Water Fighter", "Military Spy", "Magma Ninja",
+                    "God's Guard", "Brute", "Marine Captain", "Jungle Pirate",
+                    "Swan Pirate", "Fishman Raider", "Fishman Warrior",
+                    "Demonic Soul", "Vampire", "Chocolate Bar Battler",
+                    "Dragon Crew Archer", "Pistol Billionaire", "Hydra Enforcer",
+                    "Venomous Assailant", "Mythological Pirate",
+                    "Ship Deckhand", "Ship Engineer", "Ship Steward", "Ship Officer"
+                }, enemy.Name) then
+                    if (hrp.Position - PosMonMaterial.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonMaterial)
+                        brought += 1
+                    end
+
+                -- FRUIT MASTERY
+                elseif _G.FarmFruitMastery and StartMasteryFruitMagnet and ((enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon)) then
+                    if (hrp.Position - PosMonMasteryFruit.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonMasteryFruit)
+                        brought += 1
+                    end
+
+                -- GUN MASTERY
+                elseif _G.FarmGunMastery and StartMasteryGunMagnet and ((enemy.Name == "Monkey") or (enemy.Name == "Factory Staff") or (enemy.Name == Mon)) then
+                    if (hrp.Position - PosMonMasteryGun.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonMasteryGun)
+                        brought += 1
+                    end
+
+                -- BONE FARM
+                elseif _G.Bone and StartMagnetBoneMon and table.find({
+                    "Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"
+                }, enemy.Name) then
+                    if (hrp.Position - PosMonBone.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonBone)
+                        brought += 1
+                    end
+
+                -- DOUGHT BOSS OPEN DOOR
+                elseif _G.DoughtBoss and MagnetDought and table.find({
+                    "Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"
+                }, enemy.Name) then
+                    if (hrp.Position - PosMonDoughtOpenDoor.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonDoughtOpenDoor)
+                        brought += 1
+                    end
+
+                -- FARM NEAREST
+                elseif _G.FarmNearest and AutoFarmNearestMagnet then
+                    if (hrp.Position - PosMonNear.Position).Magnitude <= _G.BringMode then
+                        TweenEnemyToTarget(enemy, PosMonNear)
+                        brought += 1
+                    end
+
+                -- DEFAULT LEVEL FARM
+                elseif _G.Level and StartMagnet and enemy.Name == Mon then
+                    local specialList = {
+                        "Factory Staff [Lv. 800]", "Monkey [Lv. 14]", "Gorilla [Lv. 20]",
+                        "Dragon Crew Warrior [Lv. 1575]", "Dragon Crew Archer [Lv. 1600]",
+                        "Mercenary [Lv. 725]"
+                    }
+                    local isSpecial = table.find(specialList, Mon)
+                    local dist = distanceToPlayer
+
+                    if (isSpecial and dist <= 150) or (not isSpecial and dist <= _G.BringMode) then
+                        TweenEnemyToTarget(enemy, PosMon)
+                        brought += 1
                     end
                 end
             end
         end)
     end
 end)
+
 
 
 local AutoBuso = v16.Setting:AddToggle("AutoBuso", {
@@ -5672,8 +5621,8 @@ AutoBuso:OnChanged(function(v)
 end);
 _G.Haki = GetConfig("AutoBuso", true)
 AutoBuso:SetValue(_G.Haki)
-spawn(function()
-    while wait(0.1) do
+task.spawn(function()
+    while task.wait(0.1) do
         if _G.Haki then
             if  not game.Players.LocalPlayer.Character:FindFirstChild("HasBuso") then
                 local v2208 = {
@@ -5697,9 +5646,9 @@ end);
 _G.Noclip = GetConfig("NoClip", true)
 NoClip:SetValue(_G.Noclip)
 
-spawn(function()
+task.spawn(function()
     while _G.Noclip do
-        task.wait()
+        task.wait(0.1)
         local char = player.Character
         if char then
             for _, part in pairs(char:GetDescendants()) do
@@ -5723,8 +5672,8 @@ end)
 _G.Observation = GetConfig("AutoObservation", false)
 AutoObservation:SetValue(_G.Observation)
 
-spawn(function()
-    while wait(0.2) do
+task.spawn(function()
+    while task.wait(0.2) do
         if _G.Observation then
             if not (game:GetService("Players")).LocalPlayer.PlayerGui.ScreenGui:FindFirstChild("ImageLabel") then
                 (game:GetService("VirtualUser")):CaptureController();
@@ -5829,8 +5778,8 @@ end)
 _G.AutoRejoin = GetConfig("AutoRejoin", false)
 AutoRejoin:SetValue(_G.AutoRejoin)
 
-spawn(function()
-    while task.wait(0.2) do
+task.spawn(function()
+    while task.wait(0.1) do
         if _G.AutoRejoin then
             getgenv().rejoin = game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
                 if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then

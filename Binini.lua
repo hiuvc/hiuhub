@@ -436,16 +436,10 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
             finalCFrame = CFrame.new(root.Position - Vector3.new(0, hrp.Size.Y/2 + 2, 0))
         end
 
-        -- Set network owner
-        SetNetworkOwner(hrp)
-        if enemy:FindFirstChild("Head") then
-            SetNetworkOwner(enemy.Head)
-        end
-
         -- TWEEN (no leak)
         local tween = TweenService:Create(
             hrp,
-            TweenInfo.new(0.25, Enum.EasingStyle.Linear),
+            TweenInfo.new(0.5, Enum.EasingStyle.Linear),
             {CFrame = finalCFrame}
         )
         tween:Play()
@@ -771,7 +765,7 @@ local magnetConfigs = {
 getgenv().BringRange = 350
 
 task.spawn(function()
-    while task.wait() do
+    while task.wait(0.5) do
         pcall(function()
 
             if not getgenv().BringMonster then return end
@@ -866,78 +860,6 @@ local Window = HiuUi:Window({
     Size = UDim2.new(0, 550, 0, 350),
     TabWidth = 120
 })
-
-local StockFruitTab = Window:Tab("Fruits Stock","")
-StockFruitTab:Seperator("Current Fruits Stock")
-StockFruitTab:Line()
-
-local StocksStatus = StockFruitTab:Label("Current Fruits Stock: Unknown")
-
-local function fetchFruitsStock()
-    local url = "https://fruitsstockapi.onrender.com/fruitstock"
-    local response
-    local success, err = pcall(function()
-        response = game:HttpGet(url)
-    end)
-    if not success then
-        warn("[HTTP ERROR]:", err)
-        return nil, nil
-    end
-
-    local data
-    local decodeSuccess, decodeErr = pcall(function()
-        data = HttpService:JSONDecode(response)
-    end)
-    if not decodeSuccess then
-        warn("[JSON ERROR]:", decodeErr)
-        return nil, nil
-    end
-
-    if data.status ~= "success" then
-        warn("[INVALID DATA]: Failed to Get DATA")
-        return nil, nil
-    end
-
-    local normalStock = data.normalStock or {}
-    local mirageStock = data.mirageStock or {}
-
-    return normalStock, mirageStock
-end
-
-task.spawn(function()
-    while task.wait(0.5) do 
-        local normalStock, mirageStock = fetchFruitsStock()
-        if normalStock and mirageStock then
-            local ignoreList = {
-                ["Rocket-Rocket"] = true,
-                ["Spin-Spin"] = true
-            }
-
-            local lines = {}
-
-            for _ = 1, 10 do table.insert(lines, "") end
-
-            table.insert(lines, "🌍 Normal Stock:")
-            for _, fruit in ipairs(normalStock) do
-                if not ignoreList[fruit.name] then
-                    table.insert(lines, " - " .. fruit.name)
-                end
-            end
-            for _ = 1, 1 do table.insert(lines, "") end
-
-            table.insert(lines, "🏝 Mirage Stock:")
-            for _, fruit in ipairs(mirageStock) do
-                if not ignoreList[fruit.name] then
-                    table.insert(lines, " - " .. fruit.name)
-                end
-            end
-
-            StocksStatus:Set(table.concat(lines, "\n"))
-        else
-            StocksStatus:Set("⚠️ Failed to fetch data. Retrying...")
-        end
-    end
-end)
 
 ----------------------------------Server Tab---------------------------------------------------------------------------------------------
 local ServerTab = Window:Tab("Server","")
@@ -1247,10 +1169,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local CommF_Remote = Remotes:WaitForChild("CommF_")
 
-
-
-
-
 local BuyBlackLeg_T = ShopTab:Toggle("Black Leg", false,"", function(v)
     _G.BuyBlackLeg = v
     if not v then StopTween() end
@@ -1284,9 +1202,6 @@ task.spawn(function()
         end
     end
 end)
-
-
-
 
 ---------------------FramingTab----------------------------------------------------------------------------------------------------
 local FramingTab = Window:Tab("Framing","")

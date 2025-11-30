@@ -1,12 +1,4 @@
 
--- // CẤU HÌNH (SETTINGS) // --
-_G.AutoCollectChest = true       -- Bật tắt auto nhặt rương
-_G.AutoDarkBeard = true          -- Bật tắt auto Darkbeard
-_G.ChestLimit = 30             -- Số rương tối đa trước khi Hop
-_G.AutoRejoin = true             -- Tự động vào lại khi bị Kick/Mất kết nối
-_G.Speed = 350                   -- Tốc độ bay
-_G.Webhook = ""                  -- Link Webhook (nếu có)
-
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -15,6 +7,16 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
         task.wait(5)
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
+
+-- // CẤU HÌNH (SETTINGS) // --
+_G.AutoCollectChest = true       -- Bật tắt auto nhặt rương
+_G.AutoDarkBeard = true          -- Bật tắt auto Darkbeard
+_G.ChestLimit = 30             -- Số rương tối đa trước khi Hop
+_G.AutoRejoin = true             -- Tự động vào lại khi bị Kick/Mất kết nối
+_G.Speed = 350                   -- Tốc độ bay
+_G.Webhook = ""                  -- Link Webhook (nếu có)
+
+
 -- // DỊCH VỤ & BIẾN // --
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -72,6 +74,7 @@ if _G.AutoRejoin then
 end
 
 -- // 3. GIAO DIỆN (UI) // --
+local CoreGui = game:GetService("CoreGui")
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
@@ -86,7 +89,9 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 Frame.Parent = ScreenGui
 Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-Frame.Position = UDim2.new(0.02, 0, 0.3, 0)
+
+-- 🟩 Căn giữa màn hình
+Frame.Position = UDim2.new(0.5, -130, 0.5, -70)
 Frame.Size = UDim2.new(0, 260, 0, 140)
 
 UICorner.CornerRadius = UDim.new(0, 10)
@@ -126,19 +131,68 @@ Info.TextColor3 = Color3.fromRGB(255, 255, 100)
 Info.TextSize = 14
 Info.TextXAlignment = Enum.TextXAlignment.Left
 
+
 -- // GLOBAL VARS // --
 getgenv().CollectedCount = 0
 getgenv().StopScript = false
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
 
 local function UpdateStatus(text)
     Status.Text = "Status: " .. text
 end
 
 local function UpdateInfo()
-    if Player.Data:FindFirstChild("Beli") then
+    if Player:FindFirstChild("Data") and Player.Data:FindFirstChild("Beli") then
         Info.Text = "Chest: " .. getgenv().CollectedCount .. " | Beli: " .. math.floor(Player.Data.Beli.Value)
     end
 end
+
+
+-- // DRAG UI (PC + MOBILE) // --
+local UIS = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    Frame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement 
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
+
 
 -- // HÀM HỖ TRỢ (FUNCTIONS) // --
 

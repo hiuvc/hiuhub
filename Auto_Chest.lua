@@ -1,4 +1,3 @@
-
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -9,12 +8,12 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
 end
 
 -- // CẤU HÌNH (SETTINGS) // --
-_G.AutoCollectChest = true       -- Bật tắt auto nhặt rương
-_G.AutoDarkBeard = true          -- Bật tắt auto Darkbeard
-_G.ChestLimit = 30             -- Số rương tối đa trước khi Hop
-_G.AutoRejoin = true             -- Tự động vào lại khi bị Kick/Mất kết nối
-_G.Speed = 350                   -- Tốc độ bay
-_G.Webhook = ""                  -- Link Webhook (nếu có)
+_G.AutoCollectChest = true        -- Bật tắt auto nhặt rương
+_G.AutoDarkBeard = true           -- Bật tắt auto Darkbeard
+_G.ChestLimit = 30                -- Số rương tối đa trước khi Hop
+_G.AutoRejoin = true              -- Tự động vào lại khi bị Kick/Mất kết nối
+_G.Speed = 350                    -- Tốc độ bay
+_G.Webhook = ""                   -- Link Webhook (nếu có)
 
 
 -- // DỊCH VỤ & BIẾN // --
@@ -28,6 +27,7 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local CoreGui = game:GetService("CoreGui")
 local GuiService = game:GetService("GuiService")
+local CollectionService = game:GetService("CollectionService")
 
 local Player = Players.LocalPlayer
 local queue_on_teleport = queue_on_teleport or syn.queue_on_teleport
@@ -119,7 +119,7 @@ Status.Text = "Status: Loading..."
 Status.TextColor3 = Color3.fromRGB(200, 200, 200)
 Status.TextSize = 14
 Status.TextWrapped = true
-Status.TextXAlignment = Enum.TextXAlignment.Left
+Status.TextXAlignment = Enum.TextXAlignment.Center
 
 Info.Parent = Frame
 Info.BackgroundTransparency = 1
@@ -129,7 +129,7 @@ Info.Font = Enum.Font.Gotham
 Info.Text = "Chest: 0 | Beli: 0"
 Info.TextColor3 = Color3.fromRGB(255, 255, 100)
 Info.TextSize = 14
-Info.TextXAlignment = Enum.TextXAlignment.Left
+Info.TextXAlignment = Enum.TextXAlignment.Center
 
 
 -- // GLOBAL VARS // --
@@ -391,7 +391,7 @@ local function Actived()
     end
 end
 
--- Main loop
+-- Main Attack Loop
 task.spawn(function()
     RunService.Heartbeat:Connect(function()
         pcall(function()
@@ -421,6 +421,7 @@ task.spawn(function()
         end)
     end)
 end)
+
 -- Equip Weapon
 local function EquipWeapon(name)
     local Backpack = Player.Backpack
@@ -465,6 +466,7 @@ end
 local function Hop()
     UpdateStatus("Hopping Server...")
     SendWebhook("Server Hop", "Đang chuyển server...\nChests: " .. getgenv().CollectedCount)
+    getgenv().CollectedCount = 0 -- Reset count sau khi Hop
     
     if queue_on_teleport then
         queue_on_teleport("print('Kai Script: Hopping complete!')")
@@ -582,8 +584,8 @@ task.spawn(function()
                 getgenv().StopScript = true
                 return
             elseif RareItem == "Fist of Darkness" and _G.AutoDarkBeard then
-                 SummonDarkbeard()
-                 return
+                SummonDarkbeard()
+                return
             end
             
             -- Check Darkbeard
@@ -593,9 +595,14 @@ task.spawn(function()
                 return
             end
             
-            -- Auto Chest
+            -- Auto Chest (Đã sửa đổi logic đếm Beli và Hop Server)
             if _G.AutoCollectChest then
-                local Chests = game:GetService("CollectionService"):GetTagged("_ChestTagged")
+                if getgenv().CollectedCount >= _G.ChestLimit then
+                    Hop()
+                    return
+                end
+
+                local Chests = CollectionService:GetTagged("_ChestTagged")
                 local NearestChest = nil
                 local MinDist = math.huge
                 
@@ -611,17 +618,45 @@ task.spawn(function()
                 
                 if NearestChest then
                     UpdateStatus("Collecting Chest...")
+                    
+                    local BeliData = Player:FindFirstChild("Data") and Player.Data:FindFirstChild("Beli")
+                    local initialBeli = BeliData and BeliData.Value or 0
+                    local beliChanged = false
+                    
+                    -- Theo dõi sự thay đổi Beli
+                    local BeliCheckConnection
+                    BeliCheckConnection = BeliData.Changed:Connect(function(newBeliValue)
+                        if newBeliValue > initialBeli then
+                            beliChanged = true
+                        end
+                    end)
+                    
+                    -- Di chuyển đến rương
                     Tween(NearestChest.CFrame)
-                    if (Player.Character.HumanoidRootPart.Position - NearestChest.Position).Magnitude < 10 then
-                        getgenv().CollectedCount = getgenv().CollectedCount + 1
-                        task.wait(0.5)
+                    
+                    -- Đợi ngắn để rương được nhặt
+                    local waitTime = 1 -- Đợi 1 giây để rương nhặt (có thể điều chỉnh)
+                    local startTime = tick()
+                    while tick() - startTime < waitTime do
+                        if beliChanged then break end
+                        task.wait()
                     end
+                    
+                    -- Ngắt kết nối để tránh memory leak
+                    BeliCheckConnection:Disconnect()
+
+                    -- Kiểm tra xem Beli có thay đổi (rương đã được nhặt thành công) không
+                    if beliChanged then
+                        getgenv().CollectedCount = getgenv().CollectedCount + 1
+                        UpdateStatus("Chest Collected! Count: " .. getgenv().CollectedCount)
+                    else
+                        -- Không nhận được tiền, rương không tính. Tiếp tục tìm rương khác.
+                        UpdateStatus("Chest failed/empty. Next...")
+                    end
+                    
                 else
-                    UpdateStatus("No Chests. Hopping...")
-                    Hop()
-                end
-                
-                if getgenv().CollectedCount >= _G.ChestLimit then
+                    -- Không tìm thấy rương nào
+                    UpdateStatus("No Chests found. Hopping...")
                     Hop()
                 end
             end
@@ -634,7 +669,7 @@ task.spawn(function()
     while task.wait(5) do
         pcall(function()
             if Player.Character and not Player.Character:FindFirstChild("HasBuso") then
-                 ReplicatedStorage.Remotes.CommF_:InvokeServer("Buso")
+                ReplicatedStorage.Remotes.CommF_:InvokeServer("Buso")
             end
         end)
     end

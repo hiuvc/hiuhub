@@ -14,6 +14,7 @@ _G.ChestLimit = 30                -- Số rương tối đa trước khi Hop
 _G.AutoRejoin = true              -- Tự động vào lại khi bị Kick/Mất kết nối
 _G.Speed = 350                    -- Tốc độ bay
 _G.Webhook = ""                   -- Link Webhook (nếu có)
+_G.AutoExcute = true
 
 
 -- // DỊCH VỤ & BIẾN // --
@@ -32,12 +33,16 @@ local CollectionService = game:GetService("CollectionService")
 local Player = Players.LocalPlayer
 local queue_on_teleport = queue_on_teleport or syn.queue_on_teleport
 
-if queue_on_teleport then
-    queue_on_teleport([[
-        repeat task.wait() until game:IsLoaded()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Auto_Chest.lua"))()
-    ]])
+if _G.AutoExcute then
+    if queue_on_teleport then
+        queue_on_teleport([[
+            repeat task.wait() until game:IsLoaded()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Auto_Chest.lua"))()
+        ]])
+    end
 end
+
+
 
 
 -- // 2. AUTO REJOIN (CHỐNG DISCONNECT/KICK) // --

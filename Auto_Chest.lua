@@ -7,6 +7,14 @@ _G.AutoRejoin = true             -- Tự động vào lại khi bị Kick/Mất 
 _G.Speed = 350                   -- Tốc độ bay
 _G.Webhook = ""                  -- Link Webhook (nếu có)
 
+if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
+    repeat
+        wait()
+        local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
+        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
+        task.wait(5)
+    until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
+end
 -- // DỊCH VỤ & BIẾN // --
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -173,6 +181,192 @@ task.spawn(function()
     end
 end)
 
+-- Global cooldown
+getgenv().Seriality = getgenv().Seriality or false
+getgenv().AttackCooldown = getgenv().AttackCooldown or 0.1 
+local lastAttackTime = 0
+
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+
+-- Player
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- CameraShaker
+local CameraShakerR = require(ReplicatedStorage.Util.CameraShaker)
+CameraShakerR:Stop()
+
+--Check if entity alive
+local function IsEntityAlive(entity)
+    local humanoid = entity:FindFirstChildOfClass("Humanoid")
+    return humanoid and humanoid.Health > 0
+end
+
+-- Get enemies and players in range
+local function GetEnemiesInRange(character, range)
+    local enemies = Workspace.Enemies:GetChildren()
+    local players = Players:GetPlayers()
+    local targets = {}
+    local playerPos = character:GetPivot().Position
+
+    for _, enemy in ipairs(enemies) do
+        local rootPart = enemy:FindFirstChild("HumanoidRootPart")
+        if rootPart and IsEntityAlive(enemy) then
+            if (rootPart.Position - playerPos).Magnitude <= range then
+                table.insert(targets, enemy)
+            end
+        end
+    end
+
+    for _, otherPlayer in ipairs(players) do
+        if otherPlayer ~= player and otherPlayer.Character then
+            local rootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if rootPart and IsEntityAlive(otherPlayer.Character) then
+                if (rootPart.Position - playerPos).Magnitude <= range then
+                    table.insert(targets, otherPlayer.Character)
+                end
+            end
+        end
+    end
+
+    return targets
+end
+
+-- Attack function with global cooldown
+local function Attack()
+    local currentTime = tick()
+    if currentTime - lastAttackTime < getgenv().AttackCooldown then return end
+
+    local character = player.Character
+    if not character then return end
+
+    local equippedWeapon = character:FindFirstChildOfClass("Tool")
+    if not equippedWeapon then return end
+
+    local enemiesInRange = GetEnemiesInRange(character, 60)
+    if #enemiesInRange == 0 then return end
+
+    local modules = ReplicatedStorage:FindFirstChild("Modules")
+    if not modules then return end
+
+    local attackEvent = modules:WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
+    local hitEvent = modules:WaitForChild("Net"):WaitForChild("RE/RegisterHit")
+    if not attackEvent or not hitEvent then return end
+
+    local targets, mainTarget = {}, nil
+    for _, enemy in ipairs(enemiesInRange) do
+        if not enemy:GetAttribute("IsBoat") then
+            local HitboxLimbs = {"RightLowerArm","RightUpperArm","LeftLowerArm","LeftUpperArm","RightHand","LeftHand"}
+            local hitPart = enemy:FindFirstChild(HitboxLimbs[math.random(#HitboxLimbs)]) or enemy.PrimaryPart
+            if hitPart then
+                table.insert(targets, {enemy, hitPart})
+                mainTarget = hitPart
+            end
+        end
+    end
+    if not mainTarget then return end
+
+    attackEvent:FireServer(0)
+
+    local playerScripts = player:FindFirstChild("PlayerScripts")
+    if playerScripts then
+        local localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+        while not localScript do
+            playerScripts.ChildAdded:Wait()
+            localScript = playerScripts:FindFirstChildOfClass("LocalScript")
+        end
+
+        local hitFunction
+        if getsenv then
+            local success, scriptEnv = pcall(getsenv, localScript)
+            if success and scriptEnv then
+                hitFunction = scriptEnv._G.SendHitsToServer
+            end
+        end
+
+        local successFlags, combatRemoteThread = pcall(function()
+            return require(modules.Flags).COMBAT_REMOTE_THREAD or false
+        end)
+
+        if successFlags and combatRemoteThread and hitFunction then
+            hitFunction(mainTarget, targets)
+        elseif successFlags and not combatRemoteThread then
+            hitEvent:FireServer(mainTarget, targets)
+        end
+    end
+
+    lastAttackTime = tick()
+end
+
+-- Get monster near player
+local function get_Monster()
+    for _, enemy in pairs(Workspace.Enemies:GetChildren()) do
+        local c = enemy:FindFirstChild("UpperTorso") or enemy:FindFirstChild("Head")
+        if enemy:FindFirstChild("HumanoidRootPart", true) and c then
+            if (c.Position - player.Character.HumanoidRootPart.Position).Magnitude <= 50 then
+                return true, c.Position
+            end
+        end
+    end
+    for _, beast in pairs(Workspace.SeaBeasts:GetChildren()) do
+        if beast:FindFirstChild("HumanoidRootPart") and beast:FindFirstChild("Health") and beast.Health.Value > 0 then
+            return true, beast.HumanoidRootPart.Position
+        end
+    end
+    for _, vehicle in pairs(Workspace.Enemies:GetChildren()) do
+        if vehicle:FindFirstChild("Health") and vehicle.Health.Value > 0 and vehicle:FindFirstChild("VehicleSeat") then
+            return true, vehicle.Engine.Position
+        end
+    end
+    return false, nil
+end
+
+-- Activate tool function
+local function Actived()
+    local tool = player.Character:FindFirstChildOfClass("Tool")
+    if tool then
+        for _, c in next, getconnections(tool.Activated) do
+            if typeof(c.Function) == 'function' then
+                getupvalues(c.Function)
+            end
+        end
+    end
+end
+
+-- Main loop
+task.spawn(function()
+    RunService.Heartbeat:Connect(function()
+        pcall(function()
+            if not getgenv().Seriality then return end
+
+            -- Attack normal enemies
+            Attack()
+
+            -- MobAura/Blox Fruit attack
+            local tool = player.Character:FindFirstChildOfClass("Tool")
+            if tool then
+                local ToolTip = tool.ToolTip
+                local MobAura, Mon = get_Monster()
+                if ToolTip == "Blox Fruit" and MobAura then
+                    local currentTime = tick()
+                    if currentTime - lastAttackTime >= getgenv().AttackCooldown then
+                        local LeftClickRemote = tool:FindFirstChild('LeftClickRemote')
+                        if LeftClickRemote then
+                            Actived()
+                            LeftClickRemote:FireServer(Vector3.new(0.01, -500, 0.01), 1, true)
+                            LeftClickRemote:FireServer(false)
+                            lastAttackTime = tick()
+                        end
+                    end
+                end
+            end
+        end)
+    end)
+end)
 -- Equip Weapon
 local function EquipWeapon(name)
     local Backpack = Player.Backpack
@@ -298,9 +492,6 @@ local function SummonDarkbeard()
     UpdateStatus("Summoning Darkbeard...")
     EquipWeapon("Fist of Darkness")
     Tween(AltarPos)
-    if (Player.Character.HumanoidRootPart.Position - AltarPos.Position).Magnitude < 10 then
-        fireclickdetector(Workspace.Map.DarkBeard.Altar.ClickDetector)
-    end
 end
 
 local function FightDarkbeard(Boss)
@@ -315,11 +506,8 @@ local function FightDarkbeard(Boss)
     local BossHRP = Boss:FindFirstChild("HumanoidRootPart")
     if BossHRP then
         local AttackPos = BossHRP.CFrame * CFrame.new(0, 15, 0)
+        getgenv().Seriality = true
         Tween(AttackPos)
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton1(Vector2.new(851, 158))
-        local KeyInputs = {0x5A, 0x58, 0x43, 0x56}
-        for _, key in ipairs(KeyInputs) do VirtualUser:ClickButton1(Vector2.new(0,0)) end
     end
 end
 

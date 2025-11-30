@@ -648,12 +648,7 @@ task.spawn(function()
                     -- Kiểm tra xem Beli có thay đổi (rương đã được nhặt thành công) không
                     if beliChanged then
                         getgenv().CollectedCount = getgenv().CollectedCount + 1
-                        UpdateStatus("Chest Collected! Count: " .. getgenv().CollectedCount)
-                    else
-                        -- Không nhận được tiền, rương không tính. Tiếp tục tìm rương khác.
-                        UpdateStatus("Chest failed/empty. Next...")
                     end
-                    
                 else
                     -- Không tìm thấy rương nào
                     UpdateStatus("No Chests found. Hopping...")

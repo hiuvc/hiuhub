@@ -273,44 +273,75 @@ local SettingsLib = {
     SaveSettings = true,
     LoadAnimation = true
 };
-(getgenv()).LoadConfig = function()
-    if readfile and writefile and isfile and isfolder then
-        if not isfolder("Vxeze Hub Premium") then
-            makefolder("Vxeze Hub Premium");
-        end;
-        if not isfolder("Vxeze Hub Premium/Library/") then
-            makefolder("Vxeze Hub Premium/Library/");
-        end;
-        if not isfile(("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
-            writefile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib));
-        else
-            local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
-            for i, v in pairs(Decode) do
-                SettingsLib[i] = v;
-            end;
-        end;
-        print("Library Loaded!");
+--========================================================--
+--                 Vex Hub - Config System                --
+--========================================================--
+
+local Http = game:GetService("HttpService")
+local Player = game.Players.LocalPlayer
+local Folder = "Vex Hub"
+local SubFolder = "Vex Hub/Config"
+local FilePath = SubFolder .. "/" .. Player.Name .. ".json"
+
+SettingsLib = SettingsLib or {}   -- bảng config chính
+getgenv().LoadConfig = function()
+    if not (readfile and writefile and isfile and isfolder) then
+        return warn("Status : Undetected Executor")
+    end
+
+    -- Tạo folder nếu chưa có
+    if not isfolder(Folder) then
+        makefolder(Folder)
+    end
+    if not isfolder(SubFolder) then
+        makefolder(SubFolder)
+    end
+
+    -- Nếu chưa có file => tạo file mới từ SettingsLib
+    if not isfile(FilePath) then
+        writefile(FilePath, Http:JSONEncode(SettingsLib))
+        print("Vex Hub: Config file created.")
+        return
+    end
+
+    -- Nếu có file => load dữ liệu
+    local data = readfile(FilePath)
+    local decoded
+
+    pcall(function()
+        decoded = Http:JSONDecode(data)
+    end)
+
+    if decoded then
+        for k,v in pairs(decoded) do
+            SettingsLib[k] = v
+        end
+        print("Vex Hub: Config Loaded!")
     else
-        return warn("Status : Undetected Executor");
-    end;
-end;
-(getgenv()).SaveConfig = function()
-    if readfile and writefile and isfile and isfolder then
-        if not isfile(("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
-            (getgenv()).Load();
-        else
-            local Decode = (game:GetService("HttpService")):JSONDecode(readfile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
-            local Array = {};
-            for i, v in pairs(SettingsLib) do
-                Array[i] = v;
-            end;
-            writefile("Vxeze Hub Premium/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array));
-        end;
-    else
-        return warn("Status : Undetected Executor");
-    end;
-end;
-(getgenv()).LoadConfig();
+        warn("Vex Hub: Failed to decode config file!")
+    end
+end
+
+getgenv().SaveConfig = function()
+    if not (readfile and writefile and isfile and isfolder) then
+        return warn("Status : Undetected Executor")
+    end
+
+    -- Đảm bảo folder tồn tại
+    if not isfolder(Folder) then
+        makefolder(Folder)
+    end
+    if not isfolder(SubFolder) then
+        makefolder(SubFolder)
+    end
+
+    -- Ghi toàn bộ SettingsLib vào file JSON
+    local encoded = Http:JSONEncode(SettingsLib)
+    writefile(FilePath, encoded)
+
+    print("Vex Hub: Config Saved!")
+end
+getgenv().LoadConfig()
 function Update:SaveSettings()
     if SettingsLib.SaveSettings then
         return true;

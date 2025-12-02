@@ -762,7 +762,7 @@ local magnetConfigs = {
     }
 }
 
-getgenv().BringRange = 600
+getgenv().BringRange = 1000
 
 task.spawn(function()
     while task.wait(0.5) do

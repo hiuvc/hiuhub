@@ -1602,7 +1602,7 @@ SettingsTab:Line()
 
 Type = 1
 PosX = 0 or PosX
-PosY = 20 or PosY
+PosY = 15 or PosY
 PosZ = 0 or PosZ
 
 local PosX_Sd = SettingsTab:Slider("Distance X", 0, 60, PosX, function(v)

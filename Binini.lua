@@ -439,7 +439,7 @@ function TweenEnemyToTarget(enemy, targetCFrame, size)
         -- TWEEN (no leak)
         local tween = TweenService:Create(
             hrp,
-            TweenInfo.new(0.5, Enum.EasingStyle.Linear),
+            TweenInfo.new(0.2, Enum.EasingStyle.Linear),
             {CFrame = finalCFrame}
         )
         tween:Play()
@@ -762,10 +762,10 @@ local magnetConfigs = {
     }
 }
 
-getgenv().BringRange = 150
+getgenv().BringRange = 145
 
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait() do
         pcall(function()
 
             if not getgenv().BringMonster then return end

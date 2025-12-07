@@ -1,11 +1,12 @@
 -- // 1. CẤU HÌNH (SETTINGS) & KHỞI TẠO BAN ĐẦU // --
+local ServerHop = loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/HopServerModule.lua"))()
 getgenv().Settings = {
     AutoCollectChest = true,
     AutoDarkBeard = true,
-    ChestLimit = 30,
+    ChestLimit = 40,
     AutoRejoin = true,
     Speed = 350,
-    Webhook = "",
+    Webhook = "https://discord.com/api/webhooks/1327458507355586631/QQQOWjQcERv1HbHgBqtfihYWh6XpJZbLa2Uq0ISXs4i_sLIin0ECTD2TzjRlIP6_rRXg",
     AutoExecute = true,
     Team = "Marines",
 }
@@ -442,7 +443,7 @@ end
 
 
 -- Cờ trạng thái
-local isTweening = false      
+local isTweening = false       
 local allowBypass = false        
 local bypassDistance = 3500
 local defaultTweenSpeed = 350
@@ -450,10 +451,11 @@ local defaultTweenSpeed = 350
 -- Đợi HumanoidRootPart
 function WaitHumanoidRootPart(player)
     if not player then return end
-    return player.Character:WaitForChild("HumanoidRootPart", 9)
+    -- Đã sửa: kiểm tra nếu Character tồn tại trước khi gọi WaitForChild
+    return player.Character and player.Character:WaitForChild("HumanoidRootPart", 9)
 end
 
--- Tìm tele gần nhất
+-- Tìm tele gần nhất (Giữ nguyên)
 function CheckNearestTeleporter(targetCF)
     local placeId = game.PlaceId
     local targetPos = targetCF.Position
@@ -503,7 +505,7 @@ function CheckNearestTeleporter(targetCF)
     end
 end
 
--- Gửi requestEntrance
+-- Gửi requestEntrance (Giữ nguyên)
 function RequestEntrance(pos)
     local success = pcall(function()
         game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", pos)
@@ -517,7 +519,7 @@ function RequestEntrance(pos)
     end
 end
 
--- Dừng tween
+-- Dừng tween (Giữ nguyên)
 function StopTween()
     _G.StopTween = true
     task.wait()
@@ -532,14 +534,17 @@ function StopTween()
 
     _G.Clip = false
     _G.StopTween = false
+    isTweening = false -- Cập nhật cờ trạng thái
 end
 
 -- Tween đến vị trí target
 function topos(target)
     local player = game.Players.LocalPlayer
     local character = player and player.Character
+    local humanoid = character and character:FindFirstChild("Humanoid")
     local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    if not (character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 and hrp) then
+
+    if not (character and humanoid and humanoid.Health > 0 and hrp) then
         warn("TweenToPosition: nhân vật không hợp lệ hoặc đã chết")
         return
     end
@@ -551,6 +556,34 @@ function topos(target)
 
     local targetCFrame = typeof(target) == "Vector3" and CFrame.new(target) or target
     local distance = (targetCFrame.Position - hrp.Position).Magnitude
+    
+    -- *** BẮT ĐẦU: Logic ngăn ngồi ***
+    local originalSit = humanoid.Sit
+    local originalSeated = humanoid.Seated
+    
+    -- Tắt hành vi ngồi mặc định
+    humanoid.PlatformStand = true
+    humanoid.Sit = false
+
+    local function blockSit()
+        -- Gán Seated=true sau đó trả về false để ngăn hành động ngồi mà không thực sự ngồi
+        return false
+    end
+
+    -- Kết nối hàm blockSit vào thuộc tính Seated và sự kiện Sit
+    local seatedConnection = humanoid:GetPropertyChangedSignal("Seated"):Connect(function()
+        if humanoid.Seated then
+            humanoid.Seated = false
+        end
+    end)
+
+    local sitConnection = humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
+        if humanoid.Sit then
+            humanoid.Sit = false
+        end
+    end)
+    
+    -- *** KẾT THÚC: Logic ngăn ngồi ***
 
     -- Kiểm tra có nên teleport không
     local nearestTele = CheckNearestTeleporter(targetCFrame)
@@ -559,7 +592,7 @@ function topos(target)
         task.wait(0.5)
     end
 
-    -- Tạo PartTele nếu chưa có
+    -- Tạo PartTele nếu chưa có (Giữ nguyên)
     if not character:FindFirstChild("PartTele") then
         local part = Instance.new("Part")
         part.Size = Vector3.new(10, 1, 10)
@@ -601,11 +634,27 @@ function topos(target)
     tween:Play()
 
     tween.Completed:Connect(function(state)
+        -- *** BẮT ĐẦU: Phục hồi trạng thái ***
+        seatedConnection:Disconnect()
+        sitConnection:Disconnect()
+        
+        -- Phục hồi lại trạng thái Humanoid
+        humanoid.PlatformStand = false 
+        humanoid.Sit = originalSit
+        humanoid.Seated = originalSeated
+        -- *** KẾT THÚC: Phục hồi trạng thái ***
+        
         if state == Enum.PlaybackState.Completed then
             if character:FindFirstChild("PartTele") then
                 character.PartTele:Destroy()
             end
             isTweening = false
+        else
+             -- Nếu tween bị hủy (ví dụ: StopTween được gọi), ta vẫn phải dọn dẹp
+            isTweening = false
+            if character:FindFirstChild("PartTele") then
+                character.PartTele:Destroy()
+            end
         end
     end)
 end
@@ -615,74 +664,18 @@ function Tween(target)
 end
 
 
--- Hop Server (Improved)
-local function Hop()
-    UpdateStatus("Hopping Server...")
-    SendWebhook("Server Hop", "Đang chuyển server...\nChests: " .. getgenv().CollectedCount)
-    getgenv().CollectedCount = 0 -- Reset count sau khi Hop
-    
-    if queue_on_teleport then
-        queue_on_teleport("print('Kai Script: Hopping complete!')")
-    end
-
-    local PlaceID = game.PlaceId
-    local AllIDs = {}
-    local foundSomething = ""
-    local actualHour = os.date("!*t").hour
-    
-    local function TPReturner()
-        local Site;
-        if foundSomething == "" then
-            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
-        else
-            Site = game.HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundSomething))
-        end
-        if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
-            foundSomething = Site.nextPageCursor
-        end
-        local num = 0;
-        for i,v in pairs(Site.data) do
-            local Possible = true
-            local ID = tostring(v.id)
-            if tonumber(v.maxPlayers) > tonumber(v.playing) then
-                for _,Existing in pairs(AllIDs) do
-                    if num ~= 0 then
-                        if ID == tostring(Existing) then
-                            Possible = false
-                        end
-                    else
-                        if tonumber(actualHour) ~= tonumber(Existing) then
-                            local delFile = pcall(function()
-                                delfile("NotSameServers.json")
-                                AllIDs = {}
-                                table.insert(AllIDs, actualHour)
-                            end)
-                        end
-                    end
-                    num = num + 1
-                end
-                if Possible == true then
-                    table.insert(AllIDs, ID)
-                    wait()
-                    pcall(function()
-                        wait(0.5)
-                        TeleportService:TeleportToPlaceInstance(PlaceID, ID, Player)
-                    end)
-                    wait(4)
-                end
-            end
-        end
-    end
-    
-    while wait() do
+Hop = function()
         pcall(function()
-            TPReturner()
-            if foundSomething ~= "" then
-                TPReturner()
-            end
-        end)
-    end
-end
+            for e = math.random(1, math.random(40, 75)), 100, 1 do
+                local A = replicated.__ServerBrowser:InvokeServer(e);
+                for e, A in next, A do
+                    if tonumber(A.Count) < 12 then
+                        TeleportService:TeleportToPlaceInstance(game.PlaceId, e);
+                    end;
+                end;
+            end;
+        end);
+    end;
 
 -- // DARKBEARD LOGIC // --
 local function CheckRareItems()
@@ -702,7 +695,16 @@ local function SummonDarkbeard()
     EquipWeapon("Fist of Darkness")
     Tween(AltarPos)
 end
-
+-- // AUTO HAKI // --
+task.spawn(function()
+    while task.wait(5) do
+        pcall(function()
+            if Player.Character and not Player.Character:FindFirstChild("HasBuso") then
+                ReplicatedStorage.Remotes.CommF_:InvokeServer("Buso")
+            end
+        end)
+    end
+end)
 local function FightDarkbeard(Boss)
     UpdateStatus("Fighting Darkbeard...")
     -- Tự động chọn vũ khí Melee hoặc Sword tốt nhất
@@ -723,12 +725,30 @@ end
 ---
 -- // MAIN LOGIC // --
 task.spawn(function()
+    -- Lấy các biến cần thiết
+    local Player = game.Players.LocalPlayer
+    local CollectionService = game:GetService("CollectionService")
+
+    -- Hàm nhảy
+    local function Jump()
+        local character = Player.Character
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        if humanoid then
+            -- Tắt PlatformStand nếu đang bật (từ chức năng ngăn ngồi) để cho phép nhảy
+            humanoid.PlatformStand = false
+            -- Kích hoạt trạng thái nhảy của Humanoid
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            -- Có thể chờ một chút và bật lại PlatformStand nếu cần (tùy thuộc vào logic script khác)
+            task.wait(0.1)
+        end
+    end
+    
     while task.wait() do
         pcall(function()
             if getgenv().StopScript then return end
             UpdateInfo()
             
-            -- Check Rare Item
+            -- Check Rare Item (Giữ nguyên)
             local RareItem = CheckRareItems()
             if RareItem == "God's Chalice" then
                 getgenv().AutoCollectChest = false
@@ -737,24 +757,20 @@ task.spawn(function()
                 if game.PlaceId == 7449423635 then Tween(CFrame.new(-12470, 375, -7550)) end
                 getgenv().StopScript = true
                 return
-            -- SỬ DỤNG Settings.AutoDarkBeard
             elseif RareItem == "Fist of Darkness" and Settings.AutoDarkBeard then
                 SummonDarkbeard()
                 return
             end
             
-            -- Check Darkbeard
+            -- Check Darkbeard (Giữ nguyên)
             local Darkbeard = Workspace.Enemies:FindFirstChild("Darkbeard")
-            -- SỬ DỤNG Settings.AutoDarkBeard
             if Darkbeard and Darkbeard:FindFirstChild("Humanoid") and Darkbeard.Humanoid.Health > 0 and Settings.AutoDarkBeard then
                 FightDarkbeard(Darkbeard)
                 return
             end
             
-            -- Auto Chest (Đã sửa đổi logic đếm Beli và Hop Server)
-            -- SỬ DỤNG Settings.AutoCollectChest
+            -- Auto Chest (Đã sửa đổi)
             if Settings.AutoCollectChest then
-                -- SỬ DỤNG Settings.ChestLimit
                 if getgenv().CollectedCount >= Settings.ChestLimit then
                     Hop()
                     return
@@ -764,9 +780,11 @@ task.spawn(function()
                 local NearestChest = nil
                 local MinDist = math.huge
                 
+                local hrp = Player.Character.HumanoidRootPart -- Lấy HumanoidRootPart một lần
+                
                 for _, Chest in pairs(Chests) do
                     if Chest.Parent and Chest:FindFirstChild("TouchInterest") then
-                        local Dist = (Player.Character.HumanoidRootPart.Position - Chest.Position).Magnitude
+                        local Dist = (hrp.Position - Chest.Position).Magnitude
                         if Dist < MinDist then
                             MinDist = Dist
                             NearestChest = Chest
@@ -781,19 +799,24 @@ task.spawn(function()
                     local initialBeli = BeliData and BeliData.Value or 0
                     local beliChanged = false
                     
-                    -- Theo dõi sự thay đổi Beli
                     local BeliCheckConnection
-                    BeliCheckConnection = BeliData.Changed:Connect(function(newBeliValue)
-                        if newBeliValue > initialBeli then
-                            beliChanged = true
-                        end
-                    end)
+                    if BeliData then -- Đảm bảo BeliData tồn tại trước khi kết nối
+                        BeliCheckConnection = BeliData.Changed:Connect(function(newBeliValue)
+                            if newBeliValue > initialBeli then
+                                beliChanged = true
+                            end
+                        end)
+                    end
                     
                     -- Di chuyển đến rương
                     Tween(NearestChest.CFrame)
                     
+                    -- *** THÊM LỆNH NHẢY TẠI ĐÂY ***
+                    Jump() 
+                    -- Tùy chọn: task.wait(0.2) nếu cần thêm độ trễ sau khi nhảy
+                    
                     -- Đợi ngắn để rương được nhặt
-                    local waitTime = 1 -- Đợi 1 giây để rương nhặt (có thể điều chỉnh)
+                    local waitTime = 1 
                     local startTime = tick()
                     while tick() - startTime < waitTime do
                         if beliChanged then break end
@@ -801,7 +824,9 @@ task.spawn(function()
                     end
                     
                     -- Ngắt kết nối để tránh memory leak
-                    BeliCheckConnection:Disconnect()
+                    if BeliCheckConnection then
+                        BeliCheckConnection:Disconnect()
+                    end
 
                     -- Kiểm tra xem Beli có thay đổi (rương đã được nhặt thành công) không
                     if beliChanged then
@@ -818,13 +843,3 @@ task.spawn(function()
     end
 end)
 
--- // AUTO HAKI // --
-task.spawn(function()
-    while task.wait(5) do
-        pcall(function()
-            if Player.Character and not Player.Character:FindFirstChild("HasBuso") then
-                ReplicatedStorage.Remotes.CommF_:InvokeServer("Buso")
-            end
-        end)
-    end
-end)

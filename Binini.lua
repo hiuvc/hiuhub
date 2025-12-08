@@ -1214,7 +1214,7 @@ local FramLevel_T = FramingTab:Toggle("Auto Fram Level",false,"",function(v)
 end)
 
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(1) do
         if _G.Level then
             pcall(function()
                 local player = game:GetService("Players").LocalPlayer

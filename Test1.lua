@@ -515,6 +515,79 @@ Hop = function()
     end
   end)
 end
+-------------------------------------------------------
+--// CHECK CÓ QUÁI SỐNG KHÔNG
+-------------------------------------------------------
+local function HasAliveEnemy()
+  for _, mob in ipairs(workspace.Enemies:GetChildren()) do
+    local hum = mob:FindFirstChildOfClass("Humanoid")
+    if hum and hum.Health > 0 then
+      return true
+    end
+  end
+  return false
+end
+
+-------------------------------------------------------
+--// ĐỢI ISLAND XUẤT HIỆN
+-------------------------------------------------------
+local function WaitForIsland(islandName)
+  while _G.Raiding do
+    if workspace._WorldOrigin.Locations:FindFirstChild(islandName) then
+      return workspace._WorldOrigin.Locations:FindFirstChild(islandName)
+    end
+    task.wait(0.3)
+  end
+end
+
+-------------------------------------------------------
+--// TELEPORT TỚI ISLAND (1 LẦN)
+-------------------------------------------------------
+local function TeleportToIsland()
+  local islandName = Islands[CurrentIsland]
+  if not islandName then return end
+
+  local island = WaitForIsland(islandName)
+  if island then
+    _tp(island.CFrame * CFrame.new(0, 50, 100))
+    Teleported = true
+  end
+end
+
+-------------------------------------------------------
+--// CLEAR ISLAND (ĐỢI QUÁI SPAWN)
+-------------------------------------------------------
+local function ClearIsland()
+  -- ⏳ ĐỢI QUÁI SPAWN
+  while _G.Raiding and not HasAliveEnemy() do
+    task.wait(0.3)
+  end
+
+  -- ⚔️ CLEAR
+  for _, mob in ipairs(workspace.Enemies:GetChildren()) do
+    if not _G.Raiding then break end
+
+    local hum = mob:FindFirstChildOfClass("Humanoid")
+    local root = mob:FindFirstChild("HumanoidRootPart")
+
+    if hum and root and hum.Health > 0 then
+      repeat
+        task.wait()
+        Attack.Kill(mob, true)
+      until not mob.Parent or hum.Health <= 0 or not _G.Raiding
+    end
+  end
+
+  -- 🛑 NẾU LÀ ISLAND 5 → DỪNG
+  if Islands[CurrentIsland] == "Island 5" then
+    Island5Cleared = true
+  end
+
+  -- ➡️ QUA ISLAND TIẾP
+  CurrentIsland += 1
+  Teleported = false
+end
+
 local block = Instance.new("Part", workspace)
 block.Size = Vector3.new(1, 1, 1)
 block.Name = "Rip_Indra"
@@ -5525,78 +5598,6 @@ local CurrentIsland = 1
 local Teleported = false
 local Island5Cleared = false
 
--------------------------------------------------------
---// CHECK CÓ QUÁI SỐNG KHÔNG
--------------------------------------------------------
-local function HasAliveEnemy()
-  for _, mob in ipairs(workspace.Enemies:GetChildren()) do
-    local hum = mob:FindFirstChildOfClass("Humanoid")
-    if hum and hum.Health > 0 then
-      return true
-    end
-  end
-  return false
-end
-
--------------------------------------------------------
---// ĐỢI ISLAND XUẤT HIỆN
--------------------------------------------------------
-local function WaitForIsland(islandName)
-  while _G.Raiding do
-    if workspace._WorldOrigin.Locations:FindFirstChild(islandName) then
-      return workspace._WorldOrigin.Locations:FindFirstChild(islandName)
-    end
-    task.wait(0.3)
-  end
-end
-
--------------------------------------------------------
---// TELEPORT TỚI ISLAND (1 LẦN)
--------------------------------------------------------
-local function TeleportToIsland()
-  local islandName = Islands[CurrentIsland]
-  if not islandName then return end
-
-  local island = WaitForIsland(islandName)
-  if island then
-    _tp(island.CFrame * CFrame.new(0, 50, 100))
-    Teleported = true
-  end
-end
-
--------------------------------------------------------
---// CLEAR ISLAND (ĐỢI QUÁI SPAWN)
--------------------------------------------------------
-local function ClearIsland()
-  -- ⏳ ĐỢI QUÁI SPAWN
-  while _G.Raiding and not HasAliveEnemy() do
-    task.wait(0.3)
-  end
-
-  -- ⚔️ CLEAR
-  for _, mob in ipairs(workspace.Enemies:GetChildren()) do
-    if not _G.Raiding then break end
-
-    local hum = mob:FindFirstChildOfClass("Humanoid")
-    local root = mob:FindFirstChild("HumanoidRootPart")
-
-    if hum and root and hum.Health > 0 then
-      repeat
-        task.wait()
-        Attack.Kill(mob, true)
-      until not mob.Parent or hum.Health <= 0 or not _G.Raiding
-    end
-  end
-
-  -- 🛑 NẾU LÀ ISLAND 5 → DỪNG
-  if Islands[CurrentIsland] == "Island 5" then
-    Island5Cleared = true
-  end
-
-  -- ➡️ QUA ISLAND TIẾP
-  CurrentIsland += 1
-  Teleported = false
-end
 
 -------------------------------------------------------
 --// MAIN AUTO RAID LOOP

@@ -26,7 +26,7 @@ do
   Brazier1 = false
   Brazier2 = false
   Brazier3 = false  
-  Sec = 1
+  Sec = 0.1
   ClickState = 0
   Num_self = 25
 end
@@ -5506,33 +5506,136 @@ Q = Tabs.Raids:AddToggle("Q", {Title = "Auto Complete Raid [Safety]", Descriptio
 Q:OnChanged(function(Value)
   _G.Raiding = Value
 end)
-spawn(function()
-  pcall(function() 
-    while wait(Sec) do
-      if _G.Raiding then  
-        if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == true then          
-          local islands = {"Island5","Island 4", "Island 3", "Island 2", "Island 1"}
-          for _, island in ipairs(islands) do
-          local location = game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild(island)
-            if location then
-              for i,v in pairs(workspace.Enemies:GetChildren()) do
-                if v:FindFirstChild("Humanoid") or v:FindFirstChild("HumanoidRootPart") then
-                  if v.Humanoid.Health > 0 then
-                    repeat wait() Attack.Kill(v,_G.Raiding) NextIs=false until not _G.Raiding or not v.Parent or v.Humanoid.Health <= 0 NextIs=true
-                  end
-                end
-              end
-            end
-          end
-        else
-          NextIs = false
-        end
-      else
-        NextIs = false
-      end
+
+--// SERVICES
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+
+--// ISLAND ORDER (CHUẨN GAME)
+local Islands = {
+  "Island 1",
+  "Island 2",
+  "Island 3",
+  "Island 4",
+  "Island 5"
+}
+
+--// STATE
+local CurrentIsland = 1
+local Teleported = false
+local Island5Cleared = false
+
+-------------------------------------------------------
+--// CHECK CÓ QUÁI SỐNG KHÔNG
+-------------------------------------------------------
+local function HasAliveEnemy()
+  for _, mob in ipairs(workspace.Enemies:GetChildren()) do
+    local hum = mob:FindFirstChildOfClass("Humanoid")
+    if hum and hum.Health > 0 then
+      return true
     end
-  end)
+  end
+  return false
+end
+
+-------------------------------------------------------
+--// ĐỢI ISLAND XUẤT HIỆN
+-------------------------------------------------------
+local function WaitForIsland(islandName)
+  while _G.Raiding do
+    if workspace._WorldOrigin.Locations:FindFirstChild(islandName) then
+      return workspace._WorldOrigin.Locations:FindFirstChild(islandName)
+    end
+    task.wait(0.3)
+  end
+end
+
+-------------------------------------------------------
+--// TELEPORT TỚI ISLAND (1 LẦN)
+-------------------------------------------------------
+local function TeleportToIsland()
+  local islandName = Islands[CurrentIsland]
+  if not islandName then return end
+
+  local island = WaitForIsland(islandName)
+  if island then
+    _tp(island.CFrame * CFrame.new(0, 50, 100))
+    Teleported = true
+  end
+end
+
+-------------------------------------------------------
+--// CLEAR ISLAND (ĐỢI QUÁI SPAWN)
+-------------------------------------------------------
+local function ClearIsland()
+  -- ⏳ ĐỢI QUÁI SPAWN
+  while _G.Raiding and not HasAliveEnemy() do
+    task.wait(0.3)
+  end
+
+  -- ⚔️ CLEAR
+  for _, mob in ipairs(workspace.Enemies:GetChildren()) do
+    if not _G.Raiding then break end
+
+    local hum = mob:FindFirstChildOfClass("Humanoid")
+    local root = mob:FindFirstChild("HumanoidRootPart")
+
+    if hum and root and hum.Health > 0 then
+      repeat
+        task.wait()
+        Attack.Kill(mob, true)
+      until not mob.Parent or hum.Health <= 0 or not _G.Raiding
+    end
+  end
+
+  -- 🛑 NẾU LÀ ISLAND 5 → DỪNG
+  if Islands[CurrentIsland] == "Island 5" then
+    Island5Cleared = true
+  end
+
+  -- ➡️ QUA ISLAND TIẾP
+  CurrentIsland += 1
+  Teleported = false
+end
+
+-------------------------------------------------------
+--// MAIN AUTO RAID LOOP
+-------------------------------------------------------
+spawn(function()
+  while task.wait(Sec) do
+
+    -- RAID OFF
+    if not _G.Raiding then
+      CurrentIsland = 1
+      Teleported = false
+      Island5Cleared = false
+      continue
+    end
+
+    -- RAID KẾT THÚC
+    if not plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible then
+      CurrentIsland = 1
+      Teleported = false
+      Island5Cleared = false
+      continue
+    end
+
+    -- ĐÃ CLEAN ISLAND 5 → ĐỨNG IM
+    if Island5Cleared then
+      continue
+    end
+
+    -- TELEPORT
+    if not Teleported then
+      TeleportToIsland()
+      task.wait(1)
+    else
+      ClearIsland()
+    end
+  end
 end)
+
+
 local Q = Tabs.Raids:AddToggle("Q", {Title = "Kill Aura", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.KillH = Value

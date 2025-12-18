@@ -5532,35 +5532,6 @@ Q:OnChanged(function(Value)
 end)
 local AutoRaid = Tabs.Raids:AddToggle("AutoRaid", {Title = "Auto Complete Raid [Auto Next]", Description = "", Default = false})
 AutoRaid:OnChanged(function(Value) _G.AutoRaid = Value end)
-function IsIslandRaid(islandNumber)
-  if not game.Players.LocalPlayer.Character
-  or not game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-    return nil
-  end
-  local min = 4500
-  local result = nil
-  for _, island in ipairs(game:GetService("Workspace")._WorldOrigin.Locations:GetChildren()) do
-    if island.Name == "Island " .. islandNumber then
-      if (island.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude < min then
-        min = (island.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-        result = island
-      end
-    end
-  end
-  return result
-end
-
-function getNextIsland()
-  for _, num in ipairs({5, 4, 3, 2, 1}) do
-    if IsIslandRaid(num) then
-      return IsIslandRaid(num)
-    end
-  end
-  return nil
-end
-
-local AutoRaid = Tabs.Raids:AddToggle("AutoRaid", {Title = "Auto Complete Raid [Auto Next]", Description = "", Default = false})
-AutoRaid:OnChanged(function(Value) _G.AutoRaid = Value end)
 
 spawn(function() 
   pcall(function() 
@@ -7196,4 +7167,3 @@ task.spawn(function()
   end)
 end)
 Window:SelectTab(1)
-

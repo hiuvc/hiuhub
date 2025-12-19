@@ -5502,66 +5502,37 @@ Q:OnChanged(function(Value)
    end
   end
 end)
-
--- Toggle
-local Q = Tabs.Raids:AddToggle("Q", {
-    Title = "Auto Complete Raid [Safety]",
-    Description = "",
-    Default = false
-})
-
-Q:OnChanged(function(value)
-    _G.Raiding = value
+Q = Tabs.Raids:AddToggle("Q", {Title = "Auto Complete Raid [Safety]", Description = "", Default = false})
+Q:OnChanged(function(Value)
+  _G.Raiding = Value
 end)
-
--- Auto Raid
-task.spawn(function()
-    local visitedIsland = {}
-
-    while task.wait(0.2) do
-        if not _G.Raiding then
-            visitedIsland = {}
-            continue
-        end
-
-        pcall(function()
-            local player = game.Players.LocalPlayer
-            local character = player.Character
-            if not character then return end
-
-            local hrp = character:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-
-            local locations = workspace._WorldOrigin.Locations
-            local position = hrp.Position
-
-            -- Reset khi quay về điểm spawn
-            if (position - Vector3.new(-6438.73535, 250.645355, -4501.50684)).Magnitude < 1
-            or (position - Vector3.new(-5017.40869, 314.844055, -2823.0127)).Magnitude < 1 then
-                visitedIsland = {}
-            end
-
-            -- Auto Near khi bắt đầu raid
-            if locations:FindFirstChild("Island 1") then
-                _G.AutoFarmNear = true
-            end
-
-            -- Di chuyển island theo thứ tự
-            for islandIndex = 2, 5 do
-                local islandName = "Island " .. islandIndex
-                local island = locations:FindFirstChild(islandName)
-
-                if island and not visitedIsland[islandName] then
-                    visitedIsland[islandName] = true
-                    _tp(island.CFrame)
-                    break -- mỗi vòng chỉ xử lý 1 island
+spawn(function()
+  pcall(function() 
+    while wait(Sec) do
+      if _G.Raiding then  
+        if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == true then          
+          local islands = {"Island5","Island 4", "Island 3", "Island 2", "Island 1"}
+          for _, island in ipairs(islands) do
+          local location = game:GetService("Workspace")["_WorldOrigin"].Locations:FindFirstChild(island)
+            if location then
+              for i,v in pairs(workspace.Enemies:GetChildren()) do
+                if v:FindFirstChild("Humanoid") or v:FindFirstChild("HumanoidRootPart") then
+                  if v.Humanoid.Health > 0 then
+                    repeat wait() Attack.Kill(v,_G.Raiding) NextIs=false until not _G.Raiding or not v.Parent or v.Humanoid.Health <= 0 NextIs=true
+                  end
                 end
+              end
             end
-        end)
+          end
+        else
+          NextIs = false
+        end
+      else
+        NextIs = false
+      end
     end
+  end)
 end)
-
-
 local Q = Tabs.Raids:AddToggle("Q", {Title = "Kill Aura", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.KillH = Value

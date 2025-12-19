@@ -8262,13 +8262,11 @@ spawn(function()
     pcall(function()
         while task.wait(Sec) do
             if not _G.Raiding then
-                NextIs = false
                 continue
             end
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
-                NextIs = false
                 continue
             end
             
@@ -8277,13 +8275,16 @@ spawn(function()
             if not hrp then continue end
             
             local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
+            local foundEnemy = false
             
             for _, islandName in ipairs(islands) do
+                if foundEnemy then break end
+                
                 local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
                 if not island then continue end
                 
                 for _, enemy in pairs(workspace.Enemies:GetChildren()) do
-                    if not _G.Raiding then break end -- Thoát ngay nếu Raiding bị tắt
+                    if not _G.Raiding then break end
                     
                     local humanoid = enemy:FindFirstChild("Humanoid")
                     local ehrp = enemy:FindFirstChild("HumanoidRootPart")
@@ -8291,15 +8292,21 @@ spawn(function()
                     if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
                         
-                        if distance <= 1000 then
-                            NextIs = false
-                            print("Bắt đầu tấn công:", enemy.Name)
+                        if distance <= 500 then
+                            foundEnemy = true
+                            print("Tấn công:", enemy.Name)
                             
-                            local timeout = tick() + 30 -- Timeout 30 giây
+                            -- Đánh quái
+                            local timeout = tick() + 30
                             repeat
                                 task.wait()
+                                
                                 if tick() > timeout then
-                                    print("Timeout on enemy:", enemy.Name)
+                                    print("Timeout:", enemy.Name)
+                                    break
+                                end
+                                
+                                if not _G.Raiding or not enemy.Parent or humanoid.Health <= 0 then
                                     break
                                 end
                                 
@@ -8309,41 +8316,26 @@ spawn(function()
                                 
                             until not _G.Raiding or not enemy.Parent or humanoid.Health <= 0
                             
-                            NextIs = true
+                            break
                         end
+                    end
+                end
+            end
+            
+            -- Teleport nếu không có quái để đánh
+            if not foundEnemy and _G.Raiding and raidGui.Visible then
+                for _, islandName in ipairs(islands) do
+                    local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
+                    if island then
+                        _tp(island.CFrame * CFrame.new(0, 50, 100))
+                        break
                     end
                 end
             end
         end
     end)
 end)
-g:AddToggle({
-	Title = "Kill Aura",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.KillH = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		if _G.KillH then
-			for e, A in pairs(workspace.Enemies:GetChildren()) do
-				if O.Alive(A) then
-					pcall(function()
-						repeat
-							wait(Sec);
-							sethiddenproperty(plr, "SimulationRadius", math.huge);
-							A:BreakJoints();
-							A.Humanoid.Health = 0;
-							A.HumanoidRootPart.CanCollide = false;
-						until not _G.KillH or not A.Parent or A.Humanoid.Health <= 0;
-					end);
-				end;
-			end;
-		end;
-	end;
-end);
+
 g:AddToggle({
 	Title = "Auto Next Island",
 	Description = "",

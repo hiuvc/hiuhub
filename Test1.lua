@@ -8265,43 +8265,50 @@ spawn(function()
                 NextIs = false
                 continue
             end
-
+            
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
                 NextIs = false
                 continue
             end
-
+            
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             if not hrp then continue end
-
-            local islands = {
-                "Island 5",
-                "Island 4",
-                "Island 3",
-                "Island 2",
-                "Island 1"
-            }
-
+            
+            local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
+            
             for _, islandName in ipairs(islands) do
                 local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
                 if not island then continue end
-
+                
                 for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if not _G.Raiding then break end -- Thoát ngay nếu Raiding bị tắt
+                    
                     local humanoid = enemy:FindFirstChild("Humanoid")
                     local ehrp = enemy:FindFirstChild("HumanoidRootPart")
-
-                    if humanoid and ehrp and humanoid.Health > 0 then
+                    
+                    if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
+                        
                         if distance <= 1000 then
                             NextIs = false
+                            print("Bắt đầu tấn công:", enemy.Name)
+                            
+                            local timeout = tick() + 30 -- Timeout 30 giây
                             repeat
                                 task.wait()
-                                O.Kill(enemy, _G.Raiding)
-                            until not _G.Raiding
-                               or not enemy.Parent
-                               or humanoid.Health <= 0
+                                if tick() > timeout then
+                                    print("Timeout on enemy:", enemy.Name)
+                                    break
+                                end
+                                
+                                pcall(function()
+                                    O.Kill(enemy, _G.Raiding)
+                                end)
+                                
+                            until not _G.Raiding or not enemy.Parent or humanoid.Health <= 0
+                            
                             NextIs = true
                         end
                     end
@@ -8310,7 +8317,6 @@ spawn(function()
         end
     end)
 end)
-
 g:AddToggle({
 	Title = "Kill Aura",
 	Description = "",

@@ -5503,6 +5503,7 @@ Q:OnChanged(function(Value)
   end
 end)
 
+-- Toggle
 local Q = Tabs.Raids:AddToggle("Q", {
     Title = "Auto Complete Raid [Safety]",
     Description = "",
@@ -5513,66 +5514,47 @@ Q:OnChanged(function(value)
     _G.Raiding = value
 end)
 
--- Auto Island Loop
-spawn(function()
-    -- Lưu trữ các đảo đã được ghé thăm
-    local visitedIslands = {}
-    
-    -- Vị trí checkpoint để reset
-    local checkpoints = {
-        Vector3.new(-6438.73535, 250.645355, -4501.50684),
-        Vector3.new(-5017.40869, 314.844055, -2823.0127)
-    }
-    
-    -- Danh sách các đảo cần ghé thăm
-    local islands = {"Island 2", "Island 3", "Island 4", "Island 5"}
-    
-    while task.wait() do
-        -- Kiểm tra toggle có bật không
+-- Auto Raid
+task.spawn(function()
+    local visitedIsland = {}
+
+    while task.wait(0.2) do
         if not _G.Raiding then
+            visitedIsland = {}
             continue
         end
-        
+
         pcall(function()
-            local character = game.Players.LocalPlayer.Character
-            
-            if not character or not character:FindFirstChild("HumanoidRootPart") then
-                return
+            local player = game.Players.LocalPlayer
+            local character = player.Character
+            if not character then return end
+
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+
+            local locations = workspace._WorldOrigin.Locations
+            local position = hrp.Position
+
+            -- Reset khi quay về điểm spawn
+            if (position - Vector3.new(-6438.73535, 250.645355, -4501.50684)).Magnitude < 1
+            or (position - Vector3.new(-5017.40869, 314.844055, -2823.0127)).Magnitude < 1 then
+                visitedIsland = {}
             end
-            
-            local rootPart = character.HumanoidRootPart
-            local currentPosition = rootPart.Position
-            local worldOrigin = game:GetService("Workspace")._WorldOrigin
-            local locations = worldOrigin:FindFirstChild("Locations")
-            
-            if not locations then
-                return
-            end
-            
-            for _, checkpoint in ipairs(checkpoints) do
-                if (currentPosition - checkpoint).Magnitude < 1 then
-                    visitedIslands = {}
-                    return
-                end
-            end
-            
+
+            -- Auto Near khi bắt đầu raid
             if locations:FindFirstChild("Island 1") then
                 _G.AutoFarmNear = true
             end
-            
-            -- Duyệt qua từng đảo
-            for _, islandName in ipairs(islands) do
+
+            -- Di chuyển island theo thứ tự
+            for islandIndex = 2, 5 do
+                local islandName = "Island " .. islandIndex
                 local island = locations:FindFirstChild(islandName)
-                
-                if island and not visitedIslands[islandName] then
+
+                if island and not visitedIsland[islandName] then
+                    visitedIsland[islandName] = true
                     _tp(island.CFrame)
-                    visitedIslands[islandName] = true
-                    
-                    _G.Raiding = false
-                    task.wait()
-                    _G.Raiding = true
-                    
-                    break
+                    break -- mỗi vòng chỉ xử lý 1 island
                 end
             end
         end)

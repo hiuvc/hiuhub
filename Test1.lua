@@ -8211,48 +8211,52 @@ g:AddToggle({
 		_G.Auto_StartRaid = e;
 	end,
 });
-spawn(function()
-	while wait(Sec) do
-		pcall(function()
-			if _G.Auto_StartRaid then
-				if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
-					if GetBP("Special Microchip") then
-						if World2 then
-							_tp(CFrame.new(-6438.73535, 250.645355, -4501.50684));
-							fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector);
-						elseif World3 then
-							replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-5097.93164, 316.447021, -3142.66602, -0.405007899, -4.31682743e-08, .914313197, -1.90943332e-08, 1, 3.8755779e-08, -0.914313197, -1.76180437e-09, -0.405007899));
-							fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector);
-						end;
-					end;
-				end;
-			end;
-		end);
-	end;
-end);
-g:AddToggle({
-	Title = "Teleport To Lab",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.TpLab = e;
-		spawn(function()
-			while _G.TpLab do
-				wait(Sec);
-				if _G.TpLab then
-					if World2 then
-						_tp(CFrame.new(-6438.73535, 250.645355, -4501.50684));
-					elseif World3 then
-						_tp(CFrame.new(-5017.40869, 314.844055, -2823.0127, -0.925743818, 4.48217499e-08, -0.378151238, 4.55503146e-09, 1, 1.07377559e-07, .378151238, 9.7681621e-08, -0.925743818));
-					end;
-				end;
-			end;
-		end);
-	end,
-});
+
+local function StartRaid()
+    if not _G.Auto_StartRaid then return end
+    
+    local raidTimer = plr.PlayerGui.Main.TopHUDList.RaidTimer
+    if raidTimer.Visible then return end 
+    
+    if not GetBP("Special Microchip") then
+        HandleNoMicrochip()
+        return
+    end
+    
+    if World2 then
+        _tp(CFrame.new(-6438.73535, 250.645355, -4501.50684))
+        fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector)
+    elseif World3 then
+        replicated.Remotes.CommF_:InvokeServer("requestEntrance", 
+            Vector3.new(-5097.93164, 316.447021, -3142.66602, -0.405007899, -4.31682743e-08, .914313197, -1.90943332e-08, 1, 3.8755779e-08, -0.914313197, -1.76180437e-09, -0.405007899))
+        fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector)
+    end
+end
+
+local function HandleNoMicrochip()
+    if _G.GetFruitLowestBeli then
+        BuyLowPriceFruit()
+    else
+        replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+    end
+end
+
+local function BuyLowPriceFruit()
+    local fruits = replicated.Remotes.CommF_:InvokeServer("GetFruits")
+    
+    for _, fruit in pairs(fruits) do
+        if fruit.Price <= 490000 then
+            replicated.Remotes.CommF_:InvokeServer("LoadFruit", fruit.Name)
+            wait(0.3) -- Tránh spam
+            replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+            break -- Chỉ mua 1 quả
+        end
+    end
+end
+
 g:AddToggle({
 	Title = "Auto Raid [Fully]",
-	Description = "",
+	Description = "Buy Chip + Complete Raid",
 	Default = false,
 	Callback = function(e)
 		_G.Raiding = e;
@@ -8267,6 +8271,7 @@ spawn(function()
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
+            	StartRaid()
                 continue
             end
             
@@ -8322,7 +8327,6 @@ spawn(function()
                 end
             end
             
-            -- Teleport nếu không có quái để đánh
             if not foundEnemy and _G.Raiding and raidGui.Visible then
                 for _, islandName in ipairs(islands) do
                     local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
@@ -8337,32 +8341,13 @@ spawn(function()
 end)
 
 g:AddToggle({
-	Title = "Auto Next Island",
+	Title = "Auto Get Fruit Under 1M",
 	Description = "",
 	Default = false,
 	Callback = function(e)
-		NextIs = e;
+		_G.GetFruitLowestBeli = e;
 	end,
 });
-spawn(function()
-	while wait(Sec) do
-		if NextIs then
-			if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == true then
-				if workspace._WorldOrigin.Locations:FindFirstChild("Island 5") then
-					_tp((workspace._WorldOrigin.Locations:FindFirstChild("Island 5")).CFrame * CFrame.new(0, 50, 100));
-				elseif workspace._WorldOrigin.Locations:FindFirstChild("Island 4") then
-					_tp((workspace._WorldOrigin.Locations:FindFirstChild("Island 4")).CFrame * CFrame.new(0, 50, 100));
-				elseif workspace._WorldOrigin.Locations:FindFirstChild("Island 3") then
-					_tp((workspace._WorldOrigin.Locations:FindFirstChild("Island 3")).CFrame * CFrame.new(0, 50, 100));
-				elseif workspace._WorldOrigin.Locations:FindFirstChild("Island 2") then
-					_tp((workspace._WorldOrigin.Locations:FindFirstChild("Island 2")).CFrame * CFrame.new(0, 50, 100));
-				elseif workspace._WorldOrigin.Locations:FindFirstChild("Island 1") then
-					_tp((workspace._WorldOrigin.Locations:FindFirstChild("Island 1")).CFrame * CFrame.new(0, 50, 100));
-				end;
-			end;
-		end;
-	end;
-end);
 g:AddToggle({
 	Title = "Auto Awakening",
 	Description = "",
@@ -8381,6 +8366,28 @@ spawn(function()
 		end);
 	end;
 end);
+
+
+g:AddToggle({
+	Title = "Teleport To Lab",
+	Description = "",
+	Default = false,
+	Callback = function(e)
+		_G.TpLab = e;
+		spawn(function()
+			while _G.TpLab do
+				wait(Sec);
+				if _G.TpLab then
+					if World2 then
+						_tp(CFrame.new(-6438.73535, 250.645355, -4501.50684));
+					elseif World3 then
+						_tp(CFrame.new(-5017.40869, 314.844055, -2823.0127, -0.925743818, 4.48217499e-08, -0.378151238, 4.55503146e-09, 1, 1.07377559e-07, .378151238, 9.7681621e-08, -0.925743818));
+					end;
+				end;
+			end;
+		end);
+	end,
+});
 J:AddSeperator("Combat / Aimbot");
 __indexPlayer = J:AddParagraph({ Title = "All Players On Server :", Content = "" });
 spawn(function()

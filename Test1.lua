@@ -8245,7 +8245,7 @@ local function BuyLowPriceFruit()
     local fruits = replicated.Remotes.CommF_:InvokeServer("GetFruits")
     
     for _, fruit in pairs(fruits) do
-        if fruit.Price <= 490000 then
+        if fruit.Price <=  then
             replicated.Remotes.CommF_:InvokeServer("LoadFruit", fruit.Name)
             wait(0.3) -- Tránh spam
             replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
@@ -8271,7 +8271,7 @@ spawn(function()
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
-            	_G.Auto_StartRaid = true
+            	StartRaid()
                 continue
             end
             

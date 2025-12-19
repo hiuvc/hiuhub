@@ -8271,7 +8271,7 @@ spawn(function()
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
-            	StartRaid()
+            	_G.Auto_StartRaid = true
                 continue
             end
             

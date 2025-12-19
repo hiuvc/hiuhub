@@ -1174,51 +1174,20 @@ ClosetMons:OnChanged(function(Value)
   _G.AutoFarmNear = Value
 end)
 spawn(function()
-    local FARM_RANGE = 300 -- Giới hạn phạm vi tìm quái
-    
-    while wait() do
-        pcall(function()
-            if not _G.AutoFarmNear then
-                return
+  while wait() do
+    pcall(function()
+      if _G.AutoFarmNear then
+        for i,v in pairs(workspace.Enemies:GetChildren()) do
+          if v:FindFirstChild("Humanoid") or v:FindFirstChild("HumanoidRootPart") then
+            if v.Humanoid.Health > 0 then
+              repeat wait() Attack.Kill(v,_G.AutoFarmNear) until not _G.AutoFarmNear or not v.Parent or v.Humanoid.Health <= 0
             end
-            
-            local character = game.Players.LocalPlayer.Character
-            if not character or not character:FindFirstChild("HumanoidRootPart") then
-                return
-            end
-            
-            local playerPosition = character.HumanoidRootPart.Position
-            
-            for i, v in pairs(workspace.Enemies:GetChildren()) do
-                -- Kiểm tra quái có Humanoid và HumanoidRootPart
-                if not (v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart")) then
-                    continue
-                end
-                
-                local enemyHumanoid = v.Humanoid
-                local enemyRootPart = v.HumanoidRootPart
-                
-                -- Kiểm tra quái còn sống
-                if enemyHumanoid.Health <= 0 then
-                    continue
-                end
-                
-                -- Tính khoảng cách từ nhân vật đến quái
-                local distance = (playerPosition - enemyRootPart.Position).Magnitude
-                
-                -- Kiểm tra quái có trong phạm vi không
-                if distance <= FARM_RANGE then
-                    -- Tấn công quái
-                    repeat 
-                        wait() 
-                        Attack.Kill(v, _G.AutoFarmNear) 
-                    until not _G.AutoFarmNear or not v.Parent or v.Humanoid.Health <= 0
-                end
-            end
-        end)
-    end
+          end
+        end
+      end
+    end)
+  end
 end)
-
 local FactoryRaids = Tabs.Main:AddToggle("FactoryRaids", {Title = "Auto Factory Raid", Description = "", Default = false})
 FactoryRaids:OnChanged(function(Value)
   _G.AutoFactory = Value
@@ -5533,57 +5502,79 @@ Q:OnChanged(function(Value)
    end
   end
 end)
-
 Q = Tabs.Raids:AddToggle("Q", {Title = "Auto Complete Raid [Safety]", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.Raiding = Value
 end)
--- Auto Raid
-task.spawn(function()
-    local visitedIsland = {}
-
-    while task.wait(0.2) do
-        if not _G.Raiding then
-            visitedIsland = {}
-            continue
-        end
-
-        pcall(function()
-            local player = game.Players.LocalPlayer
-            local character = player.Character
-            if not character then return end
-
-            local hrp = character:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-
-            local locations = workspace._WorldOrigin.Locations
-            local position = hrp.Position
-
-            -- Reset khi quay về điểm spawn
-            if (position - Vector3.new(-6438.73535, 250.645355, -4501.50684)).Magnitude < 1
-            or (position - Vector3.new(-5017.40869, 314.844055, -2823.0127)).Magnitude < 1 then
-                visitedIsland = {}
+spawn(function()
+    pcall(function() 
+        while wait(Sec) do
+            if not _G.Raiding then
+                NextIs = false
+                continue
             end
-
-            -- Auto Near khi bắt đầu raid
-            if locations:FindFirstChild("Island 1") then
-                _G.AutoFarmNear = true
+            
+            -- Kiểm tra Raid Timer có đang chạy không
+            if not plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible then
+                NextIs = false
+                continue
             end
-
-            -- Di chuyển island theo thứ tự
-            for islandIndex = 2, 5 do
-                local islandName = "Island " .. islandIndex
-                local island = locations:FindFirstChild(islandName)
-
-                if island and not visitedIsland[islandName] then
-                    visitedIsland[islandName] = true
-                    _tp(island.CFrame)
-                    break -- mỗi vòng chỉ xử lý 1 island
+            
+            local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
+            local character = game.Players.LocalPlayer.Character
+            
+            if not character or not character:FindFirstChild("HumanoidRootPart") then
+                continue
+            end
+            
+            local playerPos = character.HumanoidRootPart.Position
+            local worldOrigin = game:GetService("Workspace")["_WorldOrigin"].Locations
+            
+            -- Duyệt qua từng đảo
+            for _, islandName in ipairs(islands) do
+                if not _G.Raiding then break end
+                
+                local location = worldOrigin:FindFirstChild(islandName)
+                if not location then
+                    continue
+                end
+                
+                -- Tween tới đảo
+                local islandPos = location.CFrame.Position
+                _tp(location.CFrame)
+                
+                -- Chờ tween hoàn thành
+                wait(1)
+                
+                -- Tấn công tất cả quái trên đảo này
+                for i, v in pairs(workspace.Enemies:GetChildren()) do
+                    if not _G.Raiding then break end
+                    
+                    -- Kiểm tra quái có thành phần cần thiết
+                    if not (v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart")) then
+                        continue
+                    end
+                    
+                    local enemyPos = v.HumanoidRootPart.Position
+                    local islandOrigin = location.Position
+                    
+                    -- Kiểm tra quái có nằm trên đảo này không (khoảng cách < 200)
+                    local distanceToIsland = (enemyPos - islandOrigin).Magnitude
+                    
+                    if v.Humanoid.Health > 0 and distanceToIsland < 200 then
+                        NextIs = false
+                        repeat 
+                            wait() 
+                            Attack.Kill(v, _G.Raiding) 
+                        until not _G.Raiding or not v.Parent or v.Humanoid.Health <= 0
+                        NextIs = true
+                    end
                 end
             end
-        end)
-    end
+        end
+    end)
 end)
+
 local Q = Tabs.Raids:AddToggle("Q", {Title = "Kill Aura", Description = "", Default = false})
 Q:OnChanged(function(Value)
   _G.KillH = Value

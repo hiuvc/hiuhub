@@ -1174,20 +1174,51 @@ ClosetMons:OnChanged(function(Value)
   _G.AutoFarmNear = Value
 end)
 spawn(function()
-  while wait() do
-    pcall(function()
-      if _G.AutoFarmNear then
-        for i,v in pairs(workspace.Enemies:GetChildren()) do
-          if v:FindFirstChild("Humanoid") or v:FindFirstChild("HumanoidRootPart") then
-            if v.Humanoid.Health > 0 then
-              repeat wait() Attack.Kill(v,_G.AutoFarmNear) until not _G.AutoFarmNear or not v.Parent or v.Humanoid.Health <= 0
+    local FARM_RANGE = 300 -- Giới hạn phạm vi tìm quái
+    
+    while wait() do
+        pcall(function()
+            if not _G.AutoFarmNear then
+                return
             end
-          end
-        end
-      end
-    end)
-  end
+            
+            local character = game.Players.LocalPlayer.Character
+            if not character or not character:FindFirstChild("HumanoidRootPart") then
+                return
+            end
+            
+            local playerPosition = character.HumanoidRootPart.Position
+            
+            for i, v in pairs(workspace.Enemies:GetChildren()) do
+                -- Kiểm tra quái có Humanoid và HumanoidRootPart
+                if not (v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart")) then
+                    continue
+                end
+                
+                local enemyHumanoid = v.Humanoid
+                local enemyRootPart = v.HumanoidRootPart
+                
+                -- Kiểm tra quái còn sống
+                if enemyHumanoid.Health <= 0 then
+                    continue
+                end
+                
+                -- Tính khoảng cách từ nhân vật đến quái
+                local distance = (playerPosition - enemyRootPart.Position).Magnitude
+                
+                -- Kiểm tra quái có trong phạm vi không
+                if distance <= FARM_RANGE then
+                    -- Tấn công quái
+                    repeat 
+                        wait() 
+                        Attack.Kill(v, _G.AutoFarmNear) 
+                    until not _G.AutoFarmNear or not v.Parent or v.Humanoid.Health <= 0
+                end
+            end
+        end)
+    end
 end)
+
 local FactoryRaids = Tabs.Main:AddToggle("FactoryRaids", {Title = "Auto Factory Raid", Description = "", Default = false})
 FactoryRaids:OnChanged(function(Value)
   _G.AutoFactory = Value

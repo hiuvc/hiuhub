@@ -5511,7 +5511,7 @@ spawn(function()
         while wait(Sec) do
             if not _G.Raiding then
                 NextIs = false
-                continue
+                return
             end
             
             -- Kiểm tra Raid Timer có đang chạy không
@@ -5524,7 +5524,7 @@ spawn(function()
             local character = game.Players.LocalPlayer.Character
             
             if not character or not character:FindFirstChild("HumanoidRootPart") then
-                continue
+                return
             end
             
             local playerPos = character.HumanoidRootPart.Position
@@ -5536,7 +5536,7 @@ spawn(function()
                 
                 local location = worldOrigin:FindFirstChild(islandName)
                 if not location then
-                    continue
+                    return
                 end
                 
                 -- Tween tới đảo
@@ -5552,7 +5552,7 @@ spawn(function()
                     
                     -- Kiểm tra quái có thành phần cần thiết
                     if not (v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart")) then
-                        continue
+                        return
                     end
                     
                     local enemyPos = v.HumanoidRootPart.Position
@@ -5561,7 +5561,7 @@ spawn(function()
                     -- Kiểm tra quái có nằm trên đảo này không (khoảng cách < 200)
                     local distanceToIsland = (enemyPos - islandOrigin).Magnitude
                     
-                    if v.Humanoid.Health > 0 and distanceToIsland < 200 then
+                    if v.Humanoid.Health > 0 and distanceToIsland < 300 then
                         NextIs = false
                         repeat 
                             wait() 

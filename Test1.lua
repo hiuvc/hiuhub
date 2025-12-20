@@ -8203,25 +8203,120 @@ end);
 g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); 
 g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", 
 	Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
-
 -- Player
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
 
-local function loadCheapestFruitAndBuyChip(maxValue)
-    maxValue = maxValue or 1_000_000
 
+
+-- Hàm kiểm tra fruit trong backpack
+local function checkBackpackForFruit()
+    local backpack = plr:FindFirstChild("Backpack")
+    if not backpack then
+        return nil
+    end
+    
+    -- Lấy danh sách loại fruit từ game
     local RS = game:GetService("ReplicatedStorage")
     local CommF = RS:WaitForChild("Remotes"):WaitForChild("CommF_")
-
     local ok, inventory = pcall(function()
         return CommF:InvokeServer("getInventory")
     end)
+    
+    if not ok or typeof(inventory) ~= "table" then
+        return nil
+    end
+    
+    -- Tạo bảng các fruit name
+    local fruitNames = {}
+    for _, item in pairs(inventory) do
+        if item.Type == "Blox Fruit" then
+            table.insert(fruitNames, item.Name)
+        end
+    end
+    
+    -- Kiểm tra backpack xem có fruit nào không
+    for _, tool in pairs(backpack:GetChildren()) do
+        for _, fruitName in pairs(fruitNames) do
+            if tool.Name == fruitName then
+                return fruitName
+            end
+        end
+    end
+    
+    return nil
+end
 
+-- Hàm đổi fruit trong backpack
+local function equipFruitFromBackpack(fruitName)
+    local backpack = plr:FindFirstChild("Backpack")
+    if not backpack then
+        return false
+    end
+    
+    local fruit = backpack:FindFirstChild(fruitName)
+    if not fruit then
+        return false
+    end
+    
+    local ok = pcall(function()
+        fruit.Parent = plr.Character
+    end)
+    
+    if ok then
+        print("✅ Đã đổi fruit:", fruitName)
+        task.wait(1)
+    end
+    
+    return ok
+end
+
+local function loadCheapestFruitAndBuyChip(maxValue)
+    maxValue = maxValue or 1_000_000
+    local RS = game:GetService("ReplicatedStorage")
+    local CommF = RS:WaitForChild("Remotes"):WaitForChild("CommF_")
+    
+    -- Kiểm tra backpack trước
+    local backpackFruit = checkBackpackForFruit()
+    if backpackFruit then
+        print("🎒 Phát hiện fruit trong backpack:", backpackFruit)
+        local equipOk = equipFruitFromBackpack(backpackFruit)
+        if not equipOk then
+            return false, "Không thể đổi fruit từ backpack"
+        end
+        task.wait(1)
+        
+        -- Nếu đã có fruit trong backpack thì đổi chip luôn, không cần lấy trong rương
+        if not _G.SelectChip or _G.SelectChip == nil then
+            warn("⚠️ _G.SelectChip không được định nghĩa!")
+            return false, "_G.SelectChip nil - Cần set _G.SelectChip = 'chipName' trước"
+        end
+        
+        print("🛒 Mua chip:", _G.SelectChip)
+        
+        local chipOk = pcall(function()
+            CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+        end)
+        if not chipOk then
+            return false, "Buy chip fail"
+        end
+        
+        task.wait(1)
+        return true, backpackFruit, "Backpack"
+    end
+    
+    -- Nếu không có trong backpack, lấy trong rương
+    print("📦 Không có fruit trong backpack, lấy trong rương...")
+    
+    -- Lấy inventory
+    local ok, inventory = pcall(function()
+        return CommF:InvokeServer("getInventory")
+    end)
     if not ok or typeof(inventory) ~= "table" then
         return false, "Không lấy được inventory"
     end
-
+    
+    -- Tìm fruit rẻ nhất
     local targetFruit, minValue = nil, math.huge
     for _, item in pairs(inventory) do
         if item.Type == "Blox Fruit"
@@ -8234,70 +8329,78 @@ local function loadCheapestFruitAndBuyChip(maxValue)
             targetFruit = item
         end
     end
-
+    
     if not targetFruit then
         return false, "Không có trái < " .. maxValue
     end
-
+    
+    print("📌 Tìm thấy fruit trong rương:", targetFruit.Name, "| Giá:", minValue)
+    
+    -- LoadFruit
     local loadOk = pcall(function()
         CommF:InvokeServer("LoadFruit", targetFruit.Name)
     end)
     if not loadOk then
         return false, "LoadFruit fail"
     end
-
-    task.wait(0.8)
-
-    if not _G.SelectChip then
-        return false, "_G.SelectChip nil"
+    
+    print("⏳ Đang chờ LoadFruit hoàn tất...")
+    task.wait(2)
+    
+    -- Kiểm tra SelectChip
+    if not _G.SelectChip or _G.SelectChip == nil then
+        warn("⚠️ _G.SelectChip không được định nghĩa!")
+        return false, "_G.SelectChip nil - Cần set _G.SelectChip = 'chipName' trước"
     end
-
+    
+    print("🛒 Mua chip:", _G.SelectChip)
+    
+    -- Mua chip
     local chipOk = pcall(function()
         CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
     end)
     if not chipOk then
         return false, "Buy chip fail"
     end
-
+    
+    task.wait(1)
     return true, targetFruit.Name, targetFruit.Value
 end
 
 -- ====== TOGGLE ======
 g:AddToggle({
     Title = "Auto Buy Dungeon Chip [Devil Fruit]",
-    Description = "",
+    Description = "Tự động mua chip cho dungeon + Đổi fruit nếu có trong backpack",
     Default = false,
     Callback = function(v)
         _G.BuyChipDF = v
-
-        if v then
+        if _G.BuyChipDF then
             task.spawn(function()
                 while _G.BuyChipDF do
-                    -- ====== ĐIỀU KIỆN BẮT BUỘC ======
                     local noChip = not GetBP("Special Microchip")
-                    local notRaiding =
+                    local notRaiding = 
                         plr.PlayerGui
                         and plr.PlayerGui:FindFirstChild("Main")
                         and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false
-
+                    
+                    print("📊 Kiểm tra: noChip =", noChip, "| notRaiding =", notRaiding)
+                    
                     if noChip and notRaiding then
+                        print("🎯 Điều kiện đủ - Bắt đầu mua chip...")
                         local ok, fruit, value = loadCheapestFruitAndBuyChip(1_000_000)
-
                         if ok then
-                            print("✅ Đã mua chip |", fruit, "|", value)
-                            break
+                            print("✅ Thành công! Mua chip |", fruit, "|", value)
                         else
                             warn("❌ Auto Buy Chip:", fruit)
                         end
+                        break -- Break dù thành công hay thất bại
                     end
-
-                    task.wait(2) -- loop delay
+                    task.wait(Sec) -- Chờ 2 giây rồi kiểm tra lại
                 end
             end)
         end
     end,
 })
-
 
 local function StartRaid()
     if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then

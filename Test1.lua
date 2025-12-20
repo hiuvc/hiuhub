@@ -8177,7 +8177,8 @@ spawn(function()
 		end;
 	end;
 end);
-g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
+g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); 
+g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
 
 -- Hàm mua chip bằng beli
 local function BuyChipWithBeli()
@@ -8265,30 +8266,46 @@ g:AddToggle({
     end, 
 })
 
+-- Thread riêng để mua chip
 spawn(function()
-    pcall(function()
-        while task.wait(Sec) do
-            if not _G.Raiding then continue end
-            
-            -- Kiểm tra và mua chip nếu chưa có
+    while task.wait(2) do
+        if not _G.Raiding then continue end
+        
+        local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
+        -- Chỉ mua chip khi raid chưa bắt đầu (RaidTimer ẩn)
+        if raidGui and not raidGui.Visible then
             if not GetBP("Special Microchip") then
                 print("Đang cố gắng mua chip bằng beli...")
                 if not BuyChipWithBeli() then
                     print("Mua beli thất bại, thử mua bằng fruit...")
                     BuyChipWithFruit()
                 end
-                task.wait(2)
-                continue
             end
-            
-            -- Bắt đầu raid khi đã có chip
+        end
+    end
+end)
+
+-- Thread riêng để bắt đầu raid
+spawn(function()
+    while task.wait(1) do
+        if not _G.Raiding then continue end
+        
+        if GetBP("Special Microchip") and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
+            print("Bắt đầu raid...")
             StartRaid()
-            print("Bắt đầu raid, đợi quái spawn...")
-            task.wait(5) -- Đợi 5 giây để quái spawn
+            task.wait(5)
+        end
+    end
+end)
+
+-- Thread chính để đánh quái
+spawn(function()
+    pcall(function()
+        while task.wait(0.5) do
+            if not _G.Raiding then continue end
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
-                print("Raid chưa bắt đầu")
                 continue
             end
 
@@ -8377,6 +8394,7 @@ g:AddToggle({
         _G.GetFruitLowestBeli = e
     end, 
 })
+
 g:AddToggle({
 	Title = "Auto Awakening",
 	Description = "",

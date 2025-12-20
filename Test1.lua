@@ -8361,28 +8361,8 @@ g:AddToggle({
 
 spawn(function()
 	while task.wait(0.1) do
-		if not _G.BuyChipWithFruit then break end
-		
-		if GetBP("Special Microchip") then return end
-		
-		local e = {}
-		local u = {}
-		
-		for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do
-			if u.Price <= 1000000 then
-				table.insert(e, u.Name)
-			end
-		end
-		
-		for e, u in pairs(e) do
-			if not _G.BuyChipWithFruit then break end
-			
-			for e, A in pairs(A) do
-				if not GetBP("Special Microchip") then
-					replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u))
-					replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-				end
-			end
+		if _G.BuyChipWithFruit then
+			if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end;  
 		end
 	end
 end)

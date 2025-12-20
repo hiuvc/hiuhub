@@ -8177,134 +8177,168 @@ spawn(function()
 		end;
 	end;
 end);
-g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function()
-		if not GetBP("Special Microchip") then
-			replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip);
-		end;
-	end });
-g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", Callback = function()
-		if GetBP("Special Microchip") then
-			return;
-		end;
-		local e = {};
-		local u = {};
-		for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do
-			if u.Price <= 490000 then
-				table.insert(e, u.Name);
-			end;
-		end;
-		for e, u in pairs(e) do
-			for e, A in pairs(A) do
-				if not GetBP("Special Microchip") then
-					replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u));
-					replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip);
-				end;
-			end;
-		end;
-	end });
-g:AddSeperator("Raiding Menu");
+g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
 
-g:AddToggle({
-	Title = "Auto Start Raid",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.Auto_StartRaid = e;
-	end,
-});
+-- Hàm mua chip bằng beli
+local function BuyChipWithBeli()
+    if GetBP("Special Microchip") then
+        return true
+    end
+    pcall(function()
+        replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+    end)
+    task.wait(1)
+    return GetBP("Special Microchip")
+end
+
+-- Hàm mua chip bằng fruit
+local function BuyChipWithFruit()
+    if GetBP("Special Microchip") then
+        return true
+    end
+    
+    pcall(function()
+        local fruits = {}
+        local fruitList = replicated.Remotes.CommF_:InvokeServer("GetFruits")
+        
+        for _, fruitData in next, fruitList do
+            if fruitData.Price <= 1000000 then
+                table.insert(fruits, fruitData.Name)
+            end
+        end
+        
+        if #fruits > 0 then
+            replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(fruits[1]))
+            task.wait(0.5)
+            replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+        end
+    end)
+    
+    task.wait(1)
+    return GetBP("Special Microchip")
+end
+
+-- Hàm bắt đầu raid
+local function StartRaid()
+    if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
+        if GetBP("Special Microchip") then
+            if World2 then
+                _tp(CFrame.new(-6438.73535, 250.645355, -4501.50684))
+                task.wait(0.5)
+                fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector)
+            elseif World3 then
+                replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-5097.93164, 316.447021, -3142.66602, -0.405007899, -4.31682743e-08, .914313197, -1.90943332e-08, 1, 3.8755779e-08, -0.914313197, -1.76180437e-09, -0.405007899))
+                task.wait(0.5)
+                fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector)
+            end
+        end
+    end
+end
+
+g:AddSeperator("Raiding Menu")
+
+g:AddToggle({ 
+    Title = "Auto Start Raid", 
+    Description = "", 
+    Default = false, 
+    Callback = function(e) 
+        _G.Auto_StartRaid = e
+    end, 
+})
+
 spawn(function()
-	while wait(Sec) do
-		pcall(function()
-			if _G.Auto_StartRaid then
-				if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
-					if GetBP("Special Microchip") then
-						if World2 then
-							_tp(CFrame.new(-6438.73535, 250.645355, -4501.50684));
-							fireclickdetector(workspace.Map.CircleIsland.RaidSummon2.Button.Main.ClickDetector);
-						elseif World3 then
-							replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-5097.93164, 316.447021, -3142.66602, -0.405007899, -4.31682743e-08, .914313197, -1.90943332e-08, 1, 3.8755779e-08, -0.914313197, -1.76180437e-09, -0.405007899));
-							fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector);
-						end;
-					end;
-				end;
-			end;
-		end);
-	end;
-end);
+    while wait(Sec) do
+        pcall(function()
+            if _G.Auto_StartRaid then
+                StartRaid()
+            end
+        end)
+    end
+end)
 
-g:AddToggle({
-	Title = "Auto Raid [Fully]",
-	Description = "Buy Chip + Complete Raid",
-	Default = false,
-	Callback = function(e)
-		_G.Raiding = e;
-	end,
-});
+g:AddToggle({ 
+    Title = "Auto Raid [Fully]", 
+    Description = "Buy Chip + Complete Raid", 
+    Default = false, 
+    Callback = function(e) 
+        _G.Raiding = e
+    end, 
+})
+
 spawn(function()
     pcall(function()
         while task.wait(Sec) do
-            if not _G.Raiding then
+            if not _G.Raiding then continue end
+            
+            -- Kiểm tra và mua chip nếu chưa có
+            if not GetBP("Special Microchip") then
+                print("Đang cố gắng mua chip bằng beli...")
+                if not BuyChipWithBeli() then
+                    print("Mua beli thất bại, thử mua bằng fruit...")
+                    BuyChipWithFruit()
+                end
+                task.wait(2)
                 continue
             end
+            
+            -- Bắt đầu raid khi đã có chip
+            StartRaid()
+            task.wait(1)
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
                 continue
             end
-            
+
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            if not hrp then continue end
-            
+            if not hrp then
+                continue
+            end
+
             local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
             local foundEnemy = false
-            
+
             for _, islandName in ipairs(islands) do
-                if foundEnemy then break end
-                
+                if foundEnemy then
+                    break
+                end
                 local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
-                if not island then continue end
-                
+                if not island then
+                    continue
+                end
+
                 for _, enemy in pairs(workspace.Enemies:GetChildren()) do
-                    if not _G.Raiding then break end
-                    
+                    if not _G.Raiding then
+                        break
+                    end
                     local humanoid = enemy:FindFirstChild("Humanoid")
                     local ehrp = enemy:FindFirstChild("HumanoidRootPart")
-                    
                     if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
-                        
                         if distance <= 500 then
                             foundEnemy = true
                             print("Tấn công:", enemy.Name)
-                            
-                            -- Đánh quái
                             local timeout = tick() + 30
                             repeat
                                 task.wait()
-                                
                                 if tick() > timeout then
                                     print("Timeout:", enemy.Name)
                                     break
                                 end
-                                
                                 if not _G.Raiding or not enemy.Parent or humanoid.Health <= 0 then
                                     break
                                 end
-                                
                                 pcall(function()
                                     O.Kill(enemy, _G.Raiding)
                                 end)
-                                
                             until not _G.Raiding or not enemy.Parent or humanoid.Health <= 0
-                            
                             break
                         end
                     end
                 end
             end
-            
-            -- Teleport nếu không có quái để đánh
+
             if not foundEnemy and _G.Raiding and raidGui.Visible then
                 for _, islandName in ipairs(islands) do
                     local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
@@ -8317,14 +8351,16 @@ spawn(function()
         end
     end)
 end)
-g:AddToggle({
-	Title = "Auto Get Fruit Under 1M",
-	Description = "Soon",
-	Default = false,
-	Callback = function(e)
-		_G.GetFruitLowestBeli = e;
-	end,
-});
+
+g:AddToggle({ 
+    Title = "Auto Get Fruit Under 1M", 
+    Description = "Soon", 
+    Default = false, 
+    Callback = function(e) 
+        _G.GetFruitLowestBeli = e
+    end, 
+})
+
 g:AddToggle({
 	Title = "Auto Awakening",
 	Description = "",

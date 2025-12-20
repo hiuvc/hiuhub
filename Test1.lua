@@ -274,9 +274,7 @@ O.Kill = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			if not _G.Raiding then
 			BringEnemy();
-			end
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;
@@ -435,7 +433,7 @@ BringEnemy = function()
 		end;
 		for e, A in pairs(workspace.Enemies:GetChildren()) do
 			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
-				if (A.PrimaryPart.Position - PosMon).Magnitude <= 300 then
+				if (A.PrimaryPart.Position - PosMon).Magnitude <= 250 then
 					A.PrimaryPart.CFrame = CFrame.new(PosMon);
 					A.PrimaryPart.CanCollide = true;
 					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;

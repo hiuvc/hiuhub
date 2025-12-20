@@ -8246,7 +8246,7 @@ g:AddToggle({
 })
 
 spawn(function()
-    while task.wait(Sec) do
+    while task.wait(0.001) do
         if not _G.Raiding then continue end
         
         local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
@@ -8255,6 +8255,8 @@ spawn(function()
             if not GetBP("Special Microchip") then
                 print("Mua chip bằng beli...")
                 BuyChipWithBeli()
+            elseif not BuyChipWithBeli() and _G.BuyChipWithFruit then 
+            	BuyChipWithFruit()
             end
         end
     end
@@ -8358,50 +8360,6 @@ g:AddToggle({
         _G.BuyChipWithFruit = e
     end, 
 })
-
-spawn(function()
-	while task.wait(0.01) do
-		if _G.BuyChipWithFruit then
-			-- Lấy remotes mỗi lần để tránh lỗi khi reset
-			local success, remotes = pcall(function()
-				return replicated:WaitForChild("Remotes", 1)
-			end)
-			
-			if not success or not remotes then
-				task.wait(0.5)
-				continue
-			end
-			
-			local commF = remotes:FindChild("CommF_")
-			if not commF then
-				task.wait(0.5)
-				continue
-			end
-			
-			if GetBP("Special Microchip") then continue end
-			
-			local success2, fruitList = pcall(function()
-				return commF:InvokeServer("GetFruits")
-			end)
-			
-			if not success2 or not fruitList then continue end
-			
-			-- Mua quả
-			for _, fruitData in next, fruitList do
-				if fruitData.Price <= 1000000 then
-					if not GetBP("Special Microchip") then
-						pcall(function()
-							commF:InvokeServer("LoadFruit", fruitData.Name)
-							commF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-						end)
-					else
-						break
-					end
-				end
-			end
-		end
-	end
-end)
 
 g:AddToggle({
 	Title = "Auto Awakening",

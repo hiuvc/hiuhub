@@ -8360,26 +8360,43 @@ g:AddToggle({
 })
 
 spawn(function()
-	while task.wait(0.001) do
+	while task.wait(0.01) do
 		if _G.BuyChipWithFruit then
-			if GetBP("Special Microchip") then return end
+			-- Lấy remotes mỗi lần để tránh lỗi khi reset
+			local success, remotes = pcall(function()
+				return replicated:WaitForChild("Remotes", 1)
+			end)
 			
-			local fruits = {}
-			local remotes = replicated:WaitForChild("Remotes")
-			local fruitList = remotes.CommF_:InvokeServer("GetFruits")
-			
-			-- Lọc những quả dưới 1 triệu
-			for _, fruitData in next, fruitList do
-				if fruitData.Price <= 1000000 then
-					table.insert(fruits, fruitData.Name)
-				end
+			if not success or not remotes then
+				task.wait(0.5)
+				continue
 			end
 			
-			-- Mua từng quả
-			for _, fruitName in pairs(fruits) do
-				if not GetBP("Special Microchip") then
-					remotes.CommF_:InvokeServer("LoadFruit", tostring(fruitName))
-					remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+			local commF = remotes:FindChild("CommF_")
+			if not commF then
+				task.wait(0.5)
+				continue
+			end
+			
+			if GetBP("Special Microchip") then continue end
+			
+			local success2, fruitList = pcall(function()
+				return commF:InvokeServer("GetFruits")
+			end)
+			
+			if not success2 or not fruitList then continue end
+			
+			-- Mua quả
+			for _, fruitData in next, fruitList do
+				if fruitData.Price <= 1000000 then
+					if not GetBP("Special Microchip") then
+						pcall(function()
+							commF:InvokeServer("LoadFruit", fruitData.Name)
+							commF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+						end)
+					else
+						break
+					end
 				end
 			end
 		end

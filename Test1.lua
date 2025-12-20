@@ -8181,41 +8181,6 @@ g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = f
 g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", 
 	Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
 
--- Hàm mua chip bằng beli
-local function BuyChipWithBeli()
-    if GetBP("Special Microchip") then
-        return true
-    end
-    pcall(function()
-        replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-    end)
-    task.wait(1)
-    return GetBP("Special Microchip")
-end
-
--- Hàm mua chip bằng fruit
-local function BuyChipWithFruit()
-    if GetBP("Special Microchip") then
-        return true
-    end
-    
-    pcall(function()
-        local fruits = {}
-        local fruitList = replicated.Remotes.CommF_:InvokeServer("GetFruits")
-        
-        for _, fruitData in next, fruitList do
-            if fruitData.Price <= 1000000 then
-                table.insert(fruits, fruitData.Name)
-            end
-        end
-        
-        if #fruits > 0 then
-            replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(fruits[1]))
-            replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-        end
-    end)
-    return GetBP("Special Microchip")
-end
 
 -- Hàm bắt đầu raid
 local function StartRaid()
@@ -8244,24 +8209,6 @@ g:AddToggle({
         _G.Raiding = e
     end, 
 })
-
-spawn(function()
-    while task.wait(0.001) do
-        if not _G.Raiding then continue end
-        
-        local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
-        -- Chỉ mua chip khi raid chưa bắt đầu (RaidTimer ẩn)
-        if raidGui and not raidGui.Visible then
-            if not GetBP("Special Microchip") then
-                print("Mua chip bằng beli...")
-                BuyChipWithBeli()
-            elseif not BuyChipWithBeli() and _G.BuyChipWithFruit then 
-            	BuyChipWithFruit()
-            end
-        end
-    end
-end)
-
 
 spawn(function()
     while task.wait(Sec) do
@@ -8352,14 +8299,7 @@ spawn(function()
     end)
 end)
 
-g:AddToggle({ 
-    Title = "Auto Get Fruit Under 1M", 
-    Description = "", 
-    Default = false, 
-    Callback = function(e) 
-        _G.BuyChipWithFruit = e
-    end, 
-})
+
 
 g:AddToggle({
 	Title = "Auto Awakening",

@@ -312,7 +312,7 @@ O.Kill2 = function(e, A)
 			else
 				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 8)) * CFrame.Angles(0, math.rad(180), 0));
 			end;
-			if RandomCFrame or _G.Raiding then
+			if RandomCFrame then
 				wait(.1);
 				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
 				wait(.1);

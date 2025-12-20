@@ -8283,21 +8283,26 @@ spawn(function()
             
             -- Bắt đầu raid khi đã có chip
             StartRaid()
-            task.wait(1)
+            print("Bắt đầu raid, đợi quái spawn...")
+            task.wait(5) -- Đợi 5 giây để quái spawn
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
+                print("Raid chưa bắt đầu")
                 continue
             end
 
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             if not hrp then
+                print("Không tìm thấy HumanoidRootPart")
                 continue
             end
 
             local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
             local foundEnemy = false
+            local enemies = workspace.Enemies:GetChildren()
+            print("Số lượng enemy:", #enemies)
 
             for _, islandName in ipairs(islands) do
                 if foundEnemy then
@@ -8308,29 +8313,39 @@ spawn(function()
                     continue
                 end
 
-                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                for _, enemy in pairs(enemies) do
                     if not _G.Raiding then
                         break
                     end
                     local humanoid = enemy:FindFirstChild("Humanoid")
                     local ehrp = enemy:FindFirstChild("HumanoidRootPart")
+                    
                     if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
+                        print("Enemy:", enemy.Name, "- Health:", humanoid.Health, "- Distance:", distance)
+                        
                         if distance <= 500 then
                             foundEnemy = true
                             print("Tấn công:", enemy.Name)
-                            local timeout = tick() + 30
+                            
+                            local timeout = tick() + 60
                             repeat
-                                task.wait()
+                                task.wait(0.1)
                                 if tick() > timeout then
                                     print("Timeout:", enemy.Name)
                                     break
                                 end
                                 if not _G.Raiding or not enemy.Parent or humanoid.Health <= 0 then
+                                    print("Dừng tấn công:", enemy.Name)
                                     break
                                 end
+                                
                                 pcall(function()
-                                    O.Kill(enemy, _G.Raiding)
+                                    if O and O.Kill then
+                                        O.Kill(enemy, true)
+                                    else
+                                        print("O.Kill không tồn tại")
+                                    end
                                 end)
                             until not _G.Raiding or not enemy.Parent or humanoid.Health <= 0
                             break
@@ -8340,10 +8355,12 @@ spawn(function()
             end
 
             if not foundEnemy and _G.Raiding and raidGui.Visible then
+                print("Không tìm thấy enemy, teleport đến island...")
                 for _, islandName in ipairs(islands) do
                     local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
                     if island then
                         _tp(island.CFrame * CFrame.new(0, 50, 100))
+                        print("Teleport tới:", islandName)
                         break
                     end
                 end
@@ -8360,7 +8377,6 @@ g:AddToggle({
         _G.GetFruitLowestBeli = e
     end, 
 })
-
 g:AddToggle({
 	Title = "Auto Awakening",
 	Description = "",

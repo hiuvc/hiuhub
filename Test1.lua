@@ -273,9 +273,35 @@ O.Kill = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			if not _G.Raiding then
-				BringEnemy();
-			end
+			BringEnemy();
+			EquipWeapon(_G.SelectWeapon);
+			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
+			local u = A.ToolTip;
+			if u == "Blox Fruit" then
+				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) * CFrame.Angles(0, math.rad(90), 0));
+			else
+				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)) * CFrame.Angles(0, math.rad(180), 0));
+			end;
+			if RandomCFrame then
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
+			end;
+		end;
+	end;
+O.KillRaid = function(e, A)
+		if e and A then
+			if not e:GetAttribute("Locked") then
+				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
+			end;
+			PosMon = (e:GetAttribute("Locked")).Position;
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;
@@ -1901,23 +1927,24 @@ QuestNeta = function()
 			[6] = PosQ,
 		};
 	end;
+---Tab----------------
 local x = e:NewWindow();
-local W = x:T("Farm");
-local p = x:T("Config");
-local U = x:T("Fighting Style");
-local S = x:T("Items Farm");
-local L = x:T("Sea Events");
+local W = x:T("Tab Farming");
+local p = x:T("Tab Settings Fram");
+local U = x:T("Tab Fighting Style");
+local S = x:T("Tab Items Farm");
+local L = x:T("Tab Sea Events");
 local V = x:T("Mirage + RaceV4");
-local R = x:T("Drago Dojo");
-local D = x:T("Prehistoric");
-local N = x:T("Raid");
-local s = x:T("Combat PVP");
-local M = x:T("Teleport");
-local F = x:T("Fruits");
-local t = x:T("Shop");
-local n = x:T("Misc");
-local B = W:AddSection("Farm");
-local z = p:AddSection("Config");
+local R = x:T("Tab Drago Dojo");
+local D = x:T("Tab Prehistoric");
+local N = x:T("Tab Raid");
+local s = x:T("Tab Combat PVP");
+local M = x:T("Tab Teleport");
+local F = x:T("Tab Fruits");
+local t = x:T("Tab Shop");
+local n = x:T("Tab Misc");
+local B = W:AddSection("Tab Farming");
+local z = p:AddSection("Tab Settings Fram");
 local T = U:AddSection("Fighting Style");
 local b = S:AddSection("Items Farm");
 local h = L:AddSection("Sea Events");
@@ -8111,25 +8138,20 @@ spawn(function()
 		end);
 	end;
 end);
-A = {
-		"Flame",
-		"Ice",
-		"Quake",
-		"Light",
-		"Dark",
-		"String",
-		"Rumble",
-		"Magma",
-		"Human: Buddha",
-		"Sand",
-		"Bird: Phoenix",
-		"Dough",
-	};
+Raidslist = {};
+RaidsModule = require(game.ReplicatedStorage.Raids);
+for i, v in pairs(RaidsModule.raids) do
+	table.insert(Raidslist, v);
+end;
+for i, v in pairs(RaidsModule.advancedRaids) do
+	table.insert(Raidslist, v);
+end;
+
 g:AddDropdown({
 	Title = "Select Chip",
 	Description = "",
-	Values = A,
-	Default = "Flame",
+	Values = Raidslist,
+	Default = "Frame",
 	Multi = false,
 	Callback = function(e)
 		_G.SelectChip = e;
@@ -8183,7 +8205,6 @@ g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your
 	Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
 
 
--- Hàm bắt đầu raid
 local function StartRaid()
     if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
         if GetBP("Special Microchip") then
@@ -8204,7 +8225,7 @@ g:AddSeperator("Raiding Menu")
 
 g:AddToggle({ 
     Title = "Auto Raid [Fully]", 
-    Description = "", 
+    Description = "Start Raid and Complete Raid", 
     Default = false, 
     Callback = function(e) 
         _G.Raiding = e
@@ -8216,7 +8237,6 @@ spawn(function()
         if not _G.Raiding then continue end
         
         if GetBP("Special Microchip") and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
-            print("Bắt đầu raid...")
             StartRaid()
         end
     end
@@ -8256,17 +8276,14 @@ spawn(function()
                     if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
                         
-                        if distance <= 1000 then
+                        if distance <= 500 then
                             foundEnemy = true
-                            print("Tấn công:", enemy.Name)
                             
-                            -- Đánh quái
                             local timeout = tick() + 30
                             repeat
                                 task.wait()
                                 
                                 if tick() > timeout then
-                                    print("Timeout:", enemy.Name)
                                     break
                                 end
                                 
@@ -8275,7 +8292,7 @@ spawn(function()
                                 end
                                 
                                 pcall(function()
-                                    O.Kill(enemy, _G.Raiding)
+                                    O.KillRaid(enemy, _G.Raiding)
                                 end)
                                 
                             until not _G.Raiding or not enemy.Parent or humanoid.Health <= 0
@@ -8286,7 +8303,6 @@ spawn(function()
                 end
             end
             
-            -- Teleport nếu không có quái để đánh
             if not foundEnemy and _G.Raiding and raidGui.Visible then
                 for _, islandName in ipairs(islands) do
                     local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
@@ -8299,8 +8315,6 @@ spawn(function()
         end
     end)
 end)
-
-
 
 g:AddToggle({
 	Title = "Auto Awakening",

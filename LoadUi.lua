@@ -1668,7 +1668,7 @@ function Library:NewWindow(ConfigWindow)
 	G2L["2"]["Image"] = [[rbxassetid://133979080007875]];
 	G2L["2"]["Size"] = UDim2.new(0, 50, 0, 50);
 	G2L["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-	G2L["2"]["Position"] = UDim2.new(0.26651, 0, 0.43687, 0);
+	G2L["2"]["Position"] = UDim2.new(0, 20, 0.5, -28);
 
 
 	-- StarterGui.ScreenGui.ImageButton.UICorner

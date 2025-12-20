@@ -274,7 +274,9 @@ O.Kill = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
+			if not _G.Raiding then
 			BringEnemy();
+			end
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;
@@ -283,7 +285,7 @@ O.Kill = function(e, A)
 			else
 				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)) * CFrame.Angles(0, math.rad(180), 0));
 			end;
-			if RandomCFrame then
+			if RandomCFrame or _G.Raiding then
 				wait(.5);
 				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
 				wait(.5);
@@ -312,7 +314,7 @@ O.Kill2 = function(e, A)
 			else
 				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 8)) * CFrame.Angles(0, math.rad(180), 0));
 			end;
-			if RandomCFrame then
+			if RandomCFrame or _G.Raiding then
 				wait(.1);
 				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
 				wait(.1);
@@ -8238,34 +8240,14 @@ end
 g:AddSeperator("Raiding Menu")
 
 g:AddToggle({ 
-    Title = "Auto Start Raid", 
-    Description = "", 
-    Default = false, 
-    Callback = function(e) 
-        _G.Auto_StartRaid = e
-    end, 
-})
-
-spawn(function()
-    while wait(Sec) do
-        pcall(function()
-            if _G.Auto_StartRaid then
-                StartRaid()
-            end
-        end)
-    end
-end)
-
-g:AddToggle({ 
     Title = "Auto Raid [Fully]", 
-    Description = "Buy Chip + Complete Raid", 
+    Description = "Buy Chip u Selected and Complete Raid", 
     Default = false, 
     Callback = function(e) 
         _G.Raiding = e
     end, 
 })
 
--- Thread riêng để mua chip
 spawn(function()
     while task.wait(2) do
         if not _G.Raiding then continue end
@@ -8274,9 +8256,9 @@ spawn(function()
         -- Chỉ mua chip khi raid chưa bắt đầu (RaidTimer ẩn)
         if raidGui and not raidGui.Visible then
             if not GetBP("Special Microchip") then
-                print("Đang cố gắng mua chip bằng beli...")
-                if not BuyChipWithBeli() then
-                    print("Mua beli thất bại, thử mua bằng fruit...")
+                print("Mua chip bằng beli...")
+                if not BuyChipWithBeli() and _G.GetFruitLowestBeli then
+                    print("Mua beli thất bại, Mua bằng fruit...")
                     BuyChipWithFruit()
                 end
             end
@@ -8284,7 +8266,7 @@ spawn(function()
     end
 end)
 
--- Thread riêng để bắt đầu raid
+
 spawn(function()
     while task.wait(1) do
         if not _G.Raiding then continue end
@@ -8374,7 +8356,6 @@ spawn(function()
         end
     end)
 end)
-
 
 g:AddToggle({ 
     Title = "Auto Get Fruit Under 1M", 

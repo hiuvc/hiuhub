@@ -77,8 +77,8 @@ end
 
 function Library:NewWindow(ConfigWindow)
 	local ConfigWindow = self:MakeConfig({
-		Title = "Teddy Hub",
-		Description = "By Ho Van Hai",
+		Title = "Voix Hub | Blox Kid | Premium",
+		Description = "By MinHieu_.",
 	}, ConfigWindow or {})
 	local TeddyUI_Premium = Instance.new("ScreenGui")
 	local DropShadowHolder = Instance.new("Frame")
@@ -199,7 +199,7 @@ function Library:NewWindow(ConfigWindow)
 	LogoHub.BorderSizePixel = 0
 	LogoHub.Position = UDim2.new(0, 10, 0, 5)
 	LogoHub.Size = UDim2.new(0, 40, 0, 35)
-	LogoHub.Image = "rbxassetid://89646749075297"
+	LogoHub.Image = "rbxassetid://133979080007875"
 
 	Desc.Name = "Desc"
 	Desc.Parent = Left
@@ -1665,7 +1665,7 @@ function Library:NewWindow(ConfigWindow)
 	self:MakeDraggable(G2L["2"],G2L["2"])
 	-- [ERROR] cannot convert ImageContent, please report to "https://github.com/uniquadev/GuiToLuaConverter/issues"
 	G2L["2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-	G2L["2"]["Image"] = [[rbxassetid://84435441882847]];
+	G2L["2"]["Image"] = [[rbxassetid://133979080007875]];
 	G2L["2"]["Size"] = UDim2.new(0, 50, 0, 50);
 	G2L["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
 	G2L["2"]["Position"] = UDim2.new(0.26651, 0, 0.43687, 0);

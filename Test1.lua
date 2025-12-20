@@ -8225,30 +8225,13 @@ spawn(function()
 							replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-5097.93164, 316.447021, -3142.66602, -0.405007899, -4.31682743e-08, .914313197, -1.90943332e-08, 1, 3.8755779e-08, -0.914313197, -1.76180437e-09, -0.405007899));
 							fireclickdetector(workspace.Map["Boat Castle"].RaidSummon2.Button.Main.ClickDetector);
 						end;
-					elseif not GetBP("Special Microchip") and not _G.GetFruitLowBeli then 
-						replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-					elseif not GetBP("Special Microchip") and _G.GetFruitLowBeli then 
-						local e = {};
-						local u = {};
-						for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do
-							if u.Price <= 490000 then
-								table.insert(e, u.Name);
-							end;
-						end;
-						for e, u in pairs(e) do
-							for e, A in pairs(A) do
-								if not GetBP("Special Microchip") then
-									replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u));
-									replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip);
-								end;
-							end;
-						end;
 					end;
 				end;
 			end;
 		end);
 	end;
 end);
+
 g:AddToggle({
 	Title = "Auto Raid [Fully]",
 	Description = "Buy Chip + Complete Raid",
@@ -8266,7 +8249,6 @@ spawn(function()
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
-            	StartRaid()
                 continue
             end
             
@@ -8322,6 +8304,7 @@ spawn(function()
                 end
             end
             
+            -- Teleport nếu không có quái để đánh
             if not foundEnemy and _G.Raiding and raidGui.Visible then
                 for _, islandName in ipairs(islands) do
                     local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
@@ -8334,13 +8317,9 @@ spawn(function()
         end
     end)
 end)
-
-
-
-
 g:AddToggle({
 	Title = "Auto Get Fruit Under 1M",
-	Description = "",
+	Description = "Soon",
 	Default = false,
 	Callback = function(e)
 		_G.GetFruitLowestBeli = e;

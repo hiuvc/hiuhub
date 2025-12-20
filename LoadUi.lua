@@ -77,7 +77,7 @@ end
 
 function Library:NewWindow(ConfigWindow)
 	local ConfigWindow = self:MakeConfig({
-		Title = "Voix Hub | Blox Kid | Premium",
+		Title = "Tobii Hub | Blox Kid | Premium",
 		Description = "By MinHieu_.",
 	}, ConfigWindow or {})
 	local TeddyUI_Premium = Instance.new("ScreenGui")

@@ -8209,12 +8209,10 @@ local function BuyChipWithFruit()
         
         if #fruits > 0 then
             replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(fruits[1]))
-            task.wait(.5)
+            task.wait(.1)
             replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
         end
     end)
-    
-    task.wait(1)
     return GetBP("Special Microchip")
 end
 
@@ -8247,7 +8245,7 @@ g:AddToggle({
 })
 
 spawn(function()
-    while task.wait(.5) do
+    while task.wait(Sec) do
         if not _G.Raiding then continue end
         
         local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
@@ -8266,13 +8264,12 @@ end)
 
 
 spawn(function()
-    while task.wait(1) do
+    while task.wait(Sec) do
         if not _G.Raiding then continue end
         
         if GetBP("Special Microchip") and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
             print("Bắt đầu raid...")
             StartRaid()
-            task.wait(5)
         end
     end
 end)
@@ -8311,7 +8308,7 @@ spawn(function()
                     if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
                         
-                        if distance <= 500 then
+                        if distance <= 1000 then
                             foundEnemy = true
                             print("Tấn công:", enemy.Name)
                             

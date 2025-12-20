@@ -8177,8 +8177,7 @@ spawn(function()
 		end;
 	end;
 end);
-g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); 
-g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
+g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
 
 -- Hàm mua chip bằng beli
 local function BuyChipWithBeli()
@@ -8298,86 +8297,76 @@ spawn(function()
     end
 end)
 
--- Thread chính để đánh quái
 spawn(function()
     pcall(function()
-        while task.wait(0.5) do
-            if not _G.Raiding then continue end
+        while task.wait(Sec) do
+            if not _G.Raiding then
+                continue
+            end
             
             local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer
             if not raidGui or not raidGui.Visible then
                 continue
             end
-
+            
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            if not hrp then
-                print("Không tìm thấy HumanoidRootPart")
-                continue
-            end
-
+            if not hrp then continue end
+            
             local islands = {"Island 5", "Island 4", "Island 3", "Island 2", "Island 1"}
             local foundEnemy = false
-            local enemies = workspace.Enemies:GetChildren()
-            print("Số lượng enemy:", #enemies)
-
+            
             for _, islandName in ipairs(islands) do
-                if foundEnemy then
-                    break
-                end
+                if foundEnemy then break end
+                
                 local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
-                if not island then
-                    continue
-                end
-
-                for _, enemy in pairs(enemies) do
-                    if not _G.Raiding then
-                        break
-                    end
+                if not island then continue end
+                
+                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if not _G.Raiding then break end
+                    
                     local humanoid = enemy:FindFirstChild("Humanoid")
                     local ehrp = enemy:FindFirstChild("HumanoidRootPart")
                     
                     if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
-                        print("Enemy:", enemy.Name, "- Health:", humanoid.Health, "- Distance:", distance)
                         
                         if distance <= 500 then
                             foundEnemy = true
                             print("Tấn công:", enemy.Name)
                             
-                            local timeout = tick() + 60
+                            -- Đánh quái
+                            local timeout = tick() + 30
                             repeat
-                                task.wait(0.1)
+                                task.wait()
+                                
                                 if tick() > timeout then
                                     print("Timeout:", enemy.Name)
                                     break
                                 end
+                                
                                 if not _G.Raiding or not enemy.Parent or humanoid.Health <= 0 then
-                                    print("Dừng tấn công:", enemy.Name)
                                     break
                                 end
                                 
                                 pcall(function()
-                                    if O and O.Kill then
-                                        O.Kill(enemy, true)
-                                    else
-                                        print("O.Kill không tồn tại")
-                                    end
+                                    O.Kill(enemy, _G.Raiding)
                                 end)
+                                
                             until not _G.Raiding or not enemy.Parent or humanoid.Health <= 0
+                            
                             break
                         end
                     end
                 end
             end
-
+            
+            -- Teleport nếu không có quái để đánh
             if not foundEnemy and _G.Raiding and raidGui.Visible then
-                print("Không tìm thấy enemy, teleport đến island...")
                 for _, islandName in ipairs(islands) do
                     local island = workspace._WorldOrigin.Locations:FindFirstChild(islandName)
                     if island then
                         _tp(island.CFrame * CFrame.new(0, 50, 100))
-                        print("Teleport tới:", islandName)
                         break
                     end
                 end
@@ -8385,6 +8374,7 @@ spawn(function()
         end
     end)
 end)
+
 
 g:AddToggle({ 
     Title = "Auto Get Fruit Under 1M", 

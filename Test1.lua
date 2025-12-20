@@ -283,7 +283,7 @@ O.Kill = function(e, A)
 			else
 				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)) * CFrame.Angles(0, math.rad(180), 0));
 			end;
-			if RandomCFrame or _G.Raiding then
+			if RandomCFrame then
 				wait(.5);
 				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
 				wait(.5);
@@ -8209,7 +8209,7 @@ local function BuyChipWithFruit()
         
         if #fruits > 0 then
             replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(fruits[1]))
-            task.wait(0.5)
+            task.wait(.5)
             replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
         end
     end)
@@ -8247,7 +8247,7 @@ g:AddToggle({
 })
 
 spawn(function()
-    while task.wait(2) do
+    while task.wait(.5) do
         if not _G.Raiding then continue end
         
         local raidGui = plr.PlayerGui.Main.TopHUDList.RaidTimer

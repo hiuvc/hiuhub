@@ -8209,7 +8209,6 @@ local function BuyChipWithFruit()
         
         if #fruits > 0 then
             replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(fruits[1]))
-            task.wait(.1)
             replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
         end
     end)
@@ -8253,10 +8252,7 @@ spawn(function()
         if raidGui and not raidGui.Visible then
             if not GetBP("Special Microchip") then
                 print("Mua chip bằng beli...")
-                if not BuyChipWithBeli() and _G.GetFruitLowestBeli then
-                    print("Mua beli thất bại, Mua bằng fruit...")
-                    BuyChipWithFruit()
-                end
+                BuyChipWithBeli()
             end
         end
     end
@@ -8354,12 +8350,20 @@ end)
 
 g:AddToggle({ 
     Title = "Auto Get Fruit Under 1M", 
-    Description = "Soon", 
+    Description = "", 
     Default = false, 
     Callback = function(e) 
         _G.GetFruitLowestBeli = e
     end, 
 })
+
+spawn(function()
+	while task.wait(Sec) do
+		if _G.GetFruitLowestBeli then
+			BuyChipWithFruit()
+		end
+	end
+end)
 
 g:AddToggle({
 	Title = "Auto Awakening",

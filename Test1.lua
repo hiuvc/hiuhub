@@ -8355,7 +8355,7 @@ g:AddToggle({
     Description = "", 
     Default = false, 
     Callback = function(e) 
-        _G.GetFruitLowestBeli = e
+        _G.BuyChipWithFruit = e
     end, 
 })
 

@@ -8186,7 +8186,7 @@ spawn(function()
 				elseif GetBP("Magma-Magma") then
 					_G.SelectChip = "Magma";
 				elseif GetBP("Human-Human: Buddha Fruit") then
-					_G.SelectChip = "Human: Buddha";
+					_G.SelectChip = "Buddha";
 				elseif GetBP("Dough-Dough") then
 					_G.SelectChip = "Dough";
 				elseif GetBP("Sand-Sand") then
@@ -8203,6 +8203,100 @@ end);
 g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); 
 g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", 
 	Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
+
+-- Player
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+
+local function loadCheapestFruitAndBuyChip(maxValue)
+    maxValue = maxValue or 1_000_000
+
+    local RS = game:GetService("ReplicatedStorage")
+    local CommF = RS:WaitForChild("Remotes"):WaitForChild("CommF_")
+
+    local ok, inventory = pcall(function()
+        return CommF:InvokeServer("getInventory")
+    end)
+
+    if not ok or typeof(inventory) ~= "table" then
+        return false, "Không lấy được inventory"
+    end
+
+    local targetFruit, minValue = nil, math.huge
+    for _, item in pairs(inventory) do
+        if item.Type == "Blox Fruit"
+            and item.Value
+            and item.Value < maxValue
+            and not item.Equipped
+            and item.Value < minValue
+        then
+            minValue = item.Value
+            targetFruit = item
+        end
+    end
+
+    if not targetFruit then
+        return false, "Không có trái < " .. maxValue
+    end
+
+    local loadOk = pcall(function()
+        CommF:InvokeServer("LoadFruit", targetFruit.Name)
+    end)
+    if not loadOk then
+        return false, "LoadFruit fail"
+    end
+
+    task.wait(0.8)
+
+    if not _G.SelectChip then
+        return false, "_G.SelectChip nil"
+    end
+
+    local chipOk = pcall(function()
+        CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+    end)
+    if not chipOk then
+        return false, "Buy chip fail"
+    end
+
+    return true, targetFruit.Name, targetFruit.Value
+end
+
+-- ====== TOGGLE ======
+g:AddToggle({
+    Title = "Auto Buy Dungeon Chip [Devil Fruit]",
+    Description = "",
+    Default = false,
+    Callback = function(v)
+        _G.BuyChipDF = v
+
+        if v then
+            task.spawn(function()
+                while _G.BuyChipDF do
+                    -- ====== ĐIỀU KIỆN BẮT BUỘC ======
+                    local noChip = not GetBP("Special Microchip")
+                    local notRaiding =
+                        plr.PlayerGui
+                        and plr.PlayerGui:FindFirstChild("Main")
+                        and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false
+
+                    if noChip and notRaiding then
+                        local ok, fruit, value = loadCheapestFruitAndBuyChip(1_000_000)
+
+                        if ok then
+                            print("✅ Đã mua chip |", fruit, "|", value)
+                            break
+                        else
+                            warn("❌ Auto Buy Chip:", fruit)
+                        end
+                    end
+
+                    task.wait(2) -- loop delay
+                end
+            end)
+        end
+    end,
+})
 
 
 local function StartRaid()

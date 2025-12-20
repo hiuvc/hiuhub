@@ -274,7 +274,9 @@ O.Kill = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy();
+			if not _G.Raiding then
+				BringEnemy();
+			end
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;

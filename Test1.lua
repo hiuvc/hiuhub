@@ -4,6 +4,7 @@ do
 	plr = ply.LocalPlayer;
 	Root = plr.Character.HumanoidRootPart;
 	replicated = game:GetService("ReplicatedStorage");
+	CommF = game:GetService("ReplicatedStorage").Remotes.CommF_
 	Lv = game.Players.LocalPlayer.Data.Level.Value;
 	TeleportService = game:GetService("TeleportService");
 	TW = game:GetService("TweenService");
@@ -8200,159 +8201,73 @@ spawn(function()
 		end;
 	end;
 end);
-g:AddButton({ Title = "Buy Dungeon Chips [Beli]", Description = "", Callback = function() if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end }); 
-g:AddButton({ Title = "Buy Dungeon Chips [Devil Fruit]", Description = "Use your lowest fruit in your bag", 
-	Callback = function() if GetBP("Special Microchip") then return; end; local e = {}; local u = {}; for A, u in next, (replicated:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do if u.Price <= 1000000 then table.insert(e, u.Name); end; end; for e, u in pairs(e) do for e, A in pairs(A) do if not GetBP("Special Microchip") then replicated.Remotes.CommF_:InvokeServer("LoadFruit", tostring(u)); replicated.Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip); end; end; end; end }); 
--- ================== SERVICES ==================
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local plr = Players.LocalPlayer
-local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+local function HasFruitInBackpack()
+    local inv = CommF:InvokeServer("getInventory")
+    if type(inv) ~= "table" then return end
 
--- ================== CHECK FRUIT IN BACKPACK ==================
-local function hasFruitInBackpack()
-    local backpack = plr:FindFirstChild("Backpack")
-    if not backpack then return false end
-
-    local ok, inventory = pcall(function()
-        return CommF:InvokeServer("getInventory")
-    end)
-    if not ok or typeof(inventory) ~= "table" then
-        return false
-    end
-
-    local fruitMap = {}
-    for _, item in pairs(inventory) do
-        if item.Type == "Blox Fruit" then
-            fruitMap[item.Name] = true
+    for _, t in pairs(plr.Backpack:GetChildren()) do
+        for _, i in pairs(inv) do
+            if i.Type == "Blox Fruit" and i.Name == t.Name then
+                return t.Name
+            end
         end
-    end
-
-    for _, tool in pairs(backpack:GetChildren()) do
-        if fruitMap[tool.Name] then
-            return true, tool.Name
-        end
-    end
-
-    return false
-end
-
--- ================== LOAD CHEAPEST FRUIT ==================
-local function loadCheapestFruit(maxValue)
-    maxValue = maxValue or 1_000_000
-
-    local ok, inventory = pcall(function()
-        return CommF:InvokeServer("getInventory")
-    end)
-    if not ok or typeof(inventory) ~= "table" then
-        return false, "Không lấy được inventory"
-    end
-
-    local target, minValue = nil, math.huge
-    for _, item in pairs(inventory) do
-        if item.Type == "Blox Fruit"
-            and item.Value
-            and item.Value < maxValue
-            and not item.Equipped
-            and item.Value < minValue
-        then
-            minValue = item.Value
-            target = item
-        end
-    end
-
-    if not target then
-        return false, "Không có fruit < " .. maxValue
-    end
-
-    local loadOk = pcall(function()
-        CommF:InvokeServer("LoadFruit", target.Name)
-    end)
-
-    if not loadOk then
-        return false, "LoadFruit fail"
-    end
-
-    task.wait(1.5)
-    return true, target.Name, target.Value
-end
-
--- ================== BUY CHIP CORE ==================
-local function autoBuyChip()
-    if not _G.SelectChip then
-        return false, "_G.SelectChip chưa set"
-    end
-
-    -- 1️⃣ Ưu tiên backpack
-    local hasFruit, fruitName = hasFruitInBackpack()
-    if hasFruit then
-        local ok = pcall(function()
-            CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-        end)
-
-        if ok then
-            return true, "Backpack", fruitName
-        else
-            return false, "Buy chip fail (Backpack)"
-        end
-    end
-
-    -- 2️⃣ Không có → lấy từ rương
-    print("📦 Backpack trống → lấy fruit từ rương")
-
-    local ok, fruit, value = loadCheapestFruit(1_000_000)
-    if not ok then
-        return false, fruit
-    end
-
-    local buyOk = pcall(function()
-        CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-    end)
-
-    if buyOk then
-        return true, "Chest", fruit, value
-    else
-        return false, "Buy chip fail (Chest)"
     end
 end
 
--- ================== TOGGLE ==================
+local function LoadCheapFruit()
+    local inv = CommF:InvokeServer("getInventory")
+    if type(inv) ~= "table" then return end
+
+    local f, v
+    for _, i in pairs(inv) do
+        if i.Type == "Blox Fruit" and i.Value and i.Value < 1e6 and not i.Equipped then
+            if not v or i.Value < v then
+                f = i.Name
+                v = i.Value
+            end
+        end
+    end
+
+    if f then
+        CommF:InvokeServer("LoadFruit", f)
+        task.wait(0.5)
+        return f, v
+    end
+end
+
 g:AddToggle({
     Title = "Auto Buy Dungeon Chip [Devil Fruit]",
-    Description = "Backpack có fruit → mua | Không có → lấy fruit <1M từ rương",
+    Description = "", 
     Default = false,
     Callback = function(v)
         _G.BuyChipDF = v
+        task.spawn(function()
+            while _G.BuyChipDF do
+                task.wait(Sec)
 
-        if v then
-            task.spawn(function()
-                while _G.BuyChipDF do
-                    local noChip = not GetBP("Special Microchip")
-                    local notRaiding =
-                        plr.PlayerGui
-                        and plr.PlayerGui:FindFirstChild("Main")
-                        and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false
+                if GetBP("Special Microchip") then continue end
+                if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible then continue end
+                if not _G.SelectChip then continue end
 
-                    if noChip and notRaiding then
-                        print("🎯 Đủ điều kiện → Auto Buy Chip")
-
-                        local ok, source, fruit, value = autoBuyChip()
-                        if ok then
-                            print("✅ Đã mua chip | Source:", source, "| Fruit:", fruit, value or "")
-                        else
-                            warn("❌ Auto Buy Chip:", source)
-                        end
-                        break
-                    end
-
-                    task.wait(2)
+                local fruit = HasFruitInBackpack()
+                if not fruit then
+                    fruit = LoadCheapFruit()
                 end
-            end)
-        end
-    end,
-})
 
+                if fruit then
+                    pcall(function()
+                        CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+                    end)
+                else
+                	pcall(function()
+                        CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
+                    end)
+                end
+            end
+        end)
+    end
+})
 
 local function StartRaid()
     if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then

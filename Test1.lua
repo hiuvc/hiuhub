@@ -1948,16 +1948,18 @@ MaterialMon = function()
 		end;
 	end;
 QuestNeta = function()
-		local e = QuestCheck();
-		return {
-			[1] = Mon,
-			[2] = Qdata,
-			[3] = Qname,
-			[4] = PosM,
-			[5] = NameMon,
-			[6] = PosQ,
-		};
-	end;
+	QuestCheck()
+
+	return {
+		MonName     = Mon,      -- Tên quái
+		QuestLevel  = Qdata,    -- Level quest (number)
+		QuestName   = Qname,    -- Quest name (string)
+		MobSpawnPos = PosM,     -- CFrame spawn quái
+		QuestText   = NameMon,  -- Text kiểm tra quest GUI
+		QuestNpcPos = PosQ,     -- CFrame NPC quest
+	}
+end
+
 ---Tab----------------
 local x = e:NewWindow();
 local sv = x:T("Tab Server");
@@ -2287,61 +2289,82 @@ B:AddToggle({
 });
 
 spawn(function()
-	while wait(Sec) do
-		if _G.Level then
-			pcall(function()
-				local questData = QuestNeta()
-				if not questData then return end
-				
-				local e = plr.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text
-				
-				-- Nếu quest hiện tại không đúng, hủy nó
-				if not string.find(e, questData[5]) then
-					replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-					wait(1) -- Chờ để quest hủy hoàn toàn
-					return
-				end
-				
-				if plr.PlayerGui.Main.Quest.Visible == false then
-					-- Teleport tới NPC để nhận quest
-					_tp(questData[6])
-					wait(0.5) -- Chờ teleport hoàn thành
-					
-					if (Root.Position - questData[6].Position).Magnitude <= 10 then
-						replicated.Remotes.CommF_:InvokeServer("StartQuest", questData[3], questData[2])
-						wait(2) -- Chờ quest UI cập nhật
-					end
-				
-				elseif plr.PlayerGui.Main.Quest.Visible == true then
-					-- Quest đã được nhận, tìm enemy
-					if workspace.Enemies:FindFirstChild(questData[1]) then
-						for A, u in pairs(workspace.Enemies:GetChildren()) do
-							if O.Alive(u) and u.Name == questData[1] then
-								if string.find(e, questData[5]) then
-									repeat
-										wait()
-										O.Kill(u, _G.Level)
-										BringEnemy(u)
-									until not _G.Level or u.Humanoid.Health <= 0 or not u.Parent or plr.PlayerGui.Main.Quest.Visible == false
-									return
-								else
-									replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-									return
-								end
-							end
-						end
-					else
-						_tp(questData[4])
-						wait(0.5)
-						if replicated:FindFirstChild(questData[1]) then
-							_tp((replicated:FindFirstChild(questData[1])).HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-						end
-					end
-				end
-			end)
+	while task.wait(Sec) do
+		if not _G.Level then
+			continue
 		end
+
+		pcall(function()
+			-- ================== QUEST DATA ==================
+			local Q = QuestNeta()
+			local QuestGui = plr.PlayerGui.Main.Quest
+			local QuestTitle = QuestGui.Container.QuestTitle.Title
+
+			-- ================== ABANDON QUEST SAI ==================
+			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
+				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
+				task.wait(0.5)
+				return
+			end
+
+			-- ================== NHẬN QUEST ==================
+			if not QuestGui.Visible then
+				_tp(Q.QuestNpcPos)
+
+				repeat task.wait()
+				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 5
+					or not _G.Level
+
+				task.wait(0.5)
+				replicated.Remotes.CommF_:InvokeServer(
+					"StartQuest",
+					Q.QuestName,
+					Q.QuestLevel
+				)
+
+				-- chờ server xác nhận quest
+				local t = tick()
+				repeat task.wait()
+				until QuestGui.Visible
+					or tick() - t > 3
+					or not _G.Level
+
+				return
+			end
+
+			-- ================== FARM QUÁI ==================
+			local FoundMob = false
+
+			for _, mob in pairs(workspace.Enemies:GetChildren()) do
+				if O.Alive(mob) and mob.Name == Q.MonName then
+					FoundMob = true
+
+					repeat
+						task.wait()
+						O.Kill(mob, _G.Level)
+						BringEnemy(mob)
+					until not _G.Level
+						or not mob.Parent
+						or mob.Humanoid.Health <= 0
+						or not QuestGui.Visible
+				end
+			end
+
+			-- ================== KHÔNG CÓ QUÁI → RA SPAWN ==================
+			if not FoundMob then
+				_tp(Q.MobSpawnPos)
+
+				if replicated:FindFirstChild(Q.MonName) then
+					local m = replicated:FindFirstChild(Q.MonName)
+					if m:FindFirstChild("HumanoidRootPart") then
+						_tp(m.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+					end
+				end
+			end
+		end)
 	end
 end)
+
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",

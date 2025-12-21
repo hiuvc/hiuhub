@@ -293,48 +293,237 @@ BringEnemy = function()
 			end;
 		end;
 	end;
-local function GetMobBaseName(name)
-	return string.match(name, "^(.-)%s*%[") or name
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = game.Players.LocalPlayer
+
+
+
+function TweenEnemyToTarget(enemy, targetCFrame, size)
+    pcall(function()
+        -- Chặn gọi trùng
+        if enemy:FindFirstChild("IsBeingBrought") then return end
+        local flag = Instance.new("BoolValue")
+        flag.Name = "IsBeingBrought"
+        flag.Parent = enemy
+
+        local hrp = enemy:FindFirstChild("HumanoidRootPart")
+        local humanoid = enemy:FindFirstChild("Humanoid")
+        if not hrp or not humanoid or humanoid.Health <= 0 then
+            flag:Destroy()
+            return
+        end
+
+        hrp.Size = size or Vector3.new(50,50,50)
+        hrp.CanCollide = false
+        if enemy:FindFirstChild("Head") then
+            enemy.Head.CanCollide = false
+        end
+
+        humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+        sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
+
+        local finalCFrame = targetCFrame
+        if not finalCFrame then
+            local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not root then 
+                flag:Destroy()
+                return 
+            end
+            finalCFrame = CFrame.new(root.Position - Vector3.new(0, hrp.Size.Y/2 + 2, 0))
+        end
+
+        -- TWEEN (no leak)
+        local tween = TweenService:Create(
+            hrp,
+            TweenInfo.new(0.5, Enum.EasingStyle.Linear),
+            {CFrame = finalCFrame}
+        )
+        tween:Play()
+
+        -- Force position loop
+        local anchorPos = finalCFrame.Position
+        local conn
+        conn = RunService.Stepped:Connect(function()
+            if not enemy.Parent or humanoid.Health <= 0 then
+                conn:Disconnect()
+                tween:Cancel()
+                tween:Destroy()
+                flag:Destroy()
+                return
+            end
+
+            hrp.CFrame = CFrame.new(anchorPos)
+            hrp.Velocity = Vector3.zero
+            hrp.RotVelocity = Vector3.zero
+        end)
+
+        -- Cleanup tween khi xong
+        tween.Completed:Connect(function()
+            tween:Destroy()
+        end)
+    end)
 end
 
-BringEnemy2 = function(Target, Distance)
-	if not _B or not Target then return end
-	Distance = Distance or 250
 
-	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
-	if not rootTarget then return end
+-- Danh sách quái
+local MaterialList = {
+    "Factory Staff", "Water Fighter", "Military Spy", "Magma Ninja", "God's Guard",
+    "Brute", "Marine Captain", "Jungle Pirate", "Swan Pirate", "Fishman Raider",
+    "Fishman Warrior", "Demonic Soul", "Vampire", "Chocolate Bar Battler",
+    "Dragon Crew Archer", "Pistol Billionaire", "Hydra Enforcer", "Venomous Assailant",
+    "Mythological Pirate", "Ship Deckhand", "Ship Engineer", "Ship Steward", "Ship Officer"
+}
+local BoneList = { "Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy" }
+local DoughList = { "Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker" }
 
-	local PosMon = rootTarget.Position
-	local TargetName = GetMobBaseName(Target.Name)
+-- Config magnet
+local magnetConfigs = {
+    {
+        enabled = function() return _G.Ectoplasm and StartEctoplasmMagnet end,
+        filter = function(name) return string.find(name, "Ship") end,
+        position = function() return EctoplasmMon end,
+        size = nil
+    },
+    {
+        enabled = function() return _G.Rengoku and StartRengokuMagnet end,
+        filter = function(name) return name == "Snow Lurker" or name == "Arctic Warrior" end,
+        position = function() return RengokuMon end,
+        size = Vector3.new(1500,1500,1500)
+    },
+    {
+        enabled = function() return _G.MusketeerHat and StartMagnetMusketeerhat end,
+        filter = function(name) return name == "Forest Pirate" end,
+        position = function() return MusketeerHatMon end
+    },
+    {
+        enabled = function() return _G.ObservationHakiV2 and Mangnetcitzenmon end,
+        filter = function(name) return name == "Forest Pirate" end,
+        position = function() return PosHee end
+    },
+    {
+        enabled = function() return _G.EvoRace and StartEvoMagnet end,
+        filter = function(name) return name == "Zombie" end,
+        position = function() return PosMonEvo end
+    },
+    {
+        enabled = function() return _G.Bartilo and AutoBartiloBring end,
+        filter = function(name) return name == "Swan Pirate" end,
+        position = function() return PosMonBarto end
+    },
+    {
+        enabled = function() return _G.AutoMaterial and StartMaterialMagnet end,
+        filter = function(name) return table.find(MaterialList,name) end,
+        position = function() return PosMonMaterial end
+    },
+    {
+        enabled = function() return _G.FarmFruitMastery and StartMasteryFruitMagnet end,
+        filter = function(name) return name == "Monkey" or name == "Factory Staff" or name == Mon end,
+        position = function() return PosMonMasteryFruit end
+    },
+    {
+        enabled = function() return _G.FarmGunMastery and StartMasteryGunMagnet end,
+        filter = function(name) return name == "Monkey" or name == "Factory Staff" or name == Mon end,
+        position = function() return PosMonMasteryGun end
+    },
+    {
+        enabled = function() return _G.Bone and StartMagnetBoneMon end,
+        filter = function(name) return table.find(BoneList,name) end,
+        position = function() return PosMonBone end
+    },
+    {
+        enabled = function() return _G.DoughtBoss and MagnetDought end,
+        filter = function(name) return table.find(DoughList,name) end,
+        position = function() return PosMonDoughtOpenDoor end
+    },
+    {
+        enabled = function() return _G.FarmNearest and AutoFarmNearestMagnet end,
+        filter = function(name) return true end,
+        position = function() return PosMonNear end
+    },
+    {
+        enabled = function() return _G.Level and StartMagnet end,
+        filter = function(name) return name == (QuestNeta())[1] end,
+        position = function() return PosMon end,
+        customDistance = function(enemyDist)
+            local specialList = {
+                "Skibidi","ChaleloChalala","MeoMayBe"
+            }
+            return table.find(specialList,(QuestNeta())[1]) and enemyDist <= 300 or enemyDist <= getgenv().BringRange
+        end
+    }
+}
 
-	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
-		local hum = Enemy:FindFirstChildOfClass("Humanoid")
-		local root = Enemy:FindFirstChild("HumanoidRootPart")
-		if hum and root and hum.Health > 0 then
-			
-			if GetMobBaseName(Enemy.Name) == TargetName then
-				if (root.Position - PosMon).Magnitude <= Distance then
+getgenv().BringMonster = true
 
-					root.CFrame = CFrame.new(PosMon)
-					root.Velocity = Vector3.zero
-					root.RotVelocity = Vector3.zero
-					root.CanCollide = false
+getgenv().BringRange = 250
 
-					hum.WalkSpeed = 0
-					hum.JumpPower = 0
-					hum:ChangeState(11) -- Physics
+task.spawn(function()
+while task.wait(0.5) do
+pcall(function()
+    if not getgenv().BringMonster then return end
+    if CheckQuest then CheckQuest() end
+            local plr = game.Players.LocalPlayer
+            local root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+            if not root then return end
 
-					local animator = hum:FindFirstChildOfClass("Animator")
-					if animator then
-						animator:Destroy()
-					end
-				end
-			end
-		end
-	end
+            local playerPos = root.Position
+            local candidates = {}
 
-	plr.SimulationRadius = math.huge
-end
+            -------------------------------------------------------------------
+            -- Thu thập danh sách mob hợp lệ
+            -------------------------------------------------------------------
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                local hrp = enemy:FindFirstChild("HumanoidRootPart")
+                local hum = enemy:FindFirstChild("Humanoid")
+                if hrp and hum and hum.Health > 0 then
+                    for _, cfg in pairs(magnetConfigs) do
+                        if cfg.enabled() and cfg.filter(enemy.Name) then
+                            local target = cfg.position()
+                            if not target or not target.Position then break end
+
+                            local dist = (hrp.Position - target.Position).Magnitude
+                            if dist <= getgenv().BringRange then
+                                table.insert(candidates, {
+                                    Enemy = enemy,
+                                    HRP = hrp,
+                                    Size = cfg.size,
+                                    DistanceToPlayer = (hrp.Position - playerPos).Magnitude
+                                })
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+
+            -------------------------------------------------------------------
+            -- Sắp xếp theo khoảng cách từ mob đến người chơi
+            -------------------------------------------------------------------
+            table.sort(candidates, function(a, b)
+                return a.DistanceToPlayer < b.DistanceToPlayer
+            end)
+
+            -------------------------------------------------------------------
+            -- Hút 2 mob gần nhất về player với offset
+            -------------------------------------------------------------------
+            if #candidates >= 2 then
+                local A, B = candidates[1], candidates[2]
+                local baseCF = CFrame.new(root.Position - Vector3.new(0, 3, 0))
+                local offset = 1.5
+
+                local targetA = baseCF * CFrame.new(offset, 0, 0)
+                local targetB = baseCF * CFrame.new(-offset, 0, 0)
+
+                TweenEnemyToTarget(A.Enemy, targetA, A.Size)
+                TweenEnemyToTarget(B.Enemy, targetB, B.Size)
+            end
+        end)
+    end
+
+end)
+
+
 
 
 O.Kill = function(e, A)
@@ -2333,9 +2522,11 @@ spawn(function()
 									if string.find(e, (QuestNeta())[5]) then
 										repeat
 											wait();
+											StartMagnet = true
 											O.Kill(u, _G.Level);
 										until not _G.Level or u.Humanoid.Health <= 0 or not u.Parent or plr.PlayerGui.Main.Quest.Visible == false;
 									else
+										StartMagnet = false
 										replicated.Remotes.CommF_:InvokeServer("AbandonQuest");
 									end;
 								end;

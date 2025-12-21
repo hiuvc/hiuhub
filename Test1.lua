@@ -2294,7 +2294,7 @@ BringEnemy2 = function(Target, Distance)
 	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
 	if not rootTarget then return end
 
-	local PosMon = rootTarget.Position
+	local LockPos = rootTarget.CFrame
 	local TargetName = GetMobBaseName(Target.Name)
 
 	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
@@ -2303,16 +2303,24 @@ BringEnemy2 = function(Target, Distance)
 
 		if hum and root and hum.Health > 0 then
 			if GetMobBaseName(Enemy.Name) == TargetName then
-				if (root.Position - PosMon).Magnitude <= Distance then
-					root.CFrame = CFrame.new(PosMon)
-					root.Velocity = Vector3.zero
-					root.RotVelocity = Vector3.zero
-					root.CanCollide = false
+				if (root.Position - LockPos.Position).Magnitude <= Distance then
 
+					-- 🔒 LOCK VỊ TRÍ
+					root.CFrame = LockPos
+					root.AssemblyLinearVelocity = Vector3.zero
+					root.AssemblyAngularVelocity = Vector3.zero
+
+					-- 🔒 LOCK VA CHẠM
+					root.CanCollide = false
+					root.Anchored = false -- ⚠️ KHÔNG anchor (dễ detect)
+
+					-- 🔒 LOCK HUMANOID
 					hum.WalkSpeed = 0
 					hum.JumpPower = 0
-					hum:ChangeState(11)
+					hum.AutoRotate = false
+					hum:ChangeState(Enum.HumanoidStateType.Physics)
 
+					-- 🔒 TẮT ANIMATION
 					local animator = hum:FindFirstChildOfClass("Animator")
 					if animator then
 						animator:Destroy()

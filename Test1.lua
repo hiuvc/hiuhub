@@ -280,7 +280,7 @@ BringEnemy = function()
 		end;
 		for e, A in pairs(workspace.Enemies:GetChildren()) do
 			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
-				if (A.PrimaryPart.Position - PosMon).Magnitude <= 200 then
+				if (A.PrimaryPart.Position - PosMon).Magnitude <= 250 then
 					A.PrimaryPart.CFrame = CFrame.new(PosMon);
 					A.PrimaryPart.CanCollide = true;
 					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;
@@ -328,11 +328,9 @@ O.KillRaid = function(e, A)
 		if not e:GetAttribute("Locked") then
 			e:SetAttribute("Locked", e.HumanoidRootPart.CFrame)
 		end
-
 		PosMon = e:GetAttribute("Locked").Position
-		BringEnemy();
+		BringEnemy()
 		EquipWeapon(_G.SelectWeapon)
-
 		local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
 		local toolTip = tool.ToolTip
 
@@ -343,23 +341,23 @@ O.KillRaid = function(e, A)
 			)
 		else
 			_tp(
-				(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 0)) *
+				(e.HumanoidRootPart.CFrame * CFrame.new(0, 40, 0)) *
 				CFrame.Angles(0, math.rad(180), 0)
 			)
 		end
 
 		if _G.Raiding then
-			wait(0.2)
-			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35))
+			wait(0.1)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 40, 40))
 
-			wait(0.2)
-			_tp(e.HumanoidRootPart.CFrame * CFrame.new(35, 35, 0))
+			wait(0.1)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(40, 40, 0))
 
-			wait(0.2)
-			_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0))
+			wait(0.1)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(40, 40, 0))
 
-			wait(0.2)
-			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35))
+			wait(0.1)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 40, 40))
 
 			wait(0.2)
 			_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0))

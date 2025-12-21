@@ -292,6 +292,35 @@ BringEnemy = function()
 		end
 	end
 end
+O.Kill = function(e, A)
+		if e and A then
+			if not e:GetAttribute("Locked") then
+				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
+			end;
+			PosMon = (e:GetAttribute("Locked")).Position;
+			BringEnemy();
+			EquipWeapon(_G.SelectWeapon);
+			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
+			local u = A.ToolTip;
+			if u == "Blox Fruit" then
+				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) * CFrame.Angles(0, math.rad(90), 0));
+			else
+				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)) * CFrame.Angles(0, math.rad(180), 0));
+			end;
+			if RandomCFrame then
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
+				wait(.5);
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
+			end;
+		end;
+	end;
 
 O.KillRaid = function(e, A)
 	if e and A then

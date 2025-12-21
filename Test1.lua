@@ -293,34 +293,43 @@ BringEnemy = function()
 			end;
 		end;
 	end;
-BringEnemy2 = function(Target)
-	if not _B or not Target then
-		return
-	end
-	local hum = Target:FindFirstChildOfClass("Humanoid")
-	local root = Target:FindFirstChild("HumanoidRootPart") or Target.PrimaryPart
-	if not hum or not root or hum.Health <= 0 then
-		return
-	end
-	if not Target:GetAttribute("Locked") then
-		Target:SetAttribute("Locked", root.CFrame)
-	end
+BringEnemy2 = function(Target, Distance)
+	if not _B or not Target then return end
+	Distance = Distance or 250
 
-	local pos = Target:GetAttribute("Locked").Position
+	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
+	if not rootTarget then return end
 
-	root.CFrame = CFrame.new(pos)
-	root.CanCollide = true
+	local PosMon = rootTarget.Position
 
-	hum.WalkSpeed = 0
-	hum.JumpPower = 0
+	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
+		local hum = Enemy:FindFirstChildOfClass("Humanoid")
+		local root = Enemy:FindFirstChild("HumanoidRootPart")
 
-	local animator = hum:FindFirstChildOfClass("Animator")
-	if animator then
-		animator:Destroy()
+		if hum and root and hum.Health > 0 then
+			if (root.Position - PosMon).Magnitude <= Distance then
+
+				if not Enemy:GetAttribute("Locked") then
+					Enemy:SetAttribute("Locked", CFrame.new(PosMon))
+				end
+
+				root.CFrame = Enemy:GetAttribute("Locked")
+				root.CanCollide = true
+
+				hum.WalkSpeed = 0
+				hum.JumpPower = 0
+
+				local animator = hum:FindFirstChildOfClass("Animator")
+				if animator then
+					animator:Destroy()
+				end
+			end
+		end
 	end
 
 	plr.SimulationRadius = math.huge
 end
+
 
 O.Kill = function(e, A)
 		if e and A then
@@ -328,7 +337,7 @@ O.Kill = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy2(e)
+			BringEnemy2(e,250)
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;

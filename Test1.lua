@@ -313,15 +313,15 @@ O.KillRaid = function(e, A)
 			end;
 			if RandomCFrame then
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(35, 35, 0));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0));
 			end;
 		end;
 	end;
@@ -8145,7 +8145,7 @@ g:AddDropdown({
 	Title = "Select Chip",
 	Description = "",
 	Values = Raidslist,
-	Default = "Frame",
+	Default = "Flame",
 	Multi = false,
 	Callback = function(e)
 		_G.SelectChip = e;
@@ -8258,7 +8258,7 @@ spawn(function()
             if _G.UnStoreFruit then
                 local char = plr.Character
                 
-                if char then
+                if char and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
                     UnStoreCheapFruit()
                 end
             end
@@ -8283,7 +8283,6 @@ local function StartRaid()
     end
 end
 
-g:AddSeperator("Raiding Menu")
 
 g:AddToggle({ 
     Title = "Auto Raid [Fully]", 

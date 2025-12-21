@@ -367,7 +367,7 @@ O.KillRaid = function(e, A)
 			)
 		end
 
-		if _G.Raiding then
+		if RandomCFrame then
 			wait(0.1)
 			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 40, 40))
 
@@ -8696,6 +8696,7 @@ spawn(function()
                                 
                                 pcall(function()
                                     O.KillRaid(enemy, _G.Raiding)
+                                    BringEnemy(enemy)
                                 end)
                                 
                             until not _G.Raiding or not enemy.Parent or humanoid.Health <= 0

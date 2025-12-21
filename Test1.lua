@@ -1,3 +1,11 @@
+if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
+    repeat
+        wait()
+        local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
+        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
+        task.wait(3)
+    until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
+end
 
 do
 	ply = game.Players;
@@ -31,10 +39,7 @@ do
 	ClickState = 0;
 	Num_self = 25;
 end;
-repeat
-	local e = (plr.PlayerGui:WaitForChild("Main")):WaitForChild("Loading") and game:IsLoaded();
-	wait();
-until e;
+
 local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
 local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
@@ -343,7 +348,7 @@ O.KillRaid = function(e, A)
 			)
 		end
 
-		if RandomCFrame then
+		if _G.Raiding then
 			wait(0.2)
 			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35))
 
@@ -1941,6 +1946,7 @@ QuestNeta = function()
 	end;
 ---Tab----------------
 local x = e:NewWindow();
+local sv = x:T("Tab Server");
 local W = x:T("Tab Farming");
 local p = x:T("Tab Settings Fram");
 local U = x:T("Tab Fighting Style");
@@ -1955,20 +1961,308 @@ local M = x:T("Tab Teleport");
 local F = x:T("Tab Fruits");
 local t = x:T("Tab Shop");
 local n = x:T("Tab Misc");
+local SV = sv:AddSection("Tab Server");
 local B = W:AddSection("Tab Farming");
 local z = p:AddSection("Tab Settings Fram");
-local T = U:AddSection("Fighting Style");
-local b = S:AddSection("Items Farm");
-local h = L:AddSection("Sea Events");
-local i = V:AddSection("Mirage + RaceV4");
-local I = R:AddSection("Drago Dojo");
-local P = D:AddSection("Prehistoric");
-local g = N:AddSection("Raid");
-local J = s:AddSection("Combat PVP");
-local d = M:AddSection("Teleport");
-local Q = F:AddSection("Fruits");
-local Y = t:AddSection("Shop");
-local y = n:AddSection("Misc");
+local T = U:AddSection("Tab Fighting Style");
+local b = S:AddSection("Tab Items Farm");
+local h = L:AddSection("Tab Sea Events");
+local i = V:AddSection("Tab Mirage + RaceV4");
+local I = R:AddSection("Tab Drago Dojo");
+local P = D:AddSection("Tab Prehistoric");
+local g = N:AddSection("Tab Raid");
+local J = s:AddSection("Tab Combat PVP");
+local d = M:AddSection("Tab Teleport");
+local Q = F:AddSection("Tab Fruits");
+local Y = t:AddSection("Tab Shop");
+local y = n:AddSection("Tab Misc");
+---Tab Server----------------------
+SV:AddSeperator("Server - Status")
+local MoonStatus = SV:AddParagraph({ Title = "Moon", Content = "" })
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            local lighting = game:GetService("Lighting")
+            local moonTextureId = nil
+
+            for _, obj in pairs(lighting:GetChildren()) do
+                if obj:IsA("Sky") then
+                    moonTextureId = obj.MoonTextureId
+                    break
+                end
+            end
+
+            if not moonTextureId then
+            	MoonStatus:SetDesc("Status: Unknown")
+                return
+            end
+
+            if moonTextureId == "http://www.roblox.com/asset/?id=9709149431" then
+                MoonStatus:SetDesc("Status: 🌕 Full Moon")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149052" then
+                MoonStatus:SetDesc("Status: 🌖 75%")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709143733" then
+                MoonStatus:SetDesc("Status: 🌓 50%")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709150401" then
+                MoonStatus:SetDesc("Status: 🌘 25%")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149680" then
+                MoonStatus:SetDesc("Status: 🌑 15%")
+            else
+                MoonStatus:SetDesc("Status: 🌚 0%")
+            end
+        end)
+    end
+end)
+
+if World1 then
+    local TheSawStatus = SV:AddParagraph({ Title = "The Saw", Content = "" })
+    task.spawn(function()
+        while task.wait(.5) do
+            pcall(function()
+                if game:GetService("ReplicatedStorage"):FindFirstChild("The Saw") or game:GetService("Workspace").Enemies:FindFirstChild("The Saw") then
+                    TheSawStatus:SetDesc("Status : ✅️")
+                else
+                    TheSawStatus:SetDesc("Status : ❌️")
+                end
+            end)
+        end
+    end)
+
+    local GreyBeardStatus = SV:AddParagraph({ Title = "Grey Beard", Content = "" })
+    task.spawn(function()
+        while task.wait(.5) do
+            pcall(function()
+                if game:GetService("ReplicatedStorage"):FindFirstChild("Greybeard") or game:GetService("Workspace").Enemies:FindFirstChild("Greybeard") then
+                    GreyBeardStatus:SetDesc("Status : ✅️")
+                else
+                    GreyBeardStatus:SetDesc("Status : ❌️")
+                end
+            end)
+        end
+    end)
+end
+
+if World2 then
+    local CursedCaptainStatus = SV:AddParagraph({ Title = "Cursed Captain", Content = "" })
+    task.spawn(function()
+        while wait(.5) do
+            pcall(function()
+                if game:GetService("ReplicatedStorage"):FindFirstChild("Cursed Captain") or game:GetService("Workspace").Enemies:FindFirstChild("Cursed Captain") then
+                    CursedCaptainStatus:SetDesc("Status : ✅️")
+                else
+                    CursedCaptainStatus:SetDesc("Status : ❌️")
+                end
+            end)
+        end
+    end)
+    local LegendarySwordStatus = SV:AddParagraph({ Title = "Legendary Sword", Content = "" })
+    task.spawn(function()
+        local previousStatus = ""
+        while task.wait(.5) do
+            local swordStatus = "Status : ❌"
+            if game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LegendarySwordDealer", "1") then
+                swordStatus = "Status: Shisui"
+            elseif game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LegendarySwordDealer", "2") then
+                swordStatus = "Status: Wando"
+            elseif game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LegendarySwordDealer", "3") then
+                swordStatus = "Status: Saddi"
+            end
+            LegendarySwordStatus:SetDesc(swordStatus)
+        end
+    end)
+end
+
+if World3 then
+    local MirageIslandStatus = SV:AddParagraph({ Title = "Mirage Island", Content = "" })
+    task.spawn(function()
+        while task.wait(.5) do
+            pcall(function()
+                if game.Workspace.Map:FindFirstChild("MysticIsland") then
+                    MirageIslandStatus:SetDesc("Status : ✅")
+                else
+                    MirageIslandStatus:SetDesc("Status : ❌")
+                end
+            end)
+        end
+    end)
+
+    local LeviathanStatus = SV:AddParagraph({ Title = "Spy", Content = "" })
+    task.spawn(function()
+        pcall(function()
+            while task.wait(.5) do
+                local SpyStatus = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("InfoLeviathan", "1")
+                if (SpyStatus == 5) then
+                    LeviathanStatus:SetDesc("Status : Leviathan Is Out There")
+                elseif (SpyStatus == -1) then
+                    LeviathanStatus:SetDesc("Status : I Don't Know")
+                else
+                    LeviathanStatus:SetDesc("Buy: " .. tostring(SpyStatus))
+                end
+            end
+        end)
+    end)
+
+    local FrozenDimensionStatus = SV:AddParagraph({ Title = "Frozen Dimension", Content = "" })
+    task.spawn(function()
+        pcall(function()
+            while task.wait(.5) do
+                if game:GetService("Workspace").Map:FindFirstChild("FrozenDimension") then
+                    FrozenDimensionStatus:SetDesc("Status : ✅")
+                else
+                    FrozenDimensionStatus:SetDesc("Status : ❌")
+                end
+            end
+        end)
+    end)
+
+    local KitsuneIslandStatus = SV:AddParagraph({ Title = "Kitsune Island", Content = "" })
+    function UpdateKitsune()
+        if game:GetService("Workspace").Map:FindFirstChild("KitsuneIsland") then
+            KitsuneIslandStatus:SetDesc("Status : ✅️")
+        else
+            KitsuneIslandStatus:SetDesc("Status : ❌️")
+        end
+    end
+    task.spawn(function()
+        pcall(function()
+            while task.wait(.5) do
+                UpdateKitsune()
+            end
+        end)
+    end)
+
+    local PrehistoricIslandStatus = SV:AddParagraph({ Title = "Volcano Island", Content = "" })
+    task.spawn(function()
+        pcall(function()
+            while task.wait(.5) do
+                if game:GetService("Workspace").Map:FindFirstChild("PrehistoricIsland") then
+                    PrehistoricIslandStatus:SetDesc("Status : ✅️")
+                else
+                    PrehistoricIslandStatus:SetDesc("Status : ❌️")
+                end
+            end
+        end)
+    end)
+
+    local CakePrinceStatus = SV:AddParagraph({ Title = "Cake Prince", Content = "" })
+    task.spawn(function()
+        while task.wait(.1) do
+            pcall(function()
+                if string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 88 then
+                    KillMob = (tonumber(string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,41)) - 500)
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 87 then
+                    KillMob = (tonumber(string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),40,41)) - 500)
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 86 then
+                    KillMob = (tonumber(string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),41,41)) - 500)
+                end
+            end)
+        end
+    end)
+
+    task.spawn(function()
+        while task.wait(.1) do
+            pcall(function()
+                if string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 88 then
+                    CakePrinceStatus:SetDesc("Defeat : "..string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,41).." Mobs")
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 87 then
+                    CakePrinceStatus:SetDesc("Defeat : "..string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,40).." Mobs")
+                elseif string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 86 then
+                    CakePrinceStatus:SetDesc("Defeat : "..string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,39).." Mobs")
+                else
+                    CakePrinceStatus:SetDesc("Status : Cake Prince Is Spawning!")
+                end
+            end)
+        end
+    end)
+	local TyrantStatus = SV:AddParagraph({ Title = "Tyrant of the Skies", Content = "" })
+	task.spawn(function()
+		pcall(function()
+			while wait(.5) do
+				if game:GetService("Workspace").Enemies:FindFirstChild("Tyrant of the Skies") then
+					TyrantStatus:SetDesc("Status : ✅")
+				else
+					TyrantStatus:SetDesc("Status : ❌")
+				end
+			end
+		end)
+	end) 
+    local EliteHunterStatus = SV:AddParagraph({ Title = "Elite Hunter", Content = "" })
+    task.spawn(function()
+        while task.wait(1) do
+            pcall(function()
+                if (game:GetService("ReplicatedStorage"):FindFirstChild("Diablo") or game:GetService("ReplicatedStorage"):FindFirstChild("Deandre") or game:GetService("ReplicatedStorage"):FindFirstChild("Urban") or game:GetService("Workspace").Enemies:FindFirstChild("Diablo") or game:GetService("Workspace").Enemies:FindFirstChild("Deandre") or game:GetService("Workspace").Enemies:FindFirstChild("Urban")) then
+                    EliteHunterStatus:SetDesc("Status : ✅️")
+                else
+                    EliteHunterStatus:SetDesc("Status : ❌️")
+                end
+            end)
+        end
+    end)
+end
+local FruitStatus = SV:AddParagraph({ Title = "Fruit in Server", Content = "" })
+task.spawn(function()
+    while task.wait(.5) do
+        pcall(function()
+            local foundFruits = {}
+
+            for i, v in pairs(game.Workspace:GetChildren()) do
+                if v:IsA("Tool") and string.find(v.Name, "Fruit") and v:FindFirstChild("Handle") then
+                    table.insert(foundFruits, v.Name)
+                end
+            end
+
+            if #foundFruits > 0 then
+                FruitStatus:SetDesc("Status: (" .. #foundFruits .. "): " .. table.concat(foundFruits, ", "))
+            else
+                FruitStatus:SetDesc("Status : ❌")
+            end
+        end)
+    end
+end)
+SV:AddSeperator("Server - Function")
+local ServerJobId = SV:AddParagraph({ Title = "JobId:", Content = "" })
+ServerJobId:SetDesc(game.JobId)
+SV:AddButton({ Title = "Copy JobId", Description = "", Callback = function()
+	setclipboard(tostring(game.JobId))
+end })
+SV:AddInput({
+	Title = "Enter JobId Here:",
+	Description = "",
+	PlaceHolder = "",
+	Default = "",
+	Callback = function(e)
+		_G.JobId = e
+	end,
+});
+spawn(function()
+	while wait(Sec) do
+		if _G.JobId then
+			pcall(function()
+				local e
+				e = plr.OnTeleport:Connect(function(A)
+						if A == Enum.TeleportState.Failed then
+							e:Disconnect();
+							if workspace:FindFirstChild("Message") then
+								workspace.Message:Destroy()
+							end
+						end
+					end)
+			end)
+		end
+	end
+end)
+SV:AddButton({ Title = "Join Server With JobId", Description = "", Callback = function()
+	replicated.__ServerBrowser:InvokeServer("teleport", _G.JobId)
+end})
+SV:AddButton({ Title = "Hop Server", Description = "", Callback = function()
+	Hop()
+end})
+SV:AddButton({ Title = "Hop to Lowest Players", Description = "", Callback = function()
+	loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
+end })
+SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
+	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
+end });
 B:AddToggle({
 	Title = "Auto Farm Level",
 	Description = "",
@@ -9771,101 +10065,7 @@ Y:AddButton({ Title = "Buy Ghoul Race (2.5k)", Description = "", Callback = func
 Y:AddButton({ Title = "Buy Cyborg Race (2.5k)", Description = "", Callback = function()
 		replicated.Remotes.CommF_:InvokeServer("CyborgTrainer", " Buy");
 	end });
-y:AddSeperator("Server - Function");
-y:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
-		(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
-	end });
-y:AddButton({ Title = "Hop Server", Description = "", Callback = function()
-		Hop();
-	end });
-y:AddButton({ Title = "Hop to Lowest Players", Description = "", Callback = function()
-		local e = game:GetService("HttpService");
-		local A = game:GetService("TeleportService");
-		local u = "https://games.roblox.com/v1/games/";
-		local Z = game.PlaceId;
-		local X = u .. (Z .. "/servers/Public?sortOrder=Asc&limit=100");
-		function ListServers(A)
-			local u = game:HttpGet(X .. (A and "&cursor=" .. A or ""));
-			return e:JSONDecode(u);
-		end;
-		local C, v;
-		repeat
-			local e = ListServers(v);
-			C = e.data[1];
-			v = e.nextPageCursor;
-		until C;
-		A:TeleportToPlaceInstance(Z, C.id, plr);
-	end });
-y:AddButton({ Title = "Hop to Lowest Pings Server", Description = "", Callback = function()
-		local e = game:GetService("HttpService");
-		local A = game:GetService("TeleportService");
-		local u = game:GetService("Stats");
-		local function Z(A, u)
-			local Z = string.format("https://games.roblox.com/v1/games/%d/servers/Public?limit=%d", A, u);
-			local X, C = pcall(function()
-					return e:JSONDecode(game:HttpGet(Z));
-				end);
-			if X and (C and C.data) then
-				return C.data;
-			end;
-			return nil;
-		end;
-		local X = game.PlaceId;
-		local C = 100;
-		local v = Z(X, C);
-		if not v then
-			return;
-		end;
-		local o = v[1];
-		for e, A in pairs(v) do
-			if A.ping < o.ping and A.maxPlayers > A.playing then
-				o = A;
-			end;
-		end;
-		local w = .5;
-		task.wait(w);
-		local l = 100;
-		local G = u.Network.ServerStatsItem;
-		local a = G["Data Ping"]:GetValueString();
-		local q = tonumber(a:match("(%d+)"));
-		if q >= l then
-			A:TeleportToPlaceInstance(X, o.id);
-		else
- 
-		end;
-	end });
-y:AddInput({
-	Title = "JobID",
-	Description = "",
-	PlaceHolder = "",
-	Default = "",
-	Callback = function(e)
-		_G.JobId = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		if _G.JobId then
-			pcall(function()
-				local e;
-				e = plr.OnTeleport:Connect(function(A)
-						if A == Enum.TeleportState.Failed then
-							e:Disconnect();
-							if workspace:FindFirstChild("Message") then
-								workspace.Message:Destroy();
-							end;
-						end;
-					end);
-			end);
-		end;
-	end;
-end);
-y:AddButton({ Title = "Teleport [Job ID]", Description = "", Callback = function()
-		replicated.__ServerBrowser:InvokeServer("teleport", _G.JobId);
-	end });
-y:AddButton({ Title = "Copy JobID", Description = "", Callback = function()
-		setclipboard(tostring(game.JobId));
-	end });
+
 y:AddSeperator("Player Gui / Others");
 y:AddButton({ Title = "Open Awakenings Expert", Description = "", Callback = function()
 		plr.PlayerGui.Main.AwakeningToggler.Visible = true;

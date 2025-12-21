@@ -35,7 +35,6 @@ repeat
 	local e = (plr.PlayerGui:WaitForChild("Main")):WaitForChild("Loading") and game:IsLoaded();
 	wait();
 until e;
-local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
 	World1 = true;
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
@@ -50,6 +49,7 @@ Marines = function()
 Pirates = function()
 		replicated.Remotes.CommF_:InvokeServer("SetTeam", "Pirates");
 	end;
+local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
 if World1 then
 	Boss = {
 			"The Gorilla King",
@@ -313,15 +313,15 @@ O.KillRaid = function(e, A)
 			end;
 			if RandomCFrame then
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(35, 35, 0));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
 				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0));
+				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
 			end;
 		end;
 	end;
@@ -796,8 +796,15 @@ getInfinity_Ability = function(e, A)
 	end;
 Hop = function()
 		pcall(function()
-			HopServer:Teleport()
-		end)
+			for e = math.random(1, math.random(40, 75)), 100, 1 do
+				local A = replicated.__ServerBrowser:InvokeServer(e);
+				for e, A in next, A do
+					if tonumber(A.Count) < 12 then
+						TeleportService:TeleportToPlaceInstance(game.PlaceId, e);
+					end;
+				end;
+			end;
+		end);
 	end;
 local c = Instance.new("Part", workspace);
 c.Size = Vector3.new(1, 1, 1);
@@ -8145,7 +8152,7 @@ g:AddDropdown({
 	Title = "Select Chip",
 	Description = "",
 	Values = Raidslist,
-	Default = "Flame",
+	Default = "Frame",
 	Multi = false,
 	Callback = function(e)
 		_G.SelectChip = e;
@@ -8206,7 +8213,7 @@ g:AddToggle({
 spawn(function()
     pcall(function()
         while task.wait(Sec) do
-            if _G.BuyChip and not GetBP("Special Microchip") and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
+            if _G.BuyChip and not GetBP("Special Microchip") then
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
             end
         end
@@ -8215,7 +8222,7 @@ end)
 
 g:AddToggle({
     Title = "Get Low Fruits Under 1M",
-    Description = "", 
+    Description = "Auto buy cheap fruits under 1 million", 
     Default = false,
     Callback = function(v)
         _G.UnStoreFruit = v
@@ -8223,42 +8230,34 @@ g:AddToggle({
 })
 
 function UnStoreCheapFruit()
-
-    local backpack = game.Players.LocalPlayer:FindFirstChild("Backpack")
-    if backpack then
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") and tool:FindFirstChild("Fruit") then
-                return
-            end
-        end
-    end
-
     local inv = CommF:InvokeServer("getInventory")
     if type(inv) ~= "table" then return end
-
-    local fruitName, fruitValue
+    
+    local f, v
     for _, i in pairs(inv) do
         if i.Type == "Blox Fruit" and i.Value and i.Value < 1e6 and not i.Equipped then
-            if not fruitValue or i.Value < fruitValue then
-                fruitName = i.Name
-                fruitValue = i.Value
+            if not v or i.Value < v then
+                f = i.Name
+                v = i.Value
             end
         end
     end
-
-    if fruitName then
-        CommF:InvokeServer("LoadFruit", fruitName)
-        return fruitName, fruitValue
+    
+    if f then
+        CommF:InvokeServer("LoadFruit", f)
+        task.wait(0.5)
+        return f, v
     end
 end
 
+-- Main loop
 spawn(function()
     pcall(function()
         while task.wait(Sec) do
             if _G.UnStoreFruit then
                 local char = plr.Character
                 
-                if char and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
+                if char then
                     UnStoreCheapFruit()
                 end
             end
@@ -8268,7 +8267,7 @@ end)
 
 
 local function StartRaid()
-    if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
+    if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
         if GetBP("Special Microchip") then
             if World2 then
                 _tp(CFrame.new(-6438.73535, 250.645355, -4501.50684))
@@ -8283,6 +8282,7 @@ local function StartRaid()
     end
 end
 
+g:AddSeperator("Raiding Menu")
 
 g:AddToggle({ 
     Title = "Auto Raid [Fully]", 
@@ -8297,7 +8297,7 @@ spawn(function()
     while task.wait(Sec) do
         if not _G.Raiding then continue end
         
-        if GetBP("Special Microchip") and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
+        if GetBP("Special Microchip") and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then
             StartRaid()
         end
     end
@@ -8337,7 +8337,7 @@ spawn(function()
                     if humanoid and ehrp and enemy.Parent and humanoid.Health > 0 then
                         local distance = (ehrp.Position - hrp.Position).Magnitude
                         
-                        if distance <= 300 then
+                        if distance <= 500 then
                             foundEnemy = true
                             
                             local timeout = tick() + 30

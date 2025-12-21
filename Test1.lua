@@ -293,36 +293,33 @@ BringEnemy = function()
 			end;
 		end;
 	end;
-BringEnemy2 = function(MonName)
-	if not _B then
+BringEnemy2 = function(Target)
+	if not _B or not Target then
 		return
 	end
-
-	for _, A in pairs(workspace.Enemies:GetChildren()) do
-		local hum = A:FindFirstChildOfClass("Humanoid")
-		local root = A:FindFirstChild("HumanoidRootPart") or A.PrimaryPart
-
-		if hum and root and hum.Health > 0 then
-			if MonName and A.Name ~= MonName then
-				continue
-			end
-
-			if (root.Position - PosMon).Magnitude <= 250 then
-				root.CFrame = CFrame.new(PosMon)
-				root.CanCollide = true
-
-				hum.WalkSpeed = 0
-				hum.JumpPower = 0
-
-				local animator = hum:FindFirstChildOfClass("Animator")
-				if animator then
-					animator:Destroy()
-				end
-
-				plr.SimulationRadius = math.huge
-			end
-		end
+	local hum = Target:FindFirstChildOfClass("Humanoid")
+	local root = Target:FindFirstChild("HumanoidRootPart") or Target.PrimaryPart
+	if not hum or not root or hum.Health <= 0 then
+		return
 	end
+	if not Target:GetAttribute("Locked") then
+		Target:SetAttribute("Locked", root.CFrame)
+	end
+
+	local pos = Target:GetAttribute("Locked").Position
+
+	root.CFrame = CFrame.new(pos)
+	root.CanCollide = true
+
+	hum.WalkSpeed = 0
+	hum.JumpPower = 0
+
+	local animator = hum:FindFirstChildOfClass("Animator")
+	if animator then
+		animator:Destroy()
+	end
+
+	plr.SimulationRadius = math.huge
 end
 
 O.Kill = function(e, A)
@@ -330,8 +327,8 @@ O.Kill = function(e, A)
 			if not e:GetAttribute("Locked") then
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
-			BringEnemy2(e.Name)
 			PosMon = (e:GetAttribute("Locked")).Position;
+			BringEnemy2(e)
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;

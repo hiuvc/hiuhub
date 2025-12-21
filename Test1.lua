@@ -2328,63 +2328,52 @@ end
 -- ================== AUTO QUEST LOOP ==================
 spawn(function()
 	while task.wait(Sec) do
-		if _G.Level then
-			pcall(function()
-				local QuestUI = plr.PlayerGui.Main.Quest
-				local QuestText = QuestUI.Container.QuestTitle.Title.Text
-				local QuestData = QuestNeta()
+		if not _G.Level then continue end
 
-				-- ❌ Sai quest → bỏ
-				if not string.find(QuestText, QuestData[5]) then
-					replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
+		pcall(function()
+			local QuestUI = plr.PlayerGui.Main.Quest
+			local QuestData = QuestNeta()
+			local MobName = QuestData[1]
+
+			-- ❌ chưa có quest → nhận quest
+			if QuestUI.Visible == false then
+				_tp(QuestData[6])
+				if (Root.Position - QuestData[6].Position).Magnitude <= 5 then
+					replicated.Remotes.CommF_:InvokeServer(
+						"StartQuest",
+						QuestData[3],
+						QuestData[2]
+					)
 				end
+				return
+			end
 
-				-- 📌 Chưa nhận quest
-				if QuestUI.Visible == false then
-					_tp(QuestData[6])
-					if (Root.Position - QuestData[6].Position).Magnitude <= 5 then
-						replicated.Remotes.CommF_:InvokeServer(
-							"StartQuest",
-							QuestData[3],
-							QuestData[2]
-						)
-					end
-
-				-- ⚔️ Đang có quest
-				else
-					local MobName = QuestData[1]
-					local Found = false
-
-					for _, u in pairs(workspace.Enemies:GetChildren()) do
-						if O.Alive(u) and GetMobBaseName(u.Name) == MobName then
-							Found = true
-							repeat
-								task.wait()
-								StartMagnet = true
-
-								BringEnemy2(u, Distance)
-								O.Kill(u, _G.Level)
-
-							until not _G.Level
-								or u.Humanoid.Health <= 0
-								or not u.Parent
-								or QuestUI.Visible == false
-						end
-					end
-
-					-- ❌ Không có quái → teleport spawn
-					if not Found then
-						_tp(QuestData[4])
-						if replicated:FindFirstChild(MobName) then
-							_tp(
-								replicated:FindFirstChild(MobName)
-									.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)
-							)
-						end
-					end
+			-- ✅ đã có quest → tìm quái
+			local FirstMob = nil
+			for _, u in pairs(workspace.Enemies:GetChildren()) do
+				if O.Alive(u) and GetMobBaseName(u.Name) == MobName then
+					FirstMob = u
+					break
 				end
-			end)
-		end
+			end
+
+			-- ⏳ CHƯA CÓ QUÁI → ĐỨNG ĐỢI
+			if not FirstMob then
+				return
+			end
+
+			-- 🔥 CÓ QUÁI → GOM VỀ 1 CHỖ & FARM
+			repeat
+				task.wait()
+
+				BringEnemy2(FirstMob, Distance)
+				O.Kill(FirstMob, _G.Level)
+
+			until not _G.Level
+				or not FirstMob.Parent
+				or FirstMob.Humanoid.Health <= 0
+				or QuestUI.Visible == false
+		end)
 	end
 end)
 

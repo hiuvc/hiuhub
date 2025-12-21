@@ -270,62 +270,73 @@ O.DistH = function(e, A)
 		return (Root.Position - (e:FindFirstChild("HumanoidRootPart")).Position).Magnitude > A;
 	end;
 BringEnemy = function()
-		if not _B then
-			return;
-		end;
-		for e, A in pairs(workspace.Enemies:GetChildren()) do
-			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
-				if (A.PrimaryPart.Position - PosMon).Magnitude <= 250 then
-					A.PrimaryPart.CFrame = CFrame.new(PosMon);
-					A.PrimaryPart.CanCollide = true;
-					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;
-					(A:FindFirstChild("Humanoid")).JumpPower = 0;
-					if A.Humanoid:FindFirstChild("Animator") then
-						A.Humanoid.Animator:Destroy();
-					end;
-					plr.SimulationRadius = math.huge;
-				end;
-			end;
-		end;
-	end;
+	if not _B then return end
+
+	for _, A in pairs(workspace.Enemies:GetChildren()) do
+		if not A.Parent then continue end
+
+		local hum = A:FindFirstChild("Humanoid")
+		local hrp = A:FindFirstChild("HumanoidRootPart")
+		if not hum or not hrp then continue end
+		if hum.Health <= 0 or hum:GetState() == Enum.HumanoidStateType.Dead then continue end
+
+		if (hrp.Position - PosMon).Magnitude <= 250 then
+			hrp.CFrame = CFrame.new(PosMon)
+			hrp.CanCollide = true
+
+			hum.WalkSpeed = 0
+			hum.JumpPower = 0
+			hum:ChangeState(Enum.HumanoidStateType.Physics)
+
+			plr.SimulationRadius = math.huge
+		end
+	end
+end
+
 O.KillRaid = function(e, A)
-    if e and A then
-        if not e:GetAttribute("Locked") then
-            e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
-        end;
-        PosMon = (e:GetAttribute("Locked")).Position;
+	if e and A then
+		if not e:GetAttribute("Locked") then
+			e:SetAttribute("Locked", e.HumanoidRootPart.CFrame)
+		end
 
-        if A:IsA("Model") and A.PrimaryPart then
-            A.PrimaryPart.CanCollide = true;
-            local hum = A:FindFirstChild("Humanoid")
-            if hum then
-                hum.WalkSpeed = 0;
-                hum.JumpPower = 0;
-                if hum:FindFirstChild("Animator") then
-                    hum.Animator:Destroy();
-                end
-            end
-        end
+		PosMon = e:GetAttribute("Locked").Position
 
-        EquipWeapon(_G.SelectWeapon);
-        local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
-        
-        if tool and tool.ToolTip == "Blox Fruit" then
-            _tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) * CFrame.Angles(0, math.rad(90), 0));
-        else
-            _tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 0)) * CFrame.Angles(0, math.rad(180), 0));
-        end;
+		EquipWeapon(_G.SelectWeapon)
 
-        if _G.Raiding then
-            task.wait(.2);
-            _tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35));
-            task.wait(.2);
-            _tp(e.HumanoidRootPart.CFrame * CFrame.new(35, 35, 0));
-            task.wait(.2);
-            _tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0));
-        end;
-    end;
-end;
+		local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+		local toolTip = tool.ToolTip
+
+		if toolTip == "Blox Fruit" then
+			_tp(
+				(e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) *
+				CFrame.Angles(0, math.rad(90), 0)
+			)
+		else
+			_tp(
+				(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 0)) *
+				CFrame.Angles(0, math.rad(180), 0)
+			)
+		end
+
+		if RandomCFrame then
+			wait(0.2)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35))
+
+			wait(0.2)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(35, 35, 0))
+
+			wait(0.2)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0))
+
+			wait(0.2)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35))
+
+			wait(0.2)
+			_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0))
+		end
+	end
+end
+
 O.Kill2 = function(e, A)
 		if e and A then
 			if not e:GetAttribute("Locked") then

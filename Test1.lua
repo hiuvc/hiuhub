@@ -8210,11 +8210,10 @@ g:AddToggle({
         _G.BuyChip = v
     end
 })
-
 spawn(function()
     pcall(function()
         while task.wait(Sec) do
-            if _G.BuyChip and not GetBP("Special Microchip") and game:GetService("Players").LocalPlayer.Character:FindFirstChild("Special Microchip") and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
+            if _G.BuyChip and not GetBP("Special Microchip") then
                 game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
             end
         end
@@ -8223,7 +8222,7 @@ end)
 
 g:AddToggle({
     Title = "Get Low Fruits Under 1M",
-    Description = "", 
+    Description = "Auto buy cheap fruits under 1 million", 
     Default = false,
     Callback = function(v)
         _G.UnStoreFruit = v
@@ -8231,7 +8230,7 @@ g:AddToggle({
 })
 
 function UnStoreCheapFruit()
-    local inv = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("getInventory")
+    local inv = CommF:InvokeServer("getInventory")
     if type(inv) ~= "table" then return end
     
     local f, v
@@ -8245,17 +8244,22 @@ function UnStoreCheapFruit()
     end
     
     if f then
-        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LoadFruit", f)
+        CommF:InvokeServer("LoadFruit", f)
         task.wait(0.5)
         return f, v
     end
 end
 
+-- Main loop
 spawn(function()
     pcall(function()
         while task.wait(Sec) do
-            if _G.UnStoreFruit and not GetBP("Special Microchip") and game:GetService("Players").LocalPlayer.Character:FindFirstChild("Special Microchip") and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
-                UnStoreCheapFruit()
+            if _G.UnStoreFruit then
+                local char = plr.Character
+                
+                if char then
+                    UnStoreCheapFruit()
+                end
             end
         end
     end)

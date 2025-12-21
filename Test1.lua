@@ -280,7 +280,7 @@ BringEnemy = function()
 		end;
 		for e, A in pairs(workspace.Enemies:GetChildren()) do
 			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
-				if (A.PrimaryPart.Position - PosMon).Magnitude <= 300 then
+				if (A.PrimaryPart.Position - PosMon).Magnitude <= 200 then
 					A.PrimaryPart.CFrame = CFrame.new(PosMon);
 					A.PrimaryPart.CanCollide = true;
 					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;
@@ -330,7 +330,7 @@ O.KillRaid = function(e, A)
 		end
 
 		PosMon = e:GetAttribute("Locked").Position
-
+		BringEnemy();
 		EquipWeapon(_G.SelectWeapon)
 
 		local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
@@ -891,7 +891,7 @@ _tp = function(e)
 		end;
 		local u = A.HumanoidRootPart;
 		local Z = (e.Position - u.Position).Magnitude;
-		local X = TweenInfo.new(Z / 300, Enum.EasingStyle.Linear);
+		local X = TweenInfo.new(Z / 350, Enum.EasingStyle.Linear);
 		local C = (game:GetService("TweenService")):Create(c, X, { CFrame = e });
 		if plr.Character.Humanoid.Sit == true then
 			c.CFrame = CFrame.new(c.Position.X, e.Y, c.Position.Z);

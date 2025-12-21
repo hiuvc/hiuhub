@@ -269,6 +269,25 @@ O.Dist = function(e, A)
 O.DistH = function(e, A)
 		return (Root.Position - (e:FindFirstChild("HumanoidRootPart")).Position).Magnitude > A;
 	end;
+BringEnemy = function()
+		if not _B then
+			return;
+		end;
+		for e, A in pairs(workspace.Enemies:GetChildren()) do
+			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
+				if (A.PrimaryPart.Position - PosMon).Magnitude <= 250 then
+					A.PrimaryPart.CFrame = CFrame.new(PosMon);
+					A.PrimaryPart.CanCollide = true;
+					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;
+					(A:FindFirstChild("Humanoid")).JumpPower = 0;
+					if A.Humanoid:FindFirstChild("Animator") then
+						A.Humanoid.Animator:Destroy();
+					end;
+					plr.SimulationRadius = math.huge;
+				end;
+			end;
+		end;
+	end;
 O.Kill = function(e, A)
 		if e and A then
 			if not e:GetAttribute("Locked") then
@@ -299,33 +318,41 @@ O.Kill = function(e, A)
 		end;
 	end;
 O.KillRaid = function(e, A)
-		if e and A then
-			if not e:GetAttribute("Locked") then
-				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
-			end;
-			PosMon = (e:GetAttribute("Locked")).Position;
-			EquipWeapon(_G.SelectWeapon);
-			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
-			local u = A.ToolTip;
-			if u == "Blox Fruit" then
-				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) * CFrame.Angles(0, math.rad(90), 0));
-			else
-				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)) * CFrame.Angles(0, math.rad(180), 0));
-			end;
-			if RandomCFrame then
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(35, 35, 0));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0));
-			end;
-		end;
-	end;
+	if e and A then
+		if not e:GetAttribute("Locked") then
+			e:SetAttribute("Locked", e.HumanoidRootPart.CFrame)
+		end
+		PosMon = e:GetAttribute("Locked").Position
+		EquipWeapon(_G.SelectWeapon)
+		if A.PrimaryPart then
+			A.PrimaryPart.CanCollide = true
+		end
+		local Humanoid = A:FindFirstChildOfClass("Humanoid")
+		if Humanoid then
+			Humanoid.WalkSpeed = 0
+			Humanoid.JumpPower = 0
+			local Animator = Humanoid:FindFirstChild("Animator")
+			if Animator then
+				Animator:Destroy()
+			end
+		end
+		local Tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+		local ToolType = Tool and Tool.ToolTip
+		if ToolType == "Blox Fruit" then
+			_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) * CFrame.Angles(0, math.rad(90), 0))
+		else
+			_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)) * CFrame.Angles(0, math.rad(180), 0))
+		end
+		if RandomCFrame then
+			wait(.2); _tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35))
+			wait(.2); _tp(e.HumanoidRootPart.CFrame * CFrame.new(35, 35, 0))
+			wait(.2); _tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0))
+			wait(.2); _tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 35))
+			wait(.2); _tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0))
+		end
+	end
+end
+
 O.Kill2 = function(e, A)
 		if e and A then
 			if not e:GetAttribute("Locked") then
@@ -453,25 +480,6 @@ statsSetings = function(e, A)
 		elseif e == "Devil" then
 			if plr.Data.Points.Value ~= 0 then
 				replicated.Remotes.CommF_:InvokeServer("AddPoint", "Demon Fruit", A);
-			end;
-		end;
-	end;
-BringEnemy = function()
-		if not _B then
-			return;
-		end;
-		for e, A in pairs(workspace.Enemies:GetChildren()) do
-			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
-				if (A.PrimaryPart.Position - PosMon).Magnitude <= 250 then
-					A.PrimaryPart.CFrame = CFrame.new(PosMon);
-					A.PrimaryPart.CanCollide = true;
-					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;
-					(A:FindFirstChild("Humanoid")).JumpPower = 0;
-					if A.Humanoid:FindFirstChild("Animator") then
-						A.Humanoid.Animator:Destroy();
-					end;
-					plr.SimulationRadius = math.huge;
-				end;
 			end;
 		end;
 	end;

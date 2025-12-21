@@ -270,28 +270,24 @@ O.DistH = function(e, A)
 		return (Root.Position - (e:FindFirstChild("HumanoidRootPart")).Position).Magnitude > A;
 	end;
 BringEnemy = function()
-	if not _B then return end
-
-	for _, A in pairs(workspace.Enemies:GetChildren()) do
-		if not A.Parent then continue end
-
-		local hum = A:FindFirstChild("Humanoid")
-		local hrp = A:FindFirstChild("HumanoidRootPart")
-		if not hum or not hrp then continue end
-		if hum.Health <= 0 or hum:GetState() == Enum.HumanoidStateType.Dead then continue end
-
-		if (hrp.Position - PosMon).Magnitude <= 250 then
-			hrp.CFrame = CFrame.new(PosMon)
-			hrp.CanCollide = true
-
-			hum.WalkSpeed = 0
-			hum.JumpPower = 0
-			hum:ChangeState(Enum.HumanoidStateType.Physics)
-
-			plr.SimulationRadius = math.huge
-		end
-	end
-end
+		if not _B then
+			return;
+		end;
+		for e, A in pairs(workspace.Enemies:GetChildren()) do
+			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
+				if (A.PrimaryPart.Position - PosMon).Magnitude <= 300 then
+					A.PrimaryPart.CFrame = CFrame.new(PosMon);
+					A.PrimaryPart.CanCollide = true;
+					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;
+					(A:FindFirstChild("Humanoid")).JumpPower = 0;
+					if A.Humanoid:FindFirstChild("Animator") then
+						A.Humanoid.Animator:Destroy();
+					end;
+					plr.SimulationRadius = math.huge;
+				end;
+			end;
+		end;
+	end;
 O.Kill = function(e, A)
 		if e and A then
 			if not e:GetAttribute("Locked") then

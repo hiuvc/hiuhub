@@ -337,7 +337,6 @@ O.Kill = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy2(e,250)
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;
@@ -2328,6 +2327,7 @@ spawn(function()
 									if string.find(e, (QuestNeta())[5]) then
 										repeat
 											wait();
+											BringEnemy2(u,250)
 											O.Kill(u, _G.Level);
 										until not _G.Level or u.Humanoid.Health <= 0 or not u.Parent or plr.PlayerGui.Main.Quest.Visible == false;
 									else

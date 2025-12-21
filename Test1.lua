@@ -2324,56 +2324,47 @@ BringEnemy2 = function(Target, Distance)
 	plr.SimulationRadius = math.huge
 end
 
--- ================== AUTO QUEST LOOP ==================
 spawn(function()
-	while task.wait(Sec) do
-		if not _G.Level then continue end
-
-		pcall(function()
-			local QuestUI = plr.PlayerGui.Main.Quest
-			local QuestData = QuestNeta()
-			local MobName = QuestData[1]
-
-			-- ❌ chưa có quest → nhận quest
-			if QuestUI.Visible == false then
-				_tp(QuestData[6])
-				if (Root.Position - QuestData[6].Position).Magnitude <= 5 then
-					replicated.Remotes.CommF_:InvokeServer(
-						"StartQuest",
-						QuestData[3],
-						QuestData[2]
-					)
-				end
-				return
-			end
-
-			-- ✅ đã có quest → tìm quái
-			local FirstMob = nil
-			for _, u in pairs(workspace.Enemies:GetChildren()) do
-				if O.Alive(u) and GetMobBaseName(u.Name) == MobName then
-					FirstMob = u
-					break
-				end
-			end
-			if not FirstMob then
-				StartMagnet = false
-				return
-			end
-			repeat
-				task.wait()
-				StartMagnet = true
-
-				BringEnemy2(FirstMob, Distance)
-				O.Kill(FirstMob, _G.Level)
-
-			until not _G.Level
-				or not FirstMob.Parent
-				or FirstMob.Humanoid.Health <= 0
-				or QuestUI.Visible == false
-		end)
-	end
-end)
-
+	while wait(Sec) do
+		if _G.Level then
+			pcall(function()
+				local e = plr.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text;
+				if not string.find(e, (QuestNeta())[5]) then
+					replicated.Remotes.CommF_:InvokeServer("AbandonQuest");
+				end;
+				if plr.PlayerGui.Main.Quest.Visible == false then
+					_tp((QuestNeta())[6]);
+					if (Root.Position - (QuestNeta())[6].Position).Magnitude <= 5 then
+						replicated.Remotes.CommF_:InvokeServer("StartQuest", (QuestNeta())[3], (QuestNeta())[2]);
+					end;
+				elseif plr.PlayerGui.Main.Quest.Visible == true then
+					if workspace.Enemies:FindFirstChild((QuestNeta())[1]) then
+						for A, u in pairs(workspace.Enemies:GetChildren()) do
+							if O.Alive(u) then
+								if u.Name == (QuestNeta())[1] then
+									if string.find(e, (QuestNeta())[5]) then
+										repeat
+											wait();
+											O.Kill(u, _G.Level);
+											BringEnemy2(u,250)
+										until not _G.Level or u.Humanoid.Health <= 0 or not u.Parent or plr.PlayerGui.Main.Quest.Visible == false;
+									else
+										replicated.Remotes.CommF_:InvokeServer("AbandonQuest");
+									end;
+								end;
+							end;
+						end;
+					else
+						_tp((QuestNeta())[4]);
+						if replicated:FindFirstChild((QuestNeta())[1]) then
+							_tp((replicated:FindFirstChild((QuestNeta())[1])).HumanoidRootPart.CFrame * CFrame.new(0, 30, 0));
+						end;
+					end;
+				end;
+			end);
+		end;
+	end;
+end);
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",

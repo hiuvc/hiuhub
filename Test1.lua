@@ -274,25 +274,47 @@ O.Dist = function(e, A)
 O.DistH = function(e, A)
 		return (Root.Position - (e:FindFirstChild("HumanoidRootPart")).Position).Magnitude > A;
 	end;
-BringEnemy = function()
-		if not _B then
-			return;
-		end;
-		for e, A in pairs(workspace.Enemies:GetChildren()) do
-			if A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0 then
-				if (A.PrimaryPart.Position - PosMon).Magnitude <= 250 then
-					A.PrimaryPart.CFrame = CFrame.new(PosMon);
-					A.PrimaryPart.CanCollide = true;
-					(A:FindFirstChild("Humanoid")).WalkSpeed = 0;
-					(A:FindFirstChild("Humanoid")).JumpPower = 0;
-					if A.Humanoid:FindFirstChild("Animator") then
-						A.Humanoid.Animator:Destroy();
-					end;
-					plr.SimulationRadius = math.huge;
-				end;
-			end;
-		end;
-	end;
+local function GetMobBaseName(name)
+	return string.match(name, "^(.-)%s*%[") or name
+end
+
+BringEnemy = function(Target, Distance)
+	if not _B or not Target then return end
+	Distance = Distance or 300
+
+	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
+	if not rootTarget then return end
+
+	local PosMon = rootTarget.Position
+	local TargetName = GetMobBaseName(Target.Name)
+
+	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
+		local hum = Enemy:FindFirstChildOfClass("Humanoid")
+		local root = Enemy:FindFirstChild("HumanoidRootPart")
+
+		if hum and root and hum.Health > 0 then
+			if GetMobBaseName(Enemy.Name) == TargetName then
+				if (root.Position - PosMon).Magnitude <= Distance then
+					root.CFrame = CFrame.new(PosMon)
+					root.Velocity = Vector3.zero
+					root.RotVelocity = Vector3.zero
+					root.CanCollide = false
+
+					hum.WalkSpeed = 0
+					hum.JumpPower = 0
+					hum:ChangeState(11)
+
+					local animator = hum:FindFirstChildOfClass("Animator")
+					if animator then
+						animator:Destroy()
+					end
+				end
+			end
+		end
+	end
+
+	plr.SimulationRadius = math.huge
+end
 
 O.Kill = function(e, A)
 		if e and A then
@@ -329,7 +351,6 @@ O.KillRaid = function(e, A)
 			e:SetAttribute("Locked", e.HumanoidRootPart.CFrame)
 		end
 		PosMon = e:GetAttribute("Locked").Position
-		BringEnemy()
 		EquipWeapon(_G.SelectWeapon)
 		local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
 		local toolTip = tool.ToolTip
@@ -371,7 +392,6 @@ O.Kill2 = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy();
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;
@@ -400,7 +420,6 @@ O.KillSea = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy();
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;
@@ -420,7 +439,6 @@ O.Sword = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy();
 			weaponSc("Sword");
 			_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0));
 			if RandomCFrame then
@@ -443,7 +461,6 @@ O.Mas = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy();
 			if e.Humanoid.Health <= HealthM then
 				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 20, 0));
 				Useskills("Blox Fruit", "Z");
@@ -461,7 +478,6 @@ O.Masgun = function(e, A)
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy();
 			if e.Humanoid.Health <= HealthM then
 				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 35, 8));
 				Useskills("Gun", "Z");
@@ -2269,60 +2285,6 @@ B:AddToggle({
 		_G.Level = e;
 	end,
 });
--- ================== CONFIG ==================
-local Sec = 0.1
-local Distance = 250
--- ================== SERVICES ==================
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local plr = Players.LocalPlayer
-local replicated = ReplicatedStorage
-local Root = plr.Character:WaitForChild("HumanoidRootPart")
-
--- ================== UTIL ==================
-local function GetMobBaseName(name)
-	return string.match(name, "^(.-)%s*%[") or name
-end
-
--- ================== BRING ENEMY ==================
-BringEnemy2 = function(Target, Distance)
-	if not _B or not Target then return end
-	Distance = Distance or 300
-
-	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
-	if not rootTarget then return end
-
-	local PosMon = rootTarget.Position
-	local TargetName = GetMobBaseName(Target.Name)
-
-	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
-		local hum = Enemy:FindFirstChildOfClass("Humanoid")
-		local root = Enemy:FindFirstChild("HumanoidRootPart")
-
-		if hum and root and hum.Health > 0 then
-			if GetMobBaseName(Enemy.Name) == TargetName then
-				if (root.Position - PosMon).Magnitude <= Distance then
-					root.CFrame = CFrame.new(PosMon)
-					root.Velocity = Vector3.zero
-					root.RotVelocity = Vector3.zero
-					root.CanCollide = false
-
-					hum.WalkSpeed = 0
-					hum.JumpPower = 0
-					hum:ChangeState(11)
-
-					local animator = hum:FindFirstChildOfClass("Animator")
-					if animator then
-						animator:Destroy()
-					end
-				end
-			end
-		end
-	end
-
-	plr.SimulationRadius = math.huge
-end
 
 spawn(function()
 	while wait(Sec) do
@@ -2346,7 +2308,7 @@ spawn(function()
 										repeat
 											wait();
 											O.Kill(u, _G.Level);
-											BringEnemy2(u,300)
+											BringEnemy(u)
 										until not _G.Level or u.Humanoid.Health <= 0 or not u.Parent or plr.PlayerGui.Main.Quest.Visible == false;
 									else
 										replicated.Remotes.CommF_:InvokeServer("AbandonQuest");

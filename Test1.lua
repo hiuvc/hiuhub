@@ -2288,7 +2288,7 @@ end
 -- ================== BRING ENEMY ==================
 BringEnemy2 = function(Target, Distance)
 	if not _B or not Target then return end
-	Distance = Distance or 250
+	Distance = Distance or 300
 
 	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
 	if not rootTarget then return end
@@ -2346,7 +2346,7 @@ spawn(function()
 										repeat
 											wait();
 											O.Kill(u, _G.Level);
-											BringEnemy2(u,250)
+											BringEnemy2(u,300)
 										until not _G.Level or u.Humanoid.Health <= 0 or not u.Parent or plr.PlayerGui.Main.Quest.Visible == false;
 									else
 										replicated.Remotes.CommF_:InvokeServer("AbandonQuest");

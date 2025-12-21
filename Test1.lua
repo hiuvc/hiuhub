@@ -36,6 +36,7 @@ repeat
 	wait();
 until e;
 local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
 	World1 = true;
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
@@ -796,7 +797,7 @@ getInfinity_Ability = function(e, A)
 	end;
 Hop = function()
 		pcall(function()
-			Print("Fix")
+			HopServerModule:Teleport(game.PlaceId)
 		end)
 	end;
 local c = Instance.new("Part", workspace);

@@ -293,13 +293,45 @@ BringEnemy = function()
 			end;
 		end;
 	end;
+BringEnemy2 = function(MonName)
+	if not _B then
+		return
+	end
+
+	for _, A in pairs(workspace.Enemies:GetChildren()) do
+		local hum = A:FindFirstChildOfClass("Humanoid")
+		local root = A:FindFirstChild("HumanoidRootPart") or A.PrimaryPart
+
+		if hum and root and hum.Health > 0 then
+			if MonName and A.Name ~= MonName then
+				continue
+			end
+
+			if (root.Position - PosMon).Magnitude <= 250 then
+				root.CFrame = CFrame.new(PosMon)
+				root.CanCollide = true
+
+				hum.WalkSpeed = 0
+				hum.JumpPower = 0
+
+				local animator = hum:FindFirstChildOfClass("Animator")
+				if animator then
+					animator:Destroy()
+				end
+
+				plr.SimulationRadius = math.huge
+			end
+		end
+	end
+end
+
 O.Kill = function(e, A)
 		if e and A then
 			if not e:GetAttribute("Locked") then
 				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
 			end;
+			BringEnemy2(e.Name)
 			PosMon = (e:GetAttribute("Locked")).Position;
-			BringEnemy();
 			EquipWeapon(_G.SelectWeapon);
 			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
 			local u = A.ToolTip;

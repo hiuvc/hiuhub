@@ -8202,23 +8202,38 @@ spawn(function()
 	end;
 end);
 
-local function HasFruitInBackpack()
-    local inv = CommF:InvokeServer("getInventory")
-    if type(inv) ~= "table" then return end
+g:AddToggle({
+    Title = "Auto Buy Dungeon Chip",
+    Description = "", 
+    Default = false,
+    Callback = function(v)
+        _G.BuyChip = v
+    end
+})
 
-    for _, t in pairs(plr.Backpack:GetChildren()) do
-        for _, i in pairs(inv) do
-            if i.Type == "Blox Fruit" and i.Name == t.Name then
-                return t.Name
+spawn(function()
+    pcall(function()
+        while task.wait(Sec) do
+            if _G.BuyChip and not GetBP("Special Microchip") and game:GetService("Players").LocalPlayer.Character:FindFirstChild("Special Microchip") and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
             end
         end
+    end)
+end)
+
+g:AddToggle({
+    Title = "Get Low Fruits Under 1M",
+    Description = "", 
+    Default = false,
+    Callback = function(v)
+        _G.UnStoreFruit = v
     end
-end
+})
 
-local function LoadCheapFruit()
-    local inv = CommF:InvokeServer("getInventory")
+function UnStoreCheapFruit()
+    local inv = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("getInventory")
     if type(inv) ~= "table" then return end
-
+    
     local f, v
     for _, i in pairs(inv) do
         if i.Type == "Blox Fruit" and i.Value and i.Value < 1e6 and not i.Equipped then
@@ -8228,46 +8243,24 @@ local function LoadCheapFruit()
             end
         end
     end
-
+    
     if f then
-        CommF:InvokeServer("LoadFruit", f)
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LoadFruit", f)
         task.wait(0.5)
         return f, v
     end
 end
 
-g:AddToggle({
-    Title = "Auto Buy Dungeon Chip [Devil Fruit]",
-    Description = "", 
-    Default = false,
-    Callback = function(v)
-        _G.BuyChipDF = v
-        task.spawn(function()
-            while _G.BuyChipDF do
-                task.wait(Sec)
-
-                if GetBP("Special Microchip") then continue end
-                if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible then continue end
-                if not _G.SelectChip then continue end
-
-                local fruit = HasFruitInBackpack()
-                if not fruit then
-                    fruit = LoadCheapFruit()
-                end
-
-                if fruit then
-                    pcall(function()
-                        CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-                    end)
-                else
-                	pcall(function()
-                        CommF:InvokeServer("RaidsNpc", "Select", _G.SelectChip)
-                    end)
-                end
+spawn(function()
+    pcall(function()
+        while task.wait(Sec) do
+            if _G.UnStoreFruit and not GetBP("Special Microchip") and game:GetService("Players").LocalPlayer.Character:FindFirstChild("Special Microchip") and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
+                UnStoreCheapFruit()
             end
-        end)
-    end
-})
+        end
+    end)
+end)
+
 
 local function StartRaid()
     if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then

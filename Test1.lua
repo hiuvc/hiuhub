@@ -293,6 +293,10 @@ BringEnemy = function()
 			end;
 		end;
 	end;
+local function GetMobBaseName(name)
+	return string.match(name, "^(.-)%s*%[") or name
+end
+
 BringEnemy2 = function(Target, Distance)
 	if not _B or not Target then return end
 	Distance = Distance or 250
@@ -301,27 +305,29 @@ BringEnemy2 = function(Target, Distance)
 	if not rootTarget then return end
 
 	local PosMon = rootTarget.Position
+	local TargetName = GetMobBaseName(Target.Name)
 
 	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
 		local hum = Enemy:FindFirstChildOfClass("Humanoid")
 		local root = Enemy:FindFirstChild("HumanoidRootPart")
-
 		if hum and root and hum.Health > 0 then
-			if (root.Position - PosMon).Magnitude <= Distance then
+			
+			if GetMobBaseName(Enemy.Name) == TargetName then
+				if (root.Position - PosMon).Magnitude <= Distance then
 
-				if not Enemy:GetAttribute("Locked") then
-					Enemy:SetAttribute("Locked", CFrame.new(PosMon))
-				end
+					root.CFrame = CFrame.new(PosMon)
+					root.Velocity = Vector3.zero
+					root.RotVelocity = Vector3.zero
+					root.CanCollide = false
 
-				root.CFrame = Enemy:GetAttribute("Locked")
-				root.CanCollide = true
+					hum.WalkSpeed = 0
+					hum.JumpPower = 0
+					hum:ChangeState(11) -- Physics
 
-				hum.WalkSpeed = 0
-				hum.JumpPower = 0
-
-				local animator = hum:FindFirstChildOfClass("Animator")
-				if animator then
-					animator:Destroy()
+					local animator = hum:FindFirstChildOfClass("Animator")
+					if animator then
+						animator:Destroy()
+					end
 				end
 			end
 		end
@@ -2327,7 +2333,6 @@ spawn(function()
 									if string.find(e, (QuestNeta())[5]) then
 										repeat
 											wait();
-											BringEnemy2(u,250)
 											O.Kill(u, _G.Level);
 										until not _G.Level or u.Humanoid.Health <= 0 or not u.Parent or plr.PlayerGui.Main.Quest.Visible == false;
 									else

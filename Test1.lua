@@ -2269,90 +2269,84 @@ B:AddToggle({
 		_G.Level = e;
 	end,
 });
--- ================== CONFIG ================== 
-local Sec = 0.2
-local Distance = 300
-
--- ================== SERVICES ================== 
+-- ================== CONFIG ==================
+local Sec = 0.1
+local Distance = 250
+-- ================== SERVICES ==================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local plr = Players.LocalPlayer
 local replicated = ReplicatedStorage
 local Root = plr.Character:WaitForChild("HumanoidRootPart")
 
--- ================== UTIL ================== 
+-- ================== UTIL ==================
 local function GetMobBaseName(name)
 	return string.match(name, "^(.-)%s*%[") or name
 end
 
--- ================== BRING ENEMY ================== 
+-- ================== BRING ENEMY ==================
 BringEnemy2 = function(Target, Distance)
 	if not _B or not Target then return end
 	Distance = Distance or 250
-	
+
 	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
 	if not rootTarget then return end
-	
+
 	local PosMon = rootTarget.Position
 	local TargetName = GetMobBaseName(Target.Name)
-	
+
 	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
 		local hum = Enemy:FindFirstChildOfClass("Humanoid")
 		local root = Enemy:FindFirstChild("HumanoidRootPart")
-		
+
 		if hum and root and hum.Health > 0 then
 			if GetMobBaseName(Enemy.Name) == TargetName then
 				if (root.Position - PosMon).Magnitude <= Distance then
-					-- Teleport to position
 					root.CFrame = CFrame.new(PosMon)
-					
-					-- Zero out all physics
 					root.Velocity = Vector3.zero
 					root.RotVelocity = Vector3.zero
 					root.CanCollide = false
-					
-					-- Lock humanoid movement
+
 					hum.WalkSpeed = 0
 					hum.JumpPower = 0
 					hum:ChangeState(11)
-					
-					-- Destroy animator to prevent any movement
+
 					local animator = hum:FindFirstChildOfClass("Animator")
 					if animator then
 						animator:Destroy()
 					end
-					
-					-- IMPORTANT: Keep resetting position every frame to prevent drift
-					-- This is done in the main loop now
 				end
 			end
 		end
 	end
-	
+
 	plr.SimulationRadius = math.huge
 end
 
--- ================== AUTO QUEST LOOP ================== 
+-- ================== AUTO QUEST LOOP ==================
 spawn(function()
 	while task.wait(Sec) do
 		if not _G.Level then continue end
-		
+
 		pcall(function()
 			local QuestUI = plr.PlayerGui.Main.Quest
 			local QuestData = QuestNeta()
 			local MobName = QuestData[1]
-			
+
 			-- ❌ chưa có quest → nhận quest
 			if QuestUI.Visible == false then
 				_tp(QuestData[6])
 				if (Root.Position - QuestData[6].Position).Magnitude <= 5 then
 					replicated.Remotes.CommF_:InvokeServer(
-						"StartQuest", QuestData[3], QuestData[2]
+						"StartQuest",
+						QuestData[3],
+						QuestData[2]
 					)
 				end
 				return
 			end
-			
+
 			-- ✅ đã có quest → tìm quái
 			local FirstMob = nil
 			for _, u in pairs(workspace.Enemies:GetChildren()) do
@@ -2361,39 +2355,25 @@ spawn(function()
 					break
 				end
 			end
-			
-			-- ⏳ CHƯA CÓ QUÁI → ĐỨNG ĐỢI
 			if not FirstMob then
 				StartMagnet = false
 				return
 			end
-			
-			-- 🔥 CÓ QUÁI → GOM VỀ 1 CHỖ & FARM
 			repeat
 				task.wait()
 				StartMagnet = true
-				
-				-- Bring enemy and keep repositioning to prevent drift
+
 				BringEnemy2(FirstMob, Distance)
-				
-				-- Extra: Reposition FirstMob's root if it exists
-				local firstMobRoot = FirstMob:FindFirstChild("HumanoidRootPart")
-				if firstMobRoot then
-					-- Lock position every frame to prevent any drift
-					local lastPos = firstMobRoot.Position
-					firstMobRoot.Velocity = Vector3.zero
-					firstMobRoot.RotVelocity = Vector3.zero
-					if (firstMobRoot.Position - lastPos).Magnitude > 0.1 then
-						firstMobRoot.CFrame = CFrame.new(lastPos)
-					end
-				end
-				
 				O.Kill(FirstMob, _G.Level)
-				
-			until not _G.Level or not FirstMob.Parent or FirstMob.Humanoid.Health <= 0 or QuestUI.Visible == false
+
+			until not _G.Level
+				or not FirstMob.Parent
+				or FirstMob.Humanoid.Health <= 0
+				or QuestUI.Visible == false
 		end)
 	end
 end)
+
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",

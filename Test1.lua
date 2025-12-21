@@ -2531,6 +2531,7 @@ spawn(function()
 						if A.Humanoid.Health > 0 then
 							repeat
 								wait();
+								BringEnemy(A)
 								O.Kill(A, _G.AutoFarmNear);
 							until not _G.AutoFarmNear or not A.Parent or A.Humanoid.Health <= 0;
 						end;
@@ -2654,6 +2655,7 @@ spawn(function()
 				repeat
 					wait();
 					O.Kill(e, (getgenv()).AutoMaterial);
+					BringEnemy(e)
 				until not (getgenv()).AutoMaterial or not e.Parent or e.Humanoid.Health <= 0;
 			end;
 		end;
@@ -2710,6 +2712,7 @@ spawn(function()
 					repeat
 						wait();
 						O.Kill(A, _G.AutoEctoplasm);
+						BringEnemy(A)
 					until not _G.AutoEctoplasm or not A.Parent or A.Humanoid.Health <= 0;
 				else
 					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
@@ -2744,6 +2747,7 @@ spawn(function()
 										replicated.Remotes.CommF_:InvokeServer("AbandonQuest");
 									else
 										O.Kill(A, _G.Bartilo_Quest);
+										BringEnemy(A)
 									end;
 								until _G.Bartilo_Quest == false or not A.Parent or A.Humanoid.Health <= 0 or e.Visible == false or not A:FindFirstChild("HumanoidRootPart");
 							end;
@@ -2816,6 +2820,7 @@ spawn(function()
 							repeat
 								task.wait();
 								O.Kill(e, _G.CitizenQuest);
+								BringEnemy(e)
 							until _G.CitizenQuest == false or not e.Parent or e.Humanoid.Health <= 0 or plr.PlayerGui.Main.Quest.Visible == false;
 						else
 							_tp(CFrame.new(-13206.452148438, 425.89199829102, -7964.5537109375));
@@ -3003,6 +3008,7 @@ spawn(function()
 							wait();
 							MousePos = e.HumanoidRootPart.Position;
 							O.Mas(e, _G.FarmMastery_Dev);
+							BringEnemy(e)
 						until _G.FarmMastery_Dev == false or e.Humanoid.Health <= 0 or not e.Parent;
 					else
 						_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
@@ -3015,6 +3021,7 @@ spawn(function()
 							wait();
 							MousePos = e.HumanoidRootPart.Position;
 							O.Mas(e, _G.FarmMastery_Dev);
+							BringEnemy(e)
 						until _G.FarmMastery_Dev == false or e.Humanoid.Health <= 0 or not e.Parent;
 					else
 						_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
@@ -3044,6 +3051,7 @@ spawn(function()
 							wait();
 							MousePos = e.HumanoidRootPart.Position;
 							O.Masgun(e, _G.FarmMastery_G);
+							BringEnemy(e)
 							local A = replicated:FindFirstChild("Modules");
 							local u = A:FindFirstChild("Net");
 							local Z = u:FindFirstChild("RE/ShootGunEvent");
@@ -3082,6 +3090,7 @@ spawn(function()
 							wait();
 							MousePos = e.HumanoidRootPart.Position;
 							O.Masgun(e, _G.FarmMastery_G);
+							BringEnemy(e)
 							local A = replicated:FindFirstChild("Modules");
 							local u = A:FindFirstChild("Net");
 							local Z = u:FindFirstChild("RE/ShootGunEvent");
@@ -3141,6 +3150,7 @@ spawn(function()
 											repeat
 												wait();
 												O.Sword(e, _G.FarmMastery_S);
+												BringEnemy(e)
 											until _G.FarmMastery_S == false or not e.Parent or e.Humanoid.Healh <= 0;
 										else
 											_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
@@ -3171,6 +3181,7 @@ spawn(function()
 											repeat
 												wait();
 												O.Sword(e, _G.FarmMastery_S);
+												BringEnemy(e)
 											until _G.FarmMastery_S == false or not e.Parent or e.Humanoid.Healh <= 0;
 										else
 											_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
@@ -3278,6 +3289,7 @@ spawn(function()
 						repeat
 							wait();
 							O.Kill(Z, _G.Auto_Cake_Prince);
+							BringEnemy(Z)
 						until not _G.Auto_Cake_Prince or Z.Humanoid.Health <= 0 or X.Other.Transparency == 0 or _G.AcceptQuestC and not u.Visible;
 					else
 						_tp(CFrame.new(-2077, 252, -12373));
@@ -3333,6 +3345,7 @@ spawn(function()
 					repeat
 						task.wait();
 						O.Kill(X, _G.AutoFarm_Bone);
+						BringEnemy(X)
 					until not _G.AutoFarm_Bone or X.Humanoid.Health <= 0 or not X.Parent or _G.AcceptQuestC and not u.Visible;
 				else
 					_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));

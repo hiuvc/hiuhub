@@ -3273,7 +3273,7 @@ B:AddToggle({
 	end,
 });
 spawn(function()
-	while wait(0.5) do -- Adjust delay if needed
+	while wait(0.5) do
 		if _G.Auto_Cake_Prince then
 			pcall(function()
 				local Workspace = game:GetService("Workspace")
@@ -3293,7 +3293,7 @@ spawn(function()
 				for _, v in pairs(Enemies:GetChildren()) do
 					if v.Name == "Cake Prince" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
 						cakePrince = v
-						break -- Exit loop immediately
+						break
 					end
 				end
 				
@@ -3301,7 +3301,7 @@ spawn(function()
 					-- Kill Cake Prince
 					O.Kill2(cakePrince, _G.Auto_Cake_Prince)
 					BringEnemy(cakePrince)
-					return -- Exit to next loop iteration
+					return
 				end
 				
 				-- Check if Big Mirror is active and far away
@@ -3330,10 +3330,10 @@ spawn(function()
 				end
 				
 				if minion then
-					-- Check if quest is visible
+					-- Check if quest is visible and AcceptQuestC is enabled
 					local QuestGui = Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("Main") and Player.PlayerGui.Main:FindFirstChild("Quest")
 					
-					if QuestGui and not QuestGui.Visible then
+					if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
 						-- Accept quest if needed
 						local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
 						if (questPos.Position - HRP.Position).Magnitude > 50 then
@@ -3353,19 +3353,30 @@ spawn(function()
 						end)
 					end
 					
-					-- Kill minion
+					local bossCount = nil
+					pcall(function()
+						local response = ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner")
+						local count = string.match(response, "%d+")
+						if count then
+							bossCount = tonumber(count)
+							if bossCount == 0 then
+								ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner", true)
+							end
+						end
+					end)
+					
 					O.Kill(minion, _G.Auto_Cake_Prince)
 					BringEnemy(minion)
 					return
 				end
 				
-				-- No enemies found, teleport to spawn
 				_tp(CFrame.new(-2091.91, 70.01, -12142.84))
 				
 			end)
 		end
 	end
 end)
+
 B:AddToggle({
 	Title = "Auto Bones",
 	Description = "",

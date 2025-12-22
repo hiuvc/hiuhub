@@ -2284,17 +2284,12 @@ end });
 local FrameMode = { "Level", "Cake", "Nearest" }
 
 local function UpdateFramMode()
-	if _G.SelectFramMode == "Level" and _G.StartFram then
-		_G.Level = true
-	else
-		_G.Level = false
-	end
+	_G.Level = (_G.SelectFramMode == "Level" and _G.StartFram)
 end
 
 -- ================== UI ==================
 B:AddDropdown({
 	Title = "Select Fram:",
-	Description = "",
 	Values = FrameMode,
 	Default = "Level",
 	Multi = false,
@@ -2306,7 +2301,6 @@ B:AddDropdown({
 
 B:AddToggle({
 	Title = "Start Fram",
-	Description = "",
 	Default = false,
 	Callback = function(e)
 		_G.StartFram = e
@@ -2314,16 +2308,14 @@ B:AddToggle({
 	end,
 })
 
--- ================== MAIN FARM LOOP ==================
+-- ================== MAIN LOOP ==================
 spawn(function()
 	while task.wait(Sec) do
-		-- ❌ không đúng mode hoặc chưa bật Start Fram
 		if not _G.Level then
 			continue
 		end
 
 		pcall(function()
-			-- ================== QUEST DATA ==================
 			local Q = QuestNeta()
 			local QuestGui = plr.PlayerGui.Main.Quest
 			local QuestTitle = QuestGui.Container.QuestTitle.Title
@@ -2331,71 +2323,63 @@ spawn(function()
 			-- ================== ABANDON QUEST SAI ==================
 			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
 				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-				task.wait(0.5)
-				return
+				task.wait(0.6)
 			end
 
-			-- ================== NHẬN QUEST ==================
+			-- ================== NHẬN QUEST (FIX CHUẨN) ==================
 			if not QuestGui.Visible then
 				_tp(Q.QuestNpcPos)
 
 				repeat task.wait()
-				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 5
+				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 6
 					or not _G.Level
 
 				if not _G.Level then return end
 
-				task.wait(0.3)
 				replicated.Remotes.CommF_:InvokeServer(
 					"StartQuest",
 					Q.QuestName,
 					Q.QuestLevel
 				)
 
-				-- chờ server xác nhận quest
+				-- 🔒 CHỜ QUEST THẬT SỰ NHẬN
 				local t = tick()
-				repeat task.wait()
-				until QuestGui.Visible
-					or tick() - t > 3
-					or not _G.Level
+				repeat
+					task.wait()
+				until (
+					QuestGui.Visible
+					and string.find(QuestTitle.Text, Q.QuestText)
+				)
+				or tick() - t > 5
+				or not _G.Level
 
 				return
 			end
 
 			-- ================== FARM QUÁI ==================
-			local FoundMob = false
-
 			for _, mob in pairs(workspace.Enemies:GetChildren()) do
 				if not _G.Level then break end
 
 				if O.Alive(mob) and mob.Name == Q.MonName then
-					FoundMob = true
-
 					repeat
 						task.wait()
-						O.Kill(mob, _G.Level)
+						O.Kill(mob, true)
 						BringEnemy(mob)
-					until not _G.Level
-						or not mob.Parent
+					until not mob.Parent
 						or mob.Humanoid.Health <= 0
 						or not QuestGui.Visible
+						or not _G.Level
 				end
 			end
 
 			-- ================== KHÔNG CÓ QUÁI → RA SPAWN ==================
-			if _G.Level and not FoundMob then
+			if QuestGui.Visible then
 				_tp(Q.MobSpawnPos)
-
-				if replicated:FindFirstChild(Q.MonName) then
-					local m = replicated:FindFirstChild(Q.MonName)
-					if m:FindFirstChild("HumanoidRootPart") then
-						_tp(m.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-					end
-				end
 			end
 		end)
 	end
 end)
+
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",

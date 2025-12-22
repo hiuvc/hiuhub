@@ -3331,7 +3331,7 @@ spawn(function()
 							BringEnemy(Z)
 						until not _G.Auto_Cake_Prince or Z.Humanoid.Health <= 0 or X.Other.Transparency == 0 or _G.AcceptQuestC and not u.Visible;
 					else
-						_tp(CFrame.new(- 2091.911865234375, 70.00884246826172, - 12142.8359375));
+						_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
 					end;
 				end;
 			end);
@@ -3347,13 +3347,6 @@ B:AddToggle({
 	end,
 });
 
--- ================== SERVICES ==================
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local plr = Players.LocalPlayer
-local CommF = ReplicatedStorage.Remotes.CommF_
-
--- ================== ENEMY ORDER ==================
 local EnemyOrder = {
 	"Reborn Skeleton",
 	"Living Zombie",
@@ -3361,7 +3354,6 @@ local EnemyOrder = {
 	"Posessed Mummy",
 }
 
--- ================== GET ENEMY BY NAME ==================
 local function GetEnemyByName(name)
 	for _, v in pairs(workspace.Enemies:GetChildren()) do
 		if v.Name == name
@@ -3373,7 +3365,6 @@ local function GetEnemyByName(name)
 	end
 end
 
--- ================== AUTO FARM ==================
 spawn(function()
 	while task.wait(Sec) do
 		if not _G.AutoFarm_Bone then continue end
@@ -3391,7 +3382,6 @@ spawn(function()
 				local Enemy = GetEnemyByName(EnemyName)
 				if Enemy then
 
-					-- ====== NHẬN QUEST ======
 					if _G.AcceptQuestC and not QuestGui.Visible then
 						local QuestPos = CFrame.new(
 							-9516.99316, 172.017181, 6078.46533,
@@ -3410,8 +3400,7 @@ spawn(function()
 						}
 						CommF:InvokeServer(unpack(QuestList[math.random(1,#QuestList)]))
 					end
-
-					-- ====== FARM RIÊNG LOẠI NÀY ======
+					
 					repeat
 						task.wait()
 						O.Kill(Enemy, true)

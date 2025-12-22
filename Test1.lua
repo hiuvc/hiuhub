@@ -3362,7 +3362,6 @@ spawn(function()
 			local QuestGui = plr.PlayerGui.Main.Quest
 			if not hrp then return end
 
-			-- duyệt từng loại quái
 			for _, EnemyName in ipairs(EnemyOrder) do
 				if not _G.AutoFarm_Bone then break end
 

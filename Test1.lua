@@ -3273,7 +3273,7 @@ B:AddToggle({
 	end,
 });
 spawn(function()
-	while wait(0.5) do
+	while wait(1) do
 		if _G.Auto_Cake_Prince then
 			pcall(function()
 				local Workspace = game:GetService("Workspace")

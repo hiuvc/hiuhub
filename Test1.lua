@@ -2279,6 +2279,7 @@ end })
 SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
+
 B:AddToggle({
 	Title = "Auto Farm Level",
 	Description = "",
@@ -3330,7 +3331,7 @@ spawn(function()
 							BringEnemy(Z)
 						until not _G.Auto_Cake_Prince or Z.Humanoid.Health <= 0 or X.Other.Transparency == 0 or _G.AcceptQuestC and not u.Visible;
 					else
-						_tp(CFrame.new(-2077, 252, -12373));
+						_tp(CFrame.new(- 2091.911865234375, 70.00884246826172, - 12142.8359375));
 					end;
 				end;
 			end);

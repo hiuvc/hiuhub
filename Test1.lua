@@ -280,7 +280,7 @@ end
 
 BringEnemy = function(Target, Distance)
 	if not _B or not Target then return end
-	Distance = Distance or 300
+	Distance = Distance or 250
 
 	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
 	if not rootTarget then return end
@@ -2280,89 +2280,105 @@ SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
 
+local FrameMode = {
+	"Level",
+	"Cake",
+	"Nearest"
+}
+B:AddDropdown({
+	Title = "Select Fram:",
+	Description = "",
+	Values = FrameMode,
+	Default = "Level",
+	Multi = false,
+	Callback = function(e)
+		_G.SelectFramMode = e;
+	end,
+});
 B:AddToggle({
-	Title = "Auto Farm Level",
+	Title = "Start Fram",
 	Description = "",
 	Default = false,
 	Callback = function(e)
-		_G.Level = e;
+		_G.StartFram = e;
 	end,
 });
 
 spawn(function()
 	while task.wait(Sec) do
-		if not _G.Level then
+
+		if not _G.StartFram then
 			continue
 		end
 
-		pcall(function()
-			-- ================== QUEST DATA ==================
-			local Q = QuestNeta()
-			local QuestGui = plr.PlayerGui.Main.Quest
-			local QuestTitle = QuestGui.Container.QuestTitle.Title
+		if _G.SelectFramMode == "Level" then
+			pcall(function()
 
-			-- ================== ABANDON QUEST SAI ==================
-			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
-				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-				task.wait(0.5)
-				return
-			end
+				local Q = QuestNeta()
+				if not Q then return end
 
-			-- ================== NHẬN QUEST ==================
-			if not QuestGui.Visible then
-				_tp(Q.QuestNpcPos)
+				local QuestGui = plr.PlayerGui.Main.Quest
+				local QuestTitle = QuestGui.Container.QuestTitle.Title
 
-				repeat task.wait()
-				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 5
-					or not _G.Level
+				-- Sai quest → bỏ
+				if QuestGui.Visible and Q.QuestText
+					and not QuestTitle.Text:find(Q.QuestText) then
 
-				task.wait(0.5)
-				replicated.Remotes.CommF_:InvokeServer(
-					"StartQuest",
-					Q.QuestName,
-					Q.QuestLevel
-				)
-
-				-- chờ server xác nhận quest
-				local t = tick()
-				repeat task.wait()
-				until QuestGui.Visible
-					or tick() - t > 3
-					or not _G.Level
-
-				return
-			end
-
-			-- ================== FARM QUÁI ==================
-			local FoundMob = false
-
-			for _, mob in pairs(workspace.Enemies:GetChildren()) do
-				if O.Alive(mob) and mob.Name == Q.MonName then
-					FoundMob = true
-
-					repeat
-						task.wait()
-						O.Kill(mob, _G.Level)
-						BringEnemy(mob)
-					until not _G.Level
-						or not mob.Parent
-						or mob.Humanoid.Health <= 0
-						or not QuestGui.Visible
+					replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
+					task.wait(0.5)
+					return
 				end
-			end
 
-			-- ================== KHÔNG CÓ QUÁI → RA SPAWN ==================
-			if not FoundMob then
-				_tp(Q.MobSpawnPos)
+				-- Chưa có quest → nhận
+				if not QuestGui.Visible then
+					_tp(Q.QuestNpcPos)
 
-				if replicated:FindFirstChild(Q.MonName) then
-					local m = replicated:FindFirstChild(Q.MonName)
-					if m:FindFirstChild("HumanoidRootPart") then
-						_tp(m.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+					repeat task.wait()
+					until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 5
+						or not _G.StartFram
+
+					if not _G.StartFram then return end
+
+					replicated.Remotes.CommF_:InvokeServer(
+						"StartQuest",
+						Q.QuestName,
+						Q.QuestLevel
+					)
+
+					local t = tick()
+					repeat task.wait()
+					until QuestGui.Visible
+						or tick() - t > 3
+						or not _G.StartFram
+
+					return
+				end
+
+				-- Farm quái
+				local FoundMob = false
+
+				for _, mob in pairs(workspace.Enemies:GetChildren()) do
+					if _G.StartFram
+						and O.Alive(mob)
+						and mob.Name == Q.MonName then
+
+						FoundMob = true
+
+						repeat task.wait()
+							O.Kill(mob, true)
+							BringEnemy(mob)
+						until not _G.StartFram
+							or not mob.Parent
+							or mob.Humanoid.Health <= 0
+							or not QuestGui.Visible
 					end
 				end
-			end
-		end)
+
+				if not FoundMob then
+					_tp(Q.MobSpawnPos)
+				end
+			end)
+		end
 	end
 end)
 

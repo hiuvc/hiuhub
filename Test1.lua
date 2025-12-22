@@ -3282,6 +3282,13 @@ spawn(function()
         local enemies = workspace.Enemies
         local bigMirror = workspace.Map.CakeLoaf.BigMirror
         if not root then return end
+        
+        -- Kiểm tra nếu không có quái thì tele về spawn
+        if not enemies:FindFirstChild("Cake Prince") and not bigMirror:FindFirstChild("Other") then
+          _tp(CFrame.new(-2077, 252, -12373))
+          return
+        end
+        
         if not bigMirror:FindFirstChild("Other") then
           _tp(CFrame.new(-2077, 252, -12373))
         end        

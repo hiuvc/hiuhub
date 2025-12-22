@@ -2303,65 +2303,82 @@ B:AddToggle({
 })
 
 spawn(function()
-    while task.wait(Sec) do
-        if not _G.StartFram or _G.SelectFramMode ~= "Level" then
-            continue
-        end
+	while wait(Sec) do
+		
+		if _G.SelectFramMode == "Level" and _G.StartFram then
+			pcall(function()
+				local Q = QuestNeta()
+				local QuestGui = plr.PlayerGui.Main.Quest
+				local QuestTitle = QuestGui.Container.QuestTitle.Title
 
-        pcall(function()
-            local Q = QuestNeta()
-            local QuestGui = plr.PlayerGui.Main.Quest
-            local QuestTitle = QuestGui.Container.QuestTitle.Title
+				-- Sai quest thì bỏ
+				if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
+					replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
+					task.wait(0.5)
+					return
+				end
 
-            -- ================== CHECK QUEST SAI ==================
-            if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
-                CommF:InvokeServer("AbandonQuest")
-                task.wait(0.5)
-                return
-            end
+				-- Chưa có quest thì nhận
+				if not QuestGui.Visible then
+					_tp(Q.QuestNpcPos)
 
-            -- ================== NHẬN QUEST ==================
-            if not QuestGui.Visible then
-                _tp(Q.QuestNpcPos)
-                repeat task.wait()
-                until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 6
-                    or not _G.StartFram
+					repeat
+						task.wait()
+					until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 5
+						or not _G.StartFram
 
-                if not _G.StartFram then return end
+					task.wait(0.5)
 
-                CommF:InvokeServer("StartQuest", Q.QuestName, Q.QuestLevel)
-                task.wait(0.5)
-                return
-            end
+					replicated.Remotes.CommF_:InvokeServer(
+						"StartQuest",
+						Q.QuestName,
+						Q.QuestLevel
+					)
 
-            local mob
-            for _, v in pairs(workspace.Enemies:GetChildren()) do
-                if O.Alive(v) and v.Name == Q.MonName then
-                    mob = v
-                    break
-                end
-            end
+					local t = tick()
+					repeat
+						task.wait()
+					until QuestGui.Visible
+						or tick() - t > 3
+						or not _G.StartFram
 
-            if not mob then
-                _tp(Q.MobSpawnPos)
-                return
-            end
+					return
+				end
 
-            if mob:FindFirstChild("HumanoidRootPart") then
-                PosMon = mob.HumanoidRootPart.Position
-            end
+				-- Tìm quái
+				local FoundMob = false
 
-            repeat
-                task.wait()
-                if not O.Alive(mob) then break end
-                if not _G.StartFram then break end
+				for _, mob in pairs(workspace.Enemies:GetChildren()) do
+					if O.Alive(mob) and mob.Name == Q.MonName then
+						FoundMob = true
 
-                O.Kill(mob, true)
-                BringEnemy()
-            until mob.Humanoid.Health <= 0
-        end)
-    end
+						repeat
+							task.wait()
+							O.Kill(mob, _G.StartFram)
+							BringEnemy(mob)
+						until not _G.StartFram
+							or not mob.Parent
+							or mob.Humanoid.Health <= 0
+							or not QuestGui.Visible
+					end
+				end
+
+				-- Không có quái → TP tới chỗ spawn
+				if not FoundMob then
+					_tp(Q.MobSpawnPos)
+
+					if replicated:FindFirstChild(Q.MonName) then
+						local m = replicated:FindFirstChild(Q.MonName)
+						if m:FindFirstChild("HumanoidRootPart") then
+							_tp(m.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+						end
+					end
+				end
+			end)
+		end
+	end
 end)
+
 
 
 B:AddToggle({

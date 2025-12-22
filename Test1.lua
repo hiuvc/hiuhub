@@ -3273,63 +3273,83 @@ B:AddToggle({
 	end,
 });
 spawn(function()
-  while wait() do
-    if _G.Auto_Cake_Prince then
-      pcall(function()
-        local player = game.Players.LocalPlayer
-        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        local questUI = player.PlayerGui.Main.Quest
-        local enemies = workspace.Enemies
-        local bigMirror = workspace.Map.CakeLoaf.BigMirror
-        if not root then return end
-        
-        -- Kiểm tra nếu không có quái thì tele về spawn
-        if not enemies:FindFirstChild("Cake Prince") and not bigMirror:FindFirstChild("Other") then
-          _tp(CFrame.new(-2077, 252, -12373))
-          return
-        end
-        
-        if not bigMirror:FindFirstChild("Other") then
-          _tp(CFrame.new(-2077, 252, -12373))
-        end        
-        if bigMirror.Other.Transparency == 0 or enemies:FindFirstChild("Cake Prince") then
-          local v = GetConnectionEnemies("Cake Prince")
-          if v then
-            repeat wait() O.Kill2(v, _G.Auto_Cake_Prince) BringEnemy(v) until not _G.Auto_Cake_Prince or not v.Parent or v.Humanoid.Health <= 0
-          else
-            if bigMirror.Other.Transparency == 0 and (CFrame.new(-1990.67, 4533, -14973.67).Position - root.Position).Magnitude >= 2000 then
-              _tp(CFrame.new(-2151.82, 149.32, -12404.91))
-            end
-          end
-        else
-          local CakePrince = {"Cookie Crafter","Cake Guard","Baking Staff","Head Baker"}
-          local v = GetConnectionEnemies(CakePrince)
-          if v then
-            if _G.AcceptQuestC and not questUI.Visible then
-              local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
-              _tp(questPos)
-              while (questPos.Position - root.Position).Magnitude > 50 do
-                wait(0.2)
-              end
-              local randomQuest = math.random(1, 4)
-              local questData = {
-                [1] = {"StartQuest", "CakeQuest2", 2},
-                [2] = {"StartQuest", "CakeQuest2", 1},
-                [3] = {"StartQuest", "CakeQuest1", 1},
-                [4] = {"StartQuest", "CakeQuest1", 2}
-              }                    
-              local success, response = pcall(function()
-                return game.ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(questData[randomQuest]))
-              end)
-            end
-            repeat wait() O.Kill(v, _G.Auto_Cake_Prince) BringEnemy(v) until not _G.Auto_Cake_Prince or v.Humanoid.Health <= 0 or bigMirror.Other.Transparency == 0 or (_G.AcceptQuestC and not questUI.Visible)                
-          else
-            _tp(CFrame.new(-2077, 252, -12373))
-          end
-        end
-      end)
-    end
-  end
+	while wait() do
+		if _G.Auto_Cake_Prince then
+			pcall(function()
+				local e = game.Players.LocalPlayer
+				local A = e.Character and e.Character:FindFirstChild("HumanoidRootPart")
+				local u = e.PlayerGui.Main.Quest
+				local Z = workspace.Enemies
+				local X = workspace.Map.CakeLoaf.BigMirror
+				
+				if not A then
+					return
+				end
+				
+				-- Check if Big Mirror is not active
+				if not X:FindFirstChild("Other") then
+					_tp(CFrame.new(-2077, 252, -12373))
+					return
+				end
+				
+				-- If Big Mirror is active or Cake Prince exists
+				if X.Other.Transparency == 0 or Z:FindFirstChild("Cake Prince") then
+					local cakePrince = GetConnectionEnemies("Cake Prince")
+					if cakePrince then
+						repeat
+							wait()
+							O.Kill2(cakePrince, _G.Auto_Cake_Prince)
+						until not _G.Auto_Cake_Prince or not cakePrince.Parent or cakePrince.Humanoid.Health <= 0
+					else
+						-- No Cake Prince found, return to spawn
+						_tp(CFrame.new(-2077, 252, -12373))
+					end
+				else
+					-- Big Mirror not active, need to farm minions first
+					local minionTypes = {
+						"Cookie Crafter",
+						"Cake Guard",
+						"Baking Staff",
+						"Head Baker",
+					}
+					
+					local minion = GetConnectionEnemies(minionTypes)
+					
+					if minion then
+						-- Accept quest if needed
+						if _G.AcceptQuestC and not u.Visible then
+							local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
+							_tp(questPos)
+							while (questPos.Position - A.Position).Magnitude > 50 do
+								wait(.2)
+							end
+							
+							local questChoice = math.random(1, 4)
+							local questData = {
+								[1] = { "StartQuest", "CakeQuest2", 2 },
+								[2] = { "StartQuest", "CakeQuest2", 1 },
+								[3] = { "StartQuest", "CakeQuest1", 1 },
+								[4] = { "StartQuest", "CakeQuest1", 2 },
+							}
+							
+							local success, result = pcall(function()
+								return game.ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(questData[questChoice]))
+							end)
+						end
+						
+						-- Fight minions until Big Mirror is active or minion dies
+						repeat
+							wait()
+							O.Kill(minion, _G.Auto_Cake_Prince)
+						until not _G.Auto_Cake_Prince or not minion.Parent or minion.Humanoid.Health <= 0 or X.Other.Transparency == 0
+					else
+						-- No minions found, return to spawn and wait
+						_tp(CFrame.new(-2077, 252, -12373))
+					end
+				end
+			end)
+		end
+	end
 end)
 
 B:AddToggle({

@@ -3351,6 +3351,43 @@ spawn(function()
 		end
 	end
 end)
+spawn(function()
+	while wait(Sec) do
+		if _G.Auto_Cake_Prince then
+			pcall(function()
+				if game.ReplicatedStorage:FindFirstChild("Cake Prince") or (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Prince") then
+					if (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Prince") then
+						for i, v in pairs((game:GetService("Workspace")).Enemies:GetChildren()) do
+							if v.Name == "Cake Prince" then
+								if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+									repeat
+										O.Kill2(v,_G.Auto_Cake_Prince)
+										BringEnemy(v)
+									until not _G.Auto_Cake_Prince or (not v.Parent) or v.Humanoid.Health <= 0;
+								end;
+							end;
+						end;
+					elseif (game:GetService("Workspace")).Map.CakeLoaf.BigMirror.Other.Transparency == 0 and ((CFrame.new((-1990.672607421875), 4532.99951171875, (-14973.6748046875))).Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude >= 2000 then
+						_tp(CFrame.new(-2151.82153, 149.315704, -12404.9053));
+					end;
+				elseif (game:GetService("Workspace")).Enemies:FindFirstChild("Cookie Crafter") or (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Guard") or (game:GetService("Workspace")).Enemies:FindFirstChild("Baking Staff") or (game:GetService("Workspace")).Enemies:FindFirstChild("Head Baker") then
+					for i, v in pairs((game:GetService("Workspace")).Enemies:GetChildren()) do
+						if v.Name == "Cookie Crafter" or v.Name == "Cake Guard" or v.Name == "Baking Staff" or v.Name == "Head Baker" then
+							if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+								repeat
+									O.Kill(v,_G.Auto_Cake_Prince)
+									BringEnemy(v)
+								until not _G.Auto_Cake_Prince or (not v.Parent) or v.Humanoid.Health <= 0 or (game:GetService("Workspace")).Map.CakeLoaf.BigMirror.Other.Transparency == 0 or (game:GetService("ReplicatedStorage")):FindFirstChild("Cake Prince [Lv. 2300] [Raid Boss]") or (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Prince [Lv. 2300] [Raid Boss]");
+							end;
+						end;
+					end;
+				else
+					_tp(CFrame.new(-2091.911865234375, 70.00884246826172, -12142.8359375));
+				end;
+			end);
+		end;
+	end;
+end);
 
 B:AddToggle({
 	Title = "Auto Bones",

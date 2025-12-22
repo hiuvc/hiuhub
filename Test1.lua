@@ -3273,43 +3273,99 @@ B:AddToggle({
 	end,
 });
 spawn(function()
-	while wait(Sec) do
+	while wait(0.5) do -- Adjust delay if needed
 		if _G.Auto_Cake_Prince then
 			pcall(function()
-				if game.ReplicatedStorage:FindFirstChild("Cake Prince") or (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Prince") then
-					if (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Prince") then
-						for i, v in pairs((game:GetService("Workspace")).Enemies:GetChildren()) do
-							if v.Name == "Cake Prince" then
-								if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-									repeat
-										O.Kill2(v,_G.Auto_Cake_Prince)
-										BringEnemy(v)
-									until not _G.Auto_Cake_Prince or (not v.Parent) or v.Humanoid.Health <= 0;
-								end;
-							end;
-						end;
-					elseif (game:GetService("Workspace")).Map.CakeLoaf.BigMirror.Other.Transparency == 0 and ((CFrame.new((-1990.672607421875), 4532.99951171875, (-14973.6748046875))).Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude >= 2000 then
-						_tp(CFrame.new(-2151.82153, 149.315704, -12404.9053));
-					end;
-				elseif (game:GetService("Workspace")).Enemies:FindFirstChild("Cookie Crafter") or (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Guard") or (game:GetService("Workspace")).Enemies:FindFirstChild("Baking Staff") or (game:GetService("Workspace")).Enemies:FindFirstChild("Head Baker") then
-					for i, v in pairs((game:GetService("Workspace")).Enemies:GetChildren()) do
-						if v.Name == "Cookie Crafter" or v.Name == "Cake Guard" or v.Name == "Baking Staff" or v.Name == "Head Baker" then
-							if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-								repeat
-									O.Kill(v,_G.Auto_Cake_Prince)
-									BringEnemy(v)
-								until not _G.Auto_Cake_Prince or (not v.Parent) or v.Humanoid.Health <= 0 or (game:GetService("Workspace")).Map.CakeLoaf.BigMirror.Other.Transparency == 0 or (game:GetService("ReplicatedStorage")):FindFirstChild("Cake Prince [Lv. 2300] [Raid Boss]") or (game:GetService("Workspace")).Enemies:FindFirstChild("Cake Prince [Lv. 2300] [Raid Boss]");
-							end;
-						end;
-					end;
-				else
-					_tp(CFrame.new(-2091.911865234375, 70.00884246826172, -12142.8359375));
-				end;
-			end);
-		end;
-	end;
-end);
-
+				local Workspace = game:GetService("Workspace")
+				local ReplicatedStorage = game:GetService("ReplicatedStorage")
+				local Enemies = Workspace.Enemies
+				local Player = game.Players.LocalPlayer
+				local Character = Player.Character
+				
+				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+					return
+				end
+				
+				local HRP = Character.HumanoidRootPart
+				
+				-- Check for Cake Prince
+				local cakePrince = nil
+				for _, v in pairs(Enemies:GetChildren()) do
+					if v.Name == "Cake Prince" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+						cakePrince = v
+						break -- Exit loop immediately
+					end
+				end
+				
+				if cakePrince then
+					-- Kill Cake Prince
+					O.Kill2(cakePrince, _G.Auto_Cake_Prince)
+					BringEnemy(cakePrince)
+					return -- Exit to next loop iteration
+				end
+				
+				-- Check if Big Mirror is active and far away
+				local BigMirror = Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("CakeLoaf") and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
+				if BigMirror and BigMirror:FindFirstChild("Other") then
+					if BigMirror.Other.Transparency == 0 then
+						local mirrorPos = CFrame.new(-1990.67, 4533, -14973.67)
+						if (mirrorPos.Position - HRP.Position).Magnitude >= 2000 then
+							_tp(CFrame.new(-2151.82, 149.32, -12404.91))
+							return
+						end
+					end
+				end
+				
+				-- Check for minions
+				local minion = nil
+				local minionNames = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
+				for _, v in pairs(Enemies:GetChildren()) do
+					for _, name in pairs(minionNames) do
+						if v.Name == name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+							minion = v
+							break
+						end
+					end
+					if minion then break end
+				end
+				
+				if minion then
+					-- Check if quest is visible
+					local QuestGui = Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("Main") and Player.PlayerGui.Main:FindFirstChild("Quest")
+					
+					if QuestGui and not QuestGui.Visible then
+						-- Accept quest if needed
+						local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
+						if (questPos.Position - HRP.Position).Magnitude > 50 then
+							_tp(questPos)
+							return
+						end
+						
+						local questData = {
+							{"StartQuest", "CakeQuest2", 2},
+							{"StartQuest", "CakeQuest2", 1},
+							{"StartQuest", "CakeQuest1", 1},
+							{"StartQuest", "CakeQuest1", 2},
+						}
+						
+						pcall(function()
+							ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(questData[math.random(1, 4)]))
+						end)
+					end
+					
+					-- Kill minion
+					O.Kill(minion, _G.Auto_Cake_Prince)
+					BringEnemy(minion)
+					return
+				end
+				
+				-- No enemies found, teleport to spawn
+				_tp(CFrame.new(-2091.91, 70.01, -12142.84))
+				
+			end)
+		end
+	end
+end)
 B:AddToggle({
 	Title = "Auto Bones",
 	Description = "",

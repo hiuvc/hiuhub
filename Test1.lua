@@ -3346,53 +3346,89 @@ B:AddToggle({
 		_G.AutoFarm_Bone = e;
 	end,
 });
+
+-- ================== SERVICES ==================
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local plr = Players.LocalPlayer
+local CommF = ReplicatedStorage.Remotes.CommF_
+
+-- ================== ENEMY ORDER ==================
+local EnemyOrder = {
+	"Reborn Skeleton",
+	"Living Zombie",
+	"Demonic Soul",
+	"Posessed Mummy",
+}
+
+-- ================== GET ENEMY BY NAME ==================
+local function GetEnemyByName(name)
+	for _, v in pairs(workspace.Enemies:GetChildren()) do
+		if v.Name == name
+		and v:FindFirstChild("Humanoid")
+		and v.Humanoid.Health > 0
+		and v:FindFirstChild("HumanoidRootPart") then
+			return v
+		end
+	end
+end
+
+-- ================== AUTO FARM ==================
 spawn(function()
-	while wait(Sec) do
-		if _G.AutoFarm_Bone then
-			pcall(function()
-				local e = game.Players.LocalPlayer;
-				local A = e.Character and e.Character:FindFirstChild("HumanoidRootPart");
-				local u = e.PlayerGui.Main.Quest;
-				local Z = {
-						"Reborn Skeleton",
-						"Living Zombie",
-						"Demonic Soul",
-						"Posessed Mummy",
-					};
-				if not A then
-					return;
-				end;
-				local X = GetConnectionEnemies(Z);
-				if X then
-					if _G.AcceptQuestC and not u.Visible then
-						local e = CFrame.new(-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-						_tp(e);
-						while (e.Position - A.Position).Magnitude > 50 do
-							wait(.2);
-						end;
-						local u = math.random(1, 4);
-						local Z = {
-								[1] = { "StartQuest", "HauntedQuest2", 2 },
-								[2] = { "StartQuest", "HauntedQuest2", 1 },
-								[3] = { "StartQuest", "HauntedQuest1", 1 },
-								[4] = { "StartQuest", "HauntedQuest1", 2 },
-							};
-						local X, C = pcall(function()
-								return game.ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(Z[u]));
-							end);
-					end;
+	while task.wait(Sec) do
+		if not _G.AutoFarm_Bone then continue end
+
+		pcall(function()
+			local char = plr.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			local QuestGui = plr.PlayerGui.Main.Quest
+			if not hrp then return end
+
+			-- duyệt từng loại quái
+			for _, EnemyName in ipairs(EnemyOrder) do
+				if not _G.AutoFarm_Bone then break end
+
+				local Enemy = GetEnemyByName(EnemyName)
+				if Enemy then
+
+					-- ====== NHẬN QUEST ======
+					if _G.AcceptQuestC and not QuestGui.Visible then
+						local QuestPos = CFrame.new(
+							-9516.99316, 172.017181, 6078.46533,
+							0,0,-1, 0,1,0, 1,0,0
+						)
+						_tp(QuestPos)
+
+						repeat task.wait(0.2)
+						until (QuestPos.Position - hrp.Position).Magnitude < 50
+
+						local QuestList = {
+							{"StartQuest","HauntedQuest2",2},
+							{"StartQuest","HauntedQuest2",1},
+							{"StartQuest","HauntedQuest1",1},
+							{"StartQuest","HauntedQuest1",2},
+						}
+						CommF:InvokeServer(unpack(QuestList[math.random(1,#QuestList)]))
+					end
+
+					-- ====== FARM RIÊNG LOẠI NÀY ======
 					repeat
-						task.wait();
-						O.Kill(X, _G.AutoFarm_Bone);
-						BringEnemy(X)
-					until not _G.AutoFarm_Bone or X.Humanoid.Health <= 0 or not X.Parent or _G.AcceptQuestC and not u.Visible;
-				else
-					_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
-				end;
-			end);
-		end;
-	end;
-end);
+						task.wait()
+						O.Kill(Enemy, true)
+						BringEnemy(Enemy)
+					until not _G.AutoFarm_Bone
+						or Enemy.Humanoid.Health <= 0
+						or not Enemy.Parent
+						or (_G.AcceptQuestC and not QuestGui.Visible)
+				end
+			end
+
+			-- không có quái → đứng chờ
+			_tp(CFrame.new(-9495.68, 453.58, 5977.34))
+		end)
+	end
+end)
+
 B:AddToggle({
 	Title = "Accept Quests",
 	Description = "",

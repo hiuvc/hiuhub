@@ -2303,84 +2303,79 @@ B:AddToggle({
 })
 
 spawn(function()
-	while wait(Sec) do
-		
-		if _G.SelectFramMode == "Level" and _G.StartFram then
-			pcall(function()
-				local Q = QuestNeta()
-				local QuestGui = plr.PlayerGui.Main.Quest
-				local QuestTitle = QuestGui.Container.QuestTitle.Title
-
-				-- Sai quest thì bỏ
-				if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
-					replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-					task.wait(0.5)
-					return
-				end
-
-				-- Chưa có quest thì nhận
-				if not QuestGui.Visible then
-					_tp(Q.QuestNpcPos)
-
-					repeat
-						task.wait()
-					until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 5
-						or not _G.StartFram
-
-					task.wait(0.5)
-
-					replicated.Remotes.CommF_:InvokeServer(
-						"StartQuest",
-						Q.QuestName,
-						Q.QuestLevel
-					)
-
-					local t = tick()
-					repeat
-						task.wait()
-					until QuestGui.Visible
-						or tick() - t > 3
-						or not _G.StartFram
-
-					return
-				end
-
-				-- Tìm quái
-				local FoundMob = false
-
-				for _, mob in pairs(workspace.Enemies:GetChildren()) do
-					if O.Alive(mob) and mob.Name == Q.MonName then
-						FoundMob = true
-
-						repeat
-							task.wait()
-							O.Kill(mob, _G.StartFram)
-							BringEnemy(mob)
-						until not _G.StartFram
-							or not mob.Parent
-							or mob.Humanoid.Health <= 0
-							or not QuestGui.Visible
-					end
-				end
-
-				-- Không có quái → TP tới chỗ spawn
-				if not FoundMob then
-					_tp(Q.MobSpawnPos)
-
-					if replicated:FindFirstChild(Q.MonName) then
-						local m = replicated:FindFirstChild(Q.MonName)
-						if m:FindFirstChild("HumanoidRootPart") then
-							_tp(m.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-						end
-					end
-				end
-			end)
+	while task.wait(Sec) do
+		-- Kiểm tra cả hai điều kiện: StartFram bật AND mode được chọn là "Level"
+		if not _G.StartFram or _G.SelectFramMode ~= "Level" then
+			continue
 		end
+		
+		pcall(function()
+			-- ================== QUEST DATA ==================
+			local Q = QuestNeta()
+			local QuestGui = plr.PlayerGui.Main.Quest
+			local QuestTitle = QuestGui.Container.QuestTitle.Title
+			
+			-- ================== ABANDON QUEST SAI ==================
+			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
+				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
+				task.wait(0.5)
+				return
+			end
+			
+			-- ================== NHẬN QUEST ==================
+			if not QuestGui.Visible then
+				_tp(Q.QuestNpcPos)
+				repeat task.wait()
+				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 5
+					or not _G.StartFram
+					or _G.SelectFramMode ~= "Level"
+				task.wait(0.5)
+				replicated.Remotes.CommF_:InvokeServer(
+					"StartQuest",
+					Q.QuestName,
+					Q.QuestLevel
+				)
+				
+				-- chờ server xác nhận quest
+				local t = tick()
+				repeat task.wait()
+				until QuestGui.Visible
+					or tick() - t > 3
+					or not _G.StartFram
+					or _G.SelectFramMode ~= "Level"
+				return
+			end
+			
+			-- ================== FARM QUÁI ==================
+			local FoundMob = false
+			for _, mob in pairs(workspace.Enemies:GetChildren()) do
+				if O.Alive(mob) and mob.Name == Q.MonName then
+					FoundMob = true
+					repeat
+						task.wait()
+						O.Kill(mob)
+						BringEnemy(mob)
+					until not _G.StartFram
+						or _G.SelectFramMode ~= "Level"
+						or not mob.Parent
+						or mob.Humanoid.Health <= 0
+						or not QuestGui.Visible
+				end
+			end
+			
+			-- ================== KHÔNG CÓ QUÁI → RA SPAWN ==================
+			if not FoundMob then
+				_tp(Q.MobSpawnPos)
+				if replicated:FindFirstChild(Q.MonName) then
+					local m = replicated:FindFirstChild(Q.MonName)
+					if m:FindFirstChild("HumanoidRootPart") then
+						_tp(m.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
+					end
+				end
+			end
+		end)
 	end
 end)
-
-
-
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",
 	Description = "",

@@ -2385,14 +2385,14 @@ spawn(function()
 
 			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
 				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-				task.wait(1)
+				task.wait(0.5)
 			end
 
 			if not QuestGui.Visible then
 				_tp(Q.QuestNpcPos)
 
 				repeat task.wait()
-				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 6
+				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 10
 					or not _G.Level
 
 				if not _G.Level then return end

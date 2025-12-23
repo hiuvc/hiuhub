@@ -834,156 +834,246 @@ Hop = function()
 		end)
 	end;
 
-local TweenConfig = {
+-- Services
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Local Player
+local Player = Players.LocalPlayer
+
+-- Configuration / Settings
+local TweenSystem = {
+    Speed = 350, -- Tốc độ mặc định
+    BypassDistance = 2500, -- Khoảng cách kích hoạt cổng dịch chuyển
     IsTweening = false,
     CurrentTween = nil,
-    NoclipLoop = nil,
-    Platform = nil,
-    DefaultSpeed = 350,
-    BypassMinDist = 2500
+    NoclipConnection = nil,
+    TeleportPart = nil
 }
-local function CheckNearestTele(targetCF)
+
+-- Dữ liệu cổng dịch chuyển (Teleporters)
+local Teleporters = {
+    [2753915549] = { -- First Sea
+        Sky3 = Vector3.new(-7894, 5547, -380),
+        Sky3Exit = Vector3.new(-4607, 874, -1667),
+        UnderWater = Vector3.new(61163, 11, 1819),
+        UnderwaterExit = Vector3.new(4050, -1, -1814)
+    },
+    [4442272183] = { -- Second Sea
+        ["Swan Mansion"] = Vector3.new(-390, 332, 673),
+        ["Swan Room"] = Vector3.new(2285, 15, 905),
+        ["Cursed Ship"] = Vector3.new(923, 126, 32852),
+        ["Zombie Island"] = Vector3.new(-6509, 83, -133)
+    },
+    [7449423635] = { -- Third Sea
+        ["Floating Turtle"] = Vector3.new(-12462, 375, -7552),
+        ["Hydra Island"] = Vector3.new(5745, 610, -267),
+        Mansion = Vector3.new(-12462, 375, -7552),
+        Castle = Vector3.new(-5036, 315, -3179),
+        ["Beautiful Pirate"] = Vector3.new(5319, 23, -93),
+        ["Beautiful Room"] = Vector3.new(5314.58, 22.53, -125.94),
+        ["Temple of Time"] = Vector3.new(28286, 14897, 103)
+    }
+}
+
+-- Hàm tiện ích: Lấy RootPart an toàn
+local function GetRootPart()
+    local char = Player.Character
+    return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+-- Hàm tiện ích: Lấy Humanoid
+local function GetHumanoid()
+    local char = Player.Character
+    return char and char:FindFirstChild("Humanoid")
+end
+
+-- Hàm: Bật/Tắt Noclip
+local function SetNoclip(state)
+    if state then
+        if not TweenSystem.NoclipConnection then
+            TweenSystem.NoclipConnection = RunService.Stepped:Connect(function()
+                local char = Player.Character
+                if char then
+                    for _, part in pairs(char:GetChildren()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        end
+    else
+        if TweenSystem.NoclipConnection then
+            TweenSystem.NoclipConnection:Disconnect()
+            TweenSystem.NoclipConnection = nil
+        end
+        -- Reset lại va chạm nếu cần (tùy chọn, thường game sẽ tự reset khi nhân vật reset)
+    end
+end
+
+-- Hàm: Tìm cổng gần nhất
+local function GetBestTeleporter(targetPos)
     local placeId = game.PlaceId
-    local targetPos = targetCF.Position
-    local teleList = {}
+    local mapPorts = Teleporters[placeId]
+    
+    if not mapPorts then return nil end
 
-    -- Danh sách tọa độ cổng theo Sea
-    if placeId == 2753915549 then -- First Sea
-        teleList = {
-            Sky3 = Vector3.new(-7894, 5547, -380),
-            Sky3Exit = Vector3.new(-4607, 874, -1667),
-            UnderWater = Vector3.new(61163, 11, 1819),
-            UnderwaterExit = Vector3.new(4050, -1, -1814)
-        }
-    elseif placeId == 4442272183 then -- Second Sea
-        teleList = {
-            ["Swan Mansion"] = Vector3.new(-390, 332, 673),
-            ["Swan Room"] = Vector3.new(2285, 15, 905),
-            ["Cursed Ship"] = Vector3.new(923, 126, 32852),
-            ["Zombie Island"] = Vector3.new(-6509, 83, -133)
-        }
-    elseif placeId == 7449423635 then -- Third Sea
-        teleList = {
-            ["Floating Turtle"] = Vector3.new(-12462, 375, -7552),
-            ["Hydra Island"] = Vector3.new(5745, 610, -267),
-            Mansion = Vector3.new(-12462, 375, -7552),
-            Castle = Vector3.new(-5036, 315, -3179),
-            ["Beautiful Pirate"] = Vector3.new(5319, 23, -93),
-            ["Beautiful Room"] = Vector3.new(5314.58, 22.53, -125.94),
-            ["Temple of Time"] = Vector3.new(28286, 14897, 103)
-        }
-    end
+    local nearestPos = nil
+    local minDistance = math.huge
 
-    local nearest, minDist = nil, math.huge
-    for _, pos in pairs(teleList) do
+    for _, pos in pairs(mapPorts) do
         local dist = (pos - targetPos).Magnitude
-        if dist < minDist then
-            minDist = dist
-            nearest = pos
+        if dist < minDistance then
+            minDistance = dist
+            nearestPos = pos
         end
     end
 
-    local currentRoot = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-    if currentRoot then
-        local distToTarget = (targetPos - currentRoot.Position).Magnitude
-        if minDist < 2000 and distToTarget > TweenConfig.BypassMinDist then
-            return nearest
-        end
+    local hrp = GetRootPart()
+    if not hrp then return nil end
+
+    local distToTarget = (targetPos - hrp.Position).Magnitude
+    
+    -- Điều kiện: Cổng gần đích (<2000) và Người chơi đang ở xa đích (>BypassDistance)
+    if minDistance < 2000 and distToTarget > TweenSystem.BypassDistance then
+        return nearestPos
     end
     return nil
 end
 
-function StopTween()
-    TweenConfig.IsTweening = false
-    
-    if TweenConfig.CurrentTween then 
-        TweenConfig.CurrentTween:Cancel() 
-        TweenConfig.CurrentTween = nil
+-- Hàm: Gửi request vào cổng
+local function RequestEntrance(pos)
+    -- Teleport nhẹ lên trên để tránh kẹt sàn trước khi gửi remote
+    local hrp = GetRootPart()
+    if hrp then
+        hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
     end
     
-    if TweenConfig.NoclipLoop then 
-        TweenConfig.NoclipLoop:Disconnect() 
-        TweenConfig.NoclipLoop = nil 
-    end
+    local success, err = pcall(function()
+        ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", pos)
+    end)
     
-    if TweenConfig.Platform then 
-        TweenConfig.Platform:Destroy() 
-        TweenConfig.Platform = nil 
-    end
-
-    local currentRoot = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-    if currentRoot then 
-        currentRoot.Velocity = Vector3.new(0,0,0) 
+    if success then
+        task.wait(0.5) -- Đợi server xử lý
     end
 end
 
-function topos(target)
-    -- Kiểm tra nhân vật hợp lệ
-    local char = plr.Character
-    if not char then return end
-    local currentRoot = char:FindFirstChild("HumanoidRootPart")
-    local Hum = char:FindFirstChild("Humanoid")
+-- Hàm: Dừng Tween
+function StopTween()
+    TweenSystem.IsTweening = false
     
-    if not currentRoot or not Hum or Hum.Health <= 0 then return end
+    if TweenSystem.CurrentTween then
+        TweenSystem.CurrentTween:Cancel()
+        TweenSystem.CurrentTween = nil
+    end
 
-    -- Xử lý tham số đầu vào (Vector3 hoặc CFrame)
-    local targetCF = (typeof(target) == "Vector3") and CFrame.new(target) or target
-    local distance = (targetCF.Position - currentRoot.Position).Magnitude
+    if TweenSystem.TeleportPart then
+        TweenSystem.TeleportPart:Destroy()
+        TweenSystem.TeleportPart = nil
+    end
 
-    -- Kiểm tra và sử dụng cổng dịch chuyển nhanh (Bypass)
-    local portalPos = CheckNearestTele(targetCF)
-    if portalPos then
-        pcall(function()
-            currentRoot.CFrame = currentRoot.CFrame + Vector3.new(0, 50, 0)
-            CommF:InvokeServer("requestEntrance", portalPos)
-        end)
-        task.wait(0.3)
-        currentRoot = char:FindFirstChild("HumanoidRootPart") -- Cập nhật lại Root sau khi tele
+    SetNoclip(false)
+    
+    local hrp = GetRootPart()
+    if hrp then 
+        hrp.Velocity = Vector3.new(0,0,0) -- Dừng quán tính
+        hrp.RotVelocity = Vector3.new(0,0,0)
+    end
+end
+
+-- Hàm chính: Tween tới vị trí
+function ToPos(target)
+    local hrp = GetRootPart()
+    local hum = GetHumanoid()
+
+    if not hrp or not hum or hum.Health <= 0 then
+        warn("Character not ready or dead.")
+        return
+    end
+
+    -- Xử lý đầu vào: Chuyển Vector3 thành CFrame nếu cần
+    local targetCFrame = (typeof(target) == "Vector3") and CFrame.new(target) or target
+    
+    -- Kiểm tra cổng dịch chuyển
+    local portal = GetBestTeleporter(targetCFrame.Position)
+    if portal then
+        RequestEntrance(portal)
+        -- Sau khi qua cổng, cập nhật lại hrp và vị trí
+        task.wait(0.5) 
+        hrp = GetRootPart() 
+        if not hrp then return end
+    end
+
+    -- Tính toán khoảng cách
+    local distance = (targetCFrame.Position - hrp.Position).Magnitude
+    
+    -- Nếu quá gần thì không cần tween phức tạp
+    if distance < 5 then
+        hrp.CFrame = targetCFrame
+        return
     end
 
     -- Dọn dẹp tween cũ nếu đang chạy
-    if TweenConfig.IsTweening then StopTween() end
-    
-    TweenConfig.IsTweening = true
-    Hum.Sit = false
+    if TweenSystem.IsTweening then
+        StopTween()
+    end
+    TweenSystem.IsTweening = true
 
-    TweenConfig.NoclipLoop = RunSer.Stepped:Connect(function()
-        if char then
-            for _, part in pairs(char:GetChildren()) do
-                if part:IsA("BasePart") then part.CanCollide = false end
-            end
+    -- Tắt trạng thái ngồi (để tránh lỗi ghế)
+    hum.Sit = false
+
+    -- Bật Noclip
+    SetNoclip(true)
+
+    -- Tạo Part dẫn đường
+    local partTele = Instance.new("Part")
+    partTele.Name = "TweenPlatform"
+    partTele.Size = Vector3.new(5, 1, 5)
+    partTele.Transparency = 1
+    partTele.Anchored = true
+    partTele.CanCollide = false
+    partTele.CFrame = hrp.CFrame
+    partTele.Parent = Player.Character
+    TweenSystem.TeleportPart = partTele
+
+    -- Loop cập nhật vị trí nhân vật theo Part
+    -- Sử dụng Heartbeat để mượt hơn GetPropertyChangedSignal
+    local moveConnection
+    moveConnection = RunService.Heartbeat:Connect(function()
+        if not TweenSystem.IsTweening or not partTele.Parent then
+            moveConnection:Disconnect()
+            return
+        end
+        
+        local hrpCurr = GetRootPart()
+        if hrpCurr then
+            -- Giữ nhân vật dính vào partTele
+            hrpCurr.CFrame = partTele.CFrame
+            -- Reset vận tốc để tránh bị văng
+            hrpCurr.Velocity = Vector3.zero 
         end
     end)
 
-    TweenConfig.Platform = Instance.new("Part")
-    TweenConfig.Platform.Name = "Tween_Platform"
-    TweenConfig.Platform.Size = Vector3.new(1, 1, 1)
-    TweenConfig.Platform.Transparency = 1
-    TweenConfig.Platform.Anchored = true
-    TweenConfig.Platform.CanCollide = false
-    TweenConfig.Platform.CFrame = currentRoot.CFrame
-    TweenConfig.Platform.Parent = char
-
-    local syncLoop
-    syncLoop = RunSer.Heartbeat:Connect(function()
-        if not TweenConfig.IsTweening or not TweenConfig.Platform then 
-            syncLoop:Disconnect() 
-            return 
-        end
-        currentRoot.CFrame = TweenConfig.Platform.CFrame
-        currentRoot.Velocity = Vector3.zero -- Triệt tiêu trọng lực
-    end)
-
-    local speed = getgenv().TweenSpeed or TweenConfig.DefaultSpeed
-    if distance < 250 then speed = speed * 2 end -- Tăng tốc khi ở rất gần
-
-    local tweenInfo = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
-    TweenConfig.CurrentTween = TW:Create(TweenConfig.Platform, tweenInfo, {CFrame = targetCF})
+    -- Tính toán tốc độ
+    local speed = getgenv().TweenSpeed or TweenSystem.Speed
+    if distance <= 250 then
+        speed = speed * 2 -- Tăng tốc nếu gần
+    end
     
-    TweenConfig.CurrentTween:Play()
+    local time = distance / speed
+    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    
+    local tween = TweenService:Create(partTele, tweenInfo, {CFrame = targetCFrame})
+    TweenSystem.CurrentTween = tween
+    
+    tween:Play()
 
-    TweenConfig.CurrentTween.Completed:Connect(function(state)
-        if state == Enum.PlaybackState.Completed then
+    -- Xử lý khi hoàn thành
+    tween.Completed:Connect(function(playbackState)
+        if playbackState == Enum.PlaybackState.Completed then
             StopTween()
         end
     end)

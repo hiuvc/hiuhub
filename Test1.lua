@@ -2337,11 +2337,11 @@ SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
 
-local FrameMode = { "Fram Level", "Fram Cake Prince", "Fram Bone", "Fram Nearest" }
+local FrameMode = { "Level", "Cake", "Bone", "Nearest" }
 
 local function UpdateFramMode()
-	_G.Level = (_G.SelectFramMode == "Fram Level" and _G.StartFram)
-	_G.Auto_Cake_Prince = (_G.SelectFramMode == "Fram Cake Prince" and _G.StartFram)
+	_G.Level = (_G.SelectFramMode == "Level" and _G.StartFram)
+	_G.Auto_Cake_Prince = (_G.SelectFramMode == "Cake" and _G.StartFram)
 end
 
 B:AddDropdown({

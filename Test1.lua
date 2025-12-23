@@ -1440,9 +1440,6 @@ QuestCheck = function()
 				NameMon = "Fishman Commando";
 				PosQ = CFrame.new(61122.65234375, 18.497442245483, 1569.3997802734);
 				PosM = CFrame.new(61922.6328125, 18.482830047607, 1493.9343261719);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875));
-				end;
 			elseif e == 450 or e <= 474 then
 				Mon = "God\'s Guard";
 				Qdata = 1;
@@ -1450,9 +1447,6 @@ QuestCheck = function()
 				NameMon = "God\'s Guard";
 				PosQ = CFrame.new(-4721.88867, 843.874695, -1949.96643, .996191859, 0, -0.0871884301, 0, 1, 0, .0871884301, 0, .996191859);
 				PosM = CFrame.new(-4710.04296875, 845.27697753906, -1927.3079833984);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-4607.82275, 872.54248, -1667.55688));
-				end;
 			elseif e == 475 or e <= 524 then
 				Mon = "Shanda";
 				Qdata = 2;
@@ -1460,9 +1454,6 @@ QuestCheck = function()
 				NameMon = "Shanda";
 				PosQ = CFrame.new(-7859.09814, 5544.19043, -381.476196, -0.422592998, 0, .906319618, 0, 1, 0, -0.906319618, 0, -0.422592998);
 				PosM = CFrame.new(-7678.4897460938, 5566.4038085938, -497.21560668945);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-7894.6176757813, 5547.1416015625, -380.29119873047));
-				end;
 			elseif e == 525 or e <= 549 then
 				Mon = "Royal Squad";
 				Qdata = 1;
@@ -1618,9 +1609,6 @@ QuestCheck = function()
 				NameMon = "Ship Steward";
 				PosQ = CFrame.new(968.80957, 125.092171, 33244.125);
 				PosM = CFrame.new(919.43853759766, 129.55599975586, 33436.03515625);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
 			elseif e == 1325 or e <= 1349 then
 				Mon = "Ship Officer";
 				Qdata = 2;
@@ -1628,9 +1616,6 @@ QuestCheck = function()
 				NameMon = "Ship Officer";
 				PosQ = CFrame.new(968.80957, 125.092171, 33244.125);
 				PosM = CFrame.new(1036.0179443359, 181.4390411377, 33315.7265625);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
 			elseif e == 1350 or e <= 1374 then
 				Mon = "Arctic Warrior";
 				Qdata = 1;
@@ -1960,8 +1945,6 @@ MaterialMon = function()
 				MMon = { "Fishman Warrior", "Fishman Commando", "Fishman Lord" };
 				MPos = CFrame.new(61123, 19, 1569);
 				SP = "Default";
-				local e = Vector3.new(61163.8515625, 5.342342376709, 1819.7841796875);
-				shouldRequestEntrance(e, 2500);
 			end;
 		elseif World2 then
 			if SelectMaterial == "Leather + Scrap Metal" then
@@ -1981,8 +1964,6 @@ MaterialMon = function()
 					};
 				MPos = CFrame.new(911.35827636719, 125.95812988281, 33159.5390625);
 				SP = "Default";
-				local e = Vector3.new(61163.8515625, 5.342342376709, 1819.7841796875);
-				shouldRequestEntrance(e, 2500);
 			elseif SelectMaterial == "Mystic Droplet" then
 				MMon = { "Water Fighter" };
 				MPos = CFrame.new(-3385, 239, -10542);

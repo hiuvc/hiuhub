@@ -1953,12 +1953,8 @@ task.spawn(function()
                             if string.find(questTitle, NameMon) then
                                 foundEnemy = true
                                 repeat
-                                    _tp(enemy.HumanoidRootPart.CFrame * 35)
-                                    BringEnemy(enemy)
-                                    EquipWeapon(_G.SelectWeapon)
-                                    enemy.HumanoidRootPart.CanCollide = false
-                                    enemy.Humanoid.WalkSpeed = 0
-                                    enemy.Head.CanCollide = false
+                                	O.Kill(enemy,_G.Level)
+                                	BringEnemy(enemy)
                                 until not _G.Level 
                                     or enemy.Humanoid.Health <= 0 
                                     or not enemy.Parent 

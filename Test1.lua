@@ -1,3 +1,12 @@
+if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
+    repeat
+        wait()
+        local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
+        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
+        task.wait(3)
+    until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
+end
+
 do
 	ply = game.Players;
 	plr = ply.LocalPlayer;
@@ -30,15 +39,9 @@ do
 	ClickState = 0;
 	Num_self = 25;
 end;
-if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
-    repeat
-        wait()
-        local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
-        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
-        task.wait(3)
-    until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
-end
 
+local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
 	World1 = true;
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
@@ -833,40 +836,93 @@ Hop = function()
 			HopServerModule:Teleport(game.PlaceId)
 		end)
 	end;
+local plr = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
--- Cờ trạng thái
-local isTweening = false      
-local allowBypass = false        
-local bypassDistance = 3500
-local defaultTweenSpeed = 300
+-- // 1. TẠO PART ĐIỀU KHIỂN //
+local c = Instance.new("Part", workspace)
+c.Size = Vector3.new(1, 1, 1)
+c.Name = "Rip_Indra"
+c.Anchored = true
+c.CanCollide = false
+c.CanTouch = false
+c.Transparency = 1
 
--- Đợi HumanoidRootPart
-function WaitHumanoidRootPart(player)
-    if not player then return end
-    return player.Character:WaitForChild("HumanoidRootPart", 9)
+-- Xóa part cũ
+local oldPart = workspace:FindFirstChild(c.Name)
+if oldPart and oldPart ~= c then
+    oldPart:Destroy()
 end
 
--- Tìm tele gần nhất
-function CheckNearestTeleporter(targetCF)
+
+-- // 3. LOGIC FARM & LOOP GIỮ NHÂN VẬT //
+task.spawn(function()
+    while task.wait() do
+        if c and c.Parent == workspace then
+            getgenv().OnFarm = shouldTween
+        else
+            getgenv().OnFarm = false
+        end
+    end
+end)
+
+task.spawn(function()
+    repeat task.wait() until plr.Character and plr.Character.PrimaryPart
+    c.CFrame = plr.Character.PrimaryPart.CFrame
+
+    while task.wait() do
+        pcall(function()
+            local char = plr.Character
+            if not char or not char.PrimaryPart then return end
+
+            if getgenv().OnFarm then
+                if c and c.Parent == workspace then
+                    local root = char.PrimaryPart
+                    -- Nếu nhân vật bị lệch quá xa (>200) do lag, kéo Part về lại nhân vật
+                    if (root.Position - c.Position).Magnitude > 200 then
+                        c.CFrame = root.CFrame
+                    else
+                        -- Bình thường: Kéo nhân vật theo Part
+                        root.CFrame = c.CFrame
+                    end
+                end
+                
+                -- Tắt va chạm để không bị kẹt tường
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") then v.CanCollide = false end
+                end
+            else
+                -- Bật lại va chạm khi dừng farm
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") then v.CanCollide = true end
+                end
+            end
+        end)
+    end
+end)
+
+-- // 4. HÀM TÌM CỔNG TELE (SEA 1, 2, 3) //
+local function CheckNearestTeleporter(targetCF)
     local placeId = game.PlaceId
     local targetPos = targetCF.Position
     local teleList = {}
 
-    if placeId == 2753915549 then -- First Sea
+    if placeId == 2753915549 then -- Sea 1
         teleList = {
             Sky3 = Vector3.new(-7894, 5547, -380),
             Sky3Exit = Vector3.new(-4607, 874, -1667),
             UnderWater = Vector3.new(61163, 11, 1819),
             UnderwaterExit = Vector3.new(4050, -1, -1814)
         }
-    elseif placeId == 4442272183 then -- Second Sea
+    elseif placeId == 4442272183 then -- Sea 2
         teleList = {
             ["Swan Mansion"] = Vector3.new(-390, 332, 673),
             ["Swan Room"] = Vector3.new(2285, 15, 905),
             ["Cursed Ship"] = Vector3.new(923, 126, 32852),
             ["Zombie Island"] = Vector3.new(-6509, 83, -133)
         }
-    elseif placeId == 7449423635 then -- Third Sea
+    elseif placeId == 7449423635 then -- Sea 3
         teleList = {
             ["Floating Turtle"] = Vector3.new(-12462, 375, -7552),
             ["Hydra Island"] = Vector3.new(5745, 610, -267),
@@ -887,124 +943,83 @@ function CheckNearestTeleporter(targetCF)
         end
     end
 
-    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not _G.Framing and hrp then
+    local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
         local distToTarget = (targetPos - hrp.Position).Magnitude
-        if minDist < 2000 and distToTarget > bypassDistance then
+        if minDist < 2000 and distToTarget > 3000 then
             return nearest
         end
     end
+    return nil
 end
 
--- Gửi requestEntrance
-function RequestEntrance(pos)
-    local success = pcall(function()
+local function RequestEntrance(pos)
+    pcall(function()
         game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", pos)
     end)
-    if success then
-        local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
-        end
-        task.wait(0.5)
-    end
 end
 
--- Dừng tween
-function StopTween()
-    _G.StopTween = true
-    task.wait()
-
-    local player = game.Players.LocalPlayer
-    local character = player and player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-
-    if hrp then hrp.CFrame = hrp.CFrame end
-    if hrp and hrp:FindFirstChild("BodyClip") then hrp.BodyClip:Destroy() end
-    if character and character:FindFirstChild("Highlight") then character.Highlight:Destroy() end
-
-    _G.Clip = false
-    _G.StopTween = false
-end
-
--- Tween đến vị trí target
-function topos(target)
-    local player = game.Players.LocalPlayer
-    local character = player and player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    if not (character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 and hrp) then
-        warn("TweenToPosition: nhân vật không hợp lệ hoặc đã chết")
-        return
-    end
-
-    if not target or (typeof(target) ~= "CFrame" and typeof(target) ~= "Vector3") then
-        warn("TweenToPosition: target không hợp lệ")
-        return
-    end
-
-    local targetCFrame = typeof(target) == "Vector3" and CFrame.new(target) or target
-    local distance = (targetCFrame.Position - hrp.Position).Magnitude
-
-    -- Kiểm tra có nên teleport không
-    local nearestTele = CheckNearestTeleporter(targetCFrame)
-    if nearestTele then
-        RequestEntrance(nearestTele)
-        task.wait(0.5)
-    end
-
-    -- Tạo PartTele nếu chưa có
-    if not character:FindFirstChild("PartTele") then
-        local part = Instance.new("Part")
-        part.Size = Vector3.new(10, 1, 10)
-        part.Name = "PartTele"
-        part.Anchored = true
-        part.Transparency = 1
-        part.CanCollide = false
-        part.CFrame = hrp.CFrame
-        part.Parent = character
-
-        part:GetPropertyChangedSignal("CFrame"):Connect(function()
-            if not isTweening then return end
-            task.wait()
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                local cf = part.CFrame
-                hrp.CFrame = CFrame.new(cf.Position.X, targetCFrame.Position.Y, cf.Position.Z)
-            end
-        end)
-    end
+-- // 5. HÀM _tp ĐÃ FIX LỖI //
+_tp = function(target)
+    local char = plr.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
     
-    isTweening = true
+    local targetCF = target
+    if typeof(target) == "Vector3" then
+        targetCF = CFrame.new(target)
+    end
 
-    if allowBypass and distance > bypassDistance then
-        if typeof(bypass) == "function" then
-            bypass(targetCFrame)
+    c.CFrame = char.HumanoidRootPart.CFrame
+    task.wait() 
+
+    -- BƯỚC 1: Thử tìm cổng dịch chuyển
+    local bestPortal = CheckNearestTeleporter(targetCF)
+    if bestPortal then
+        RequestEntrance(bestPortal)
+        task.wait(0.5) -- Chờ server load map
+        -- Sau khi qua cổng, CẬP NHẬT LẠI vị trí Part c theo nhân vật ở đảo mới
+        if char.PrimaryPart then
+            c.CFrame = char.PrimaryPart.CFrame
         end
     end
 
-    local speed = getgenv().TweenSpeed or defaultTweenSpeed
-    if distance <= 250 then
-        speed = speed * 3
+    -- BƯỚC 2: Bay thường (Tween) đến đích (Dù có dùng cổng hay không vẫn chạy đoạn này để đi nốt quãng đường còn lại)
+    local currentPos = c.Position
+    local finalPos = targetCF.Position
+    local distance = (finalPos - currentPos).Magnitude
+
+    -- Nếu khoảng cách quá gần (< 10 studs) thì không cần tween nữa
+    if distance < 10 then 
+        c.CFrame = targetCF
+        return 
     end
+    local speed = 350
+    if distance < 250 then speed = 350 end 
 
     local tweenInfo = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
-    local tween = game:GetService("TweenService"):Create(character.PartTele, tweenInfo, {
-        CFrame = targetCFrame
-    })
+    local tween = TweenService:Create(c, tweenInfo, { CFrame = targetCF })
+
+    -- Xử lý ngồi ghế (nếu có)
+    if char.Humanoid.Sit then
+        char.Humanoid.Sit = false
+    end
 
     tween:Play()
 
-    tween.Completed:Connect(function(state)
-        if state == Enum.PlaybackState.Completed then
-            if character:FindFirstChild("PartTele") then
-                character.PartTele:Destroy()
-            end
-            isTweening = false
+    -- Sử dụng Heartbeat thay vì Loop để mượt hơn và tránh treo script
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if tween.PlaybackState ~= Enum.PlaybackState.Playing then
+            connection:Disconnect()
+            return
+        end
+        
+        -- Nếu tắt tool farm hoặc Part bị mất -> Hủy tween
+        if not shouldTween or not c or c.Parent ~= workspace then
+            tween:Cancel()
+            connection:Disconnect()
         end
     end)
-end
-
-function _tp(target)
-    topos(target)
 end
 
 TeleportToTarget = function(e)
@@ -1017,11 +1032,12 @@ TeleportToTarget = function(e)
 notween = function(e)
 		plr.Character.HumanoidRootPart.CFrame = e;
 	end;
+
 spawn(function()
 	while task.wait() do
 		pcall(function()
 			if _G.SailBoat_Hydra or _G.WardenBoss or _G.AutoFactory or _G.HighestMirage or _G.HCM or _G.PGB or _G.Leviathan1 or _G.UPGDrago or _G.Complete_Trials or _G.TpDrago_Prehis or _G.BuyDrago or _G.AutoFireFlowers or _G.DT_Uzoth or _G.AutoBerry or _G.Prehis_Find or _G.Prehis_Skills or _G.Prehis_DB or _G.Prehis_DE or _G.FarmBlazeEM or _G.Dojoo or _G.CollectPresent or _G.AutoLawKak or _G.TpLab or _G.AutoPhoenixF or _G.AutoFarmChest or _G.AutoHytHallow or _G.LongsWord or _G.BlackSpikey or _G.AutoHolyTorch or _G.TrainDrago or _G.AutoSaber or _G.FarmMastery_Dev or _G.CitizenQuest or _G.AutoEctoplasm or _G.KeysRen or _G.Auto_Rainbow_Haki or _G.obsFarm or _G.AutoBigmom or _G.Doughv2 or _G.AuraBoss or _G.Raiding or _G.Auto_Cavender or _G.TpPly or _G.Bartilo_Quest or _G.Level or _G.FarmEliteHunt or _G.AutoZou or _G.AutoFarm_Bone or (getgenv()).AutoMaterial or _G.CraftVM or _G.FrozenTP or _G.TPDoor or _G.AcientOne or _G.AutoFarmNear or _G.AutoRaidCastle or _G.DarkBladev3 or _G.AutoFarmRaid or _G.Auto_Cake_Prince or _G.Addealer or _G.TPNpc or _G.TwinHook or _G.FindMirage or _G.FarmChestM or _G.Shark or _G.TerrorShark or _G.Piranha or _G.MobCrew or _G.SeaBeast1 or _G.FishBoat or _G.AutoPole or _G.AutoPoleV2 or _G.Auto_SuperHuman or _G.AutoDeathStep or _G.Auto_SharkMan_Karate or _G.Auto_Electric_Claw or _G.AutoDragonTalon or _G.Auto_Def_DarkCoat or _G.Auto_God_Human or _G.Auto_Tushita or _G.AutoMatSoul or _G.AutoKenVTWO or _G.AutoSerpentBow or _G.AutoFMon or _G.Auto_Soul_Guitar or _G.TPGEAR or _G.AutoSaw or _G.AutoTridentW2 or _G.Auto_StartRaid or _G.AutoEvoRace or _G.AutoGetQuestBounty or _G.MarinesCoat or _G.TravelDres or _G.Defeating or _G.DummyMan or _G.Auto_Yama or _G.Auto_SwanGG or _G.SwanCoat or _G.AutoEcBoss or _G.Auto_Mink or _G.Auto_Human or _G.Auto_Skypiea or _G.Auto_Fish or _G.CDK_TS or _G.CDK_YM or _G.CDK or _G.AutoFarmGodChalice or _G.AutoFistDarkness or _G.AutoMiror or _G.Teleport or _G.AutoKilo or _G.AutoGetUsoap or _G.Praying or _G.TryLucky or _G.AutoColShad or _G.AutoUnHaki or _G.Auto_DonAcces or _G.AutoRipIngay or _G.DragoV3 or _G.DragoV1 or _G.SailBoats or NextIs or _G.FarmGodChalice or _G.IceBossRen or senth or senth2 or _G.Lvthan or _G.beasthunter or _G.DangerLV or _G.Relic123 or _G.tweenKitsune or _G.Collect_Ember or _G.AutofindKitIs or _G.snaguine or _G.TwFruits or _G.tweenKitShrine or _G.Tp_LgS or _G.Tp_MasterA or _G.tweenShrine or _G.FarmMastery_G or _G.FarmMastery_S then
-				TweenSystem.IsTweening = true
+				shouldTween = true;
 				if not plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
 					local e = Instance.new("BodyVelocity");
 					e.Name = "BodyClip";
@@ -1045,7 +1061,7 @@ spawn(function()
 					end;
 				end;
 			else
-				TweenSystem.IsTweening = false
+				shouldTween = false;
 				if plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
 					(plr.Character.HumanoidRootPart:FindFirstChild("BodyClip")):Destroy();
 				end;
@@ -1268,660 +1284,129 @@ QuestBeta = function()
 			[4] = PosB,
 		};
 	end;
-QuestCheck = function()
-		local e = game.Players.LocalPlayer.Data.Level.Value;
-		if World1 then
-			if e == 1 or e <= 9 then
-				if tostring(TeamSelf) == "Marines" then
-					Mon = "Trainee";
-					Qname = "MarineQuest";
-					Qdata = 1;
-					NameMon = "Trainee";
-					PosM = CFrame.new(-2709.67944, 24.5206585, 2104.24585, -0.744724929, -3.97967455e-08, -0.667371571, 4.32403588e-08, 1, -1.07884304e-07, .667371571, -1.09201515e-07, -0.744724929);
-					PosQ = CFrame.new(-2709.67944, 24.5206585, 2104.24585, -0.744724929, -3.97967455e-08, -0.667371571, 4.32403588e-08, 1, -1.07884304e-07, .667371571, -1.09201515e-07, -0.744724929);
-				elseif tostring(TeamSelf) == "Pirates" then
-					Mon = "Bandit";
-					Qdata = 1;
-					Qname = "BanditQuest1";
-					NameMon = "Bandit";
-					PosM = CFrame.new(1045.9626464844, 27.002508163452, 1560.8203125);
-					PosQ = CFrame.new(1045.9626464844, 27.002508163452, 1560.8203125);
-				end;
-			elseif e == 10 or e <= 14 then
-				Mon = "Monkey";
-				Qdata = 1;
-				Qname = "JungleQuest";
-				NameMon = "Monkey";
-				PosQ = CFrame.new(-1598.08911, 35.5501175, 153.377838, 0, 0, 1, 0, 1, 0, -1, 0, 0);
-				PosM = CFrame.new(-1448.5180664062, 67.853012084961, 11.465796470642);
-			elseif e == 15 or e <= 29 then
-				Mon = "Gorilla";
-				Qdata = 2;
-				Qname = "JungleQuest";
-				NameMon = "Gorilla";
-				PosQ = CFrame.new(-1598.08911, 35.5501175, 153.377838, 0, 0, 1, 0, 1, 0, -1, 0, 0);
-				PosM = CFrame.new(-1129.8836669922, 40.46354675293, -525.42370605469);
-			elseif e == 30 or e <= 39 then
-				Mon = "Pirate";
-				Qdata = 1;
-				Qname = "BuggyQuest1";
-				NameMon = "Pirate";
-				PosQ = CFrame.new(-1141.07483, 4.10001802, 3831.5498, .965929627, 0, -0.258804798, 0, 1, 0, .258804798, 0, .965929627);
-				PosM = CFrame.new(-1103.5134277344, 13.752052307129, 3896.0910644531);
-			elseif e == 40 or e <= 59 then
-				Mon = "Brute";
-				Qdata = 2;
-				Qname = "BuggyQuest1";
-				NameMon = "Brute";
-				PosQ = CFrame.new(-1141.07483, 4.10001802, 3831.5498, .965929627, 0, -0.258804798, 0, 1, 0, .258804798, 0, .965929627);
-				PosM = CFrame.new(-1140.0837402344, 14.809885025024, 4322.9213867188);
-			elseif e == 60 or e <= 74 then
-				Mon = "Desert Bandit";
-				Qdata = 1;
-				Qname = "DesertQuest";
-				NameMon = "Desert Bandit";
-				PosQ = CFrame.new(894.488647, 5.14000702, 4392.43359, .819155693, 0, -0.573571265, 0, 1, 0, .573571265, 0, .819155693);
-				PosM = CFrame.new(924.7998046875, 6.4486746788025, 4481.5859375);
-			elseif e == 75 or e <= 89 then
-				Mon = "Desert Officer";
-				Qdata = 2;
-				Qname = "DesertQuest";
-				NameMon = "Desert Officer";
-				PosQ = CFrame.new(894.488647, 5.14000702, 4392.43359, .819155693, 0, -0.573571265, 0, 1, 0, .573571265, 0, .819155693);
-				PosM = CFrame.new(1608.2822265625, 8.6142244338989, 4371.0073242188);
-			elseif e == 90 or e <= 99 then
-				Mon = "Snow Bandit";
-				Qdata = 1;
-				Qname = "SnowQuest";
-				NameMon = "Snow Bandit";
-				PosQ = CFrame.new(1389.74451, 88.1519318, -1298.90796, -0.342042685, 0, .939684391, 0, 1, 0, -0.939684391, 0, -0.342042685);
-				PosM = CFrame.new(1354.3479003906, 87.272773742676, -1393.9465332031);
-			elseif e == 100 or e <= 119 then
-				Mon = "Snowman";
-				Qdata = 2;
-				Qname = "SnowQuest";
-				NameMon = "Snowman";
-				PosQ = CFrame.new(1389.74451, 88.1519318, -1298.90796, -0.342042685, 0, .939684391, 0, 1, 0, -0.939684391, 0, -0.342042685);
-				PosM = CFrame.new(6241.9951171875, 51.522083282471, -1243.9771728516);
-			elseif e == 120 or e <= 149 then
-				Mon = "Chief Petty Officer";
-				Qdata = 1;
-				Qname = "MarineQuest2";
-				NameMon = "Chief Petty Officer";
-				PosQ = CFrame.new(-5039.58643, 27.3500385, 4324.68018, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-4881.2309570312, 22.652044296265, 4273.7524414062);
-			elseif e == 150 or e <= 174 then
-				Mon = "Sky Bandit";
-				Qdata = 1;
-				Qname = "SkyQuest";
-				NameMon = "Sky Bandit";
-				PosQ = CFrame.new(-4839.53027, 716.368591, -2619.44165, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268);
-				PosM = CFrame.new(-4953.20703125, 295.74420166016, -2899.2290039062);
-			elseif e == 175 or e <= 189 then
-				Mon = "Dark Master";
-				Qdata = 2;
-				Qname = "SkyQuest";
-				NameMon = "Dark Master";
-				PosQ = CFrame.new(-4839.53027, 716.368591, -2619.44165, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268);
-				PosM = CFrame.new(-5259.8447265625, 391.39767456055, -2229.0354003906);
-			elseif e == 190 or e <= 209 then
-				Mon = "Prisoner";
-				Qdata = 1;
-				Qname = "PrisonerQuest";
-				NameMon = "Prisoner";
-				PosQ = CFrame.new(5308.93115, 1.65517521, 475.120514, -0.0894274712, -5.00292918e-09, -0.995993316, 1.60817859e-09, 1, -5.16744869e-09, .995993316, -2.06384709e-09, -0.0894274712);
-				PosM = CFrame.new(5098.9736328125, -0.3204058110714, 474.23733520508);
-			elseif e == 210 or e <= 249 then
-				Mon = "Dangerous Prisoner";
-				Qdata = 2;
-				Qname = "PrisonerQuest";
-				NameMon = "Dangerous Prisoner";
-				PosQ = CFrame.new(5308.93115, 1.65517521, 475.120514, -0.0894274712, -5.00292918e-09, -0.995993316, 1.60817859e-09, 1, -5.16744869e-09, .995993316, -2.06384709e-09, -0.0894274712);
-				PosM = CFrame.new(5654.5634765625, 15.633401870728, 866.29919433594);
-			elseif e == 250 or e <= 274 then
-				Mon = "Toga Warrior";
-				Qdata = 1;
-				Qname = "ColosseumQuest";
-				NameMon = "Toga Warrior";
-				PosQ = CFrame.new(-1580.04663, 6.35000277, -2986.47534, -0.515037298, 0, -0.857167721, 0, 1, 0, .857167721, 0, -0.515037298);
-				PosM = CFrame.new(-1820.21484375, 51.683856964111, -2740.6650390625);
-			elseif e == 275 or e <= 299 then
-				Mon = "Gladiator";
-				Qdata = 2;
-				Qname = "ColosseumQuest";
-				NameMon = "Gladiator";
-				PosQ = CFrame.new(-1580.04663, 6.35000277, -2986.47534, -0.515037298, 0, -0.857167721, 0, 1, 0, .857167721, 0, -0.515037298);
-				PosM = CFrame.new(-1292.8381347656, 56.380882263184, -3339.0314941406);
-			elseif e == 300 or e <= 324 then
-				Boubty = false;
-				Mon = "Military Soldier";
-				Qdata = 1;
-				Qname = "MagmaQuest";
-				NameMon = "Military Soldier";
-				PosQ = CFrame.new(-5313.37012, 10.9500084, 8515.29395, -0.499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, -0.499959469);
-				PosM = CFrame.new(-5411.1645507812, 11.081554412842, 8454.29296875);
-			elseif e == 325 or e <= 374 then
-				Mon = "Military Spy";
-				Qdata = 2;
-				Qname = "MagmaQuest";
-				NameMon = "Military Spy";
-				PosQ = CFrame.new(-5313.37012, 10.9500084, 8515.29395, -0.499959469, 0, .866048813, 0, 1, 0, -0.866048813, 0, -0.499959469);
-				PosM = CFrame.new(-5802.8681640625, 86.262413024902, 8828.859375);
-			elseif e == 375 or e <= 399 then
-				Mon = "Fishman Warrior";
-				Qdata = 1;
-				Qname = "FishmanQuest";
-				NameMon = "Fishman Warrior";
-				PosQ = CFrame.new(61122.65234375, 18.497442245483, 1569.3997802734);
-				PosM = CFrame.new(60878.30078125, 18.482830047607, 1543.7574462891);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875));
-				end;
-			elseif e == 400 or e <= 449 then
-				Mon = "Fishman Commando";
-				Qdata = 2;
-				Qname = "FishmanQuest";
-				NameMon = "Fishman Commando";
-				PosQ = CFrame.new(61122.65234375, 18.497442245483, 1569.3997802734);
-				PosM = CFrame.new(61922.6328125, 18.482830047607, 1493.9343261719);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875));
-				end;
-			elseif e == 450 or e <= 474 then
-				Mon = "God\'s Guard";
-				Qdata = 1;
-				Qname = "SkyExp1Quest";
-				NameMon = "God\'s Guard";
-				PosQ = CFrame.new(-4721.88867, 843.874695, -1949.96643, .996191859, 0, -0.0871884301, 0, 1, 0, .0871884301, 0, .996191859);
-				PosM = CFrame.new(-4710.04296875, 845.27697753906, -1927.3079833984);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-4607.82275, 872.54248, -1667.55688));
-				end;
-			elseif e == 475 or e <= 524 then
-				Mon = "Shanda";
-				Qdata = 2;
-				Qname = "SkyExp1Quest";
-				NameMon = "Shanda";
-				PosQ = CFrame.new(-7859.09814, 5544.19043, -381.476196, -0.422592998, 0, .906319618, 0, 1, 0, -0.906319618, 0, -0.422592998);
-				PosM = CFrame.new(-7678.4897460938, 5566.4038085938, -497.21560668945);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(-7894.6176757813, 5547.1416015625, -380.29119873047));
-				end;
-			elseif e == 525 or e <= 549 then
-				Mon = "Royal Squad";
-				Qdata = 1;
-				Qname = "SkyExp2Quest";
-				NameMon = "Royal Squad";
-				PosQ = CFrame.new(-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-7624.2524414062, 5658.1333007812, -1467.3542480469);
-			elseif e == 550 or e <= 624 then
-				Mon = "Royal Soldier";
-				Qdata = 2;
-				Qname = "SkyExp2Quest";
-				NameMon = "Royal Soldier";
-				PosQ = CFrame.new(-7906.81592, 5634.6626, -1411.99194, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-7836.7534179688, 5645.6640625, -1790.6236572266);
-			elseif e == 625 or e <= 649 then
-				Mon = "Galley Pirate";
-				Qdata = 1;
-				Qname = "FountainQuest";
-				NameMon = "Galley Pirate";
-				PosQ = CFrame.new(5259.81982, 37.3500175, 4050.0293, .087131381, 0, .996196866, 0, 1, 0, -0.996196866, 0, .087131381);
-				PosM = CFrame.new(5551.0219726562, 78.901351928711, 3930.4128417969);
-			elseif e >= 650 then
-				Mon = "Galley Captain";
-				Qdata = 2;
-				Qname = "FountainQuest";
-				NameMon = "Galley Captain";
-				PosQ = CFrame.new(5259.81982, 37.3500175, 4050.0293, .087131381, 0, .996196866, 0, 1, 0, -0.996196866, 0, .087131381);
-				PosM = CFrame.new(5441.9516601562, 42.502059936523, 4950.09375);
-			end;
-		elseif World2 then
-			if e == 700 or e <= 724 then
-				Mon = "Raider";
-				Qdata = 1;
-				Qname = "Area1Quest";
-				NameMon = "Raider";
-				PosQ = CFrame.new(-429.543518, 71.7699966, 1836.18188, -0.22495985, 0, -0.974368095, 0, 1, 0, .974368095, 0, -0.22495985);
-				PosM = CFrame.new(-728.32672119141, 52.779319763184, 2345.7705078125);
-			elseif e == 725 or e <= 774 then
-				Mon = "Mercenary";
-				Qdata = 2;
-				Qname = "Area1Quest";
-				NameMon = "Mercenary";
-				PosQ = CFrame.new(-429.543518, 71.7699966, 1836.18188, -0.22495985, 0, -0.974368095, 0, 1, 0, .974368095, 0, -0.22495985);
-				PosM = CFrame.new(-1004.3244018555, 80.158866882324, 1424.6193847656);
-			elseif e == 775 or e <= 799 then
-				Mon = "Swan Pirate";
-				Qdata = 1;
-				Qname = "Area2Quest";
-				NameMon = "Swan Pirate";
-				PosQ = CFrame.new(638.43811, 71.769989, 918.282898, .139203906, 0, .99026376, 0, 1, 0, -0.99026376, 0, .139203906);
-				PosM = CFrame.new(1068.6643066406, 137.61428833008, 1322.1060791016);
-			elseif e == 800 or e <= 874 then
-				Mon = "Factory Staff";
-				Qname = "Area2Quest";
-				Qdata = 2;
-				NameMon = "Factory Staff";
-				PosQ = CFrame.new(632.698608, 73.1055908, 918.666321, -0.0319722369, 8.96074881e-10, -0.999488771, 1.36326533e-10, 1, 8.92172336e-10, .999488771, -1.07732087e-10, -0.0319722369);
-				PosM = CFrame.new(73.078674316406, 81.863441467285, -27.470672607422);
-			elseif e == 875 or e <= 899 then
-				Mon = "Marine Lieutenant";
-				Qdata = 1;
-				Qname = "MarineQuest3";
-				NameMon = "Marine Lieutenant";
-				PosQ = CFrame.new(-2440.79639, 71.7140732, -3216.06812, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268);
-				PosM = CFrame.new(-2821.3723144531, 75.897277832031, -3070.0891113281);
-			elseif e == 900 or e <= 949 then
-				Mon = "Marine Captain";
-				Qdata = 2;
-				Qname = "MarineQuest3";
-				NameMon = "Marine Captain";
-				PosQ = CFrame.new(-2440.79639, 71.7140732, -3216.06812, .866007268, 0, .500031412, 0, 1, 0, -0.500031412, 0, .866007268);
-				PosM = CFrame.new(-1861.2310791016, 80.176582336426, -3254.6975097656);
-			elseif e == 950 or e <= 974 then
-				Mon = "Zombie";
-				Qdata = 1;
-				Qname = "ZombieQuest";
-				NameMon = "Zombie";
-				PosQ = CFrame.new(-5497.06152, 47.5923004, -795.237061, -0.29242146, 0, -0.95628953, 0, 1, 0, .95628953, 0, -0.29242146);
-				PosM = CFrame.new(-5657.7768554688, 78.969734191895, -928.68701171875);
-			elseif e == 975 or e <= 999 then
-				Mon = "Vampire";
-				Qdata = 2;
-				Qname = "ZombieQuest";
-				NameMon = "Vampire";
-				PosQ = CFrame.new(-5497.06152, 47.5923004, -795.237061, -0.29242146, 0, -0.95628953, 0, 1, 0, .95628953, 0, -0.29242146);
-				PosM = CFrame.new(-6037.66796875, 32.184638977051, -1340.6597900391);
-			elseif e == 1000 or e <= 1049 then
-				Mon = "Snow Trooper";
-				Qdata = 1;
-				Qname = "SnowMountainQuest";
-				NameMon = "Snow Trooper";
-				PosQ = CFrame.new(609.858826, 400.119904, -5372.25928, -0.374604106, 0, .92718488, 0, 1, 0, -0.92718488, 0, -0.374604106);
-				PosM = CFrame.new(549.14733886719, 427.38705444336, -5563.6987304688);
-			elseif e == 1050 or e <= 1099 then
-				Mon = "Winter Warrior";
-				Qdata = 2;
-				Qname = "SnowMountainQuest";
-				NameMon = "Winter Warrior";
-				PosQ = CFrame.new(609.858826, 400.119904, -5372.25928, -0.374604106, 0, .92718488, 0, 1, 0, -0.92718488, 0, -0.374604106);
-				PosM = CFrame.new(1142.7451171875, 475.63980102539, -5199.4165039062);
-			elseif e == 1100 or e <= 1124 then
-				Mon = "Lab Subordinate";
-				Qdata = 1;
-				Qname = "IceSideQuest";
-				NameMon = "Lab Subordinate";
-				PosQ = CFrame.new(-6064.06885, 15.2422857, -4902.97852, .453972578, 0, -0.891015649, 0, 1, 0, .891015649, 0, .453972578);
-				PosM = CFrame.new(-5707.4716796875, 15.951709747314, -4513.3920898438);
-			elseif e == 1125 or e <= 1174 then
-				Mon = "Horned Warrior";
-				Qdata = 2;
-				Qname = "IceSideQuest";
-				NameMon = "Horned Warrior";
-				PosQ = CFrame.new(-6064.06885, 15.2422857, -4902.97852, .453972578, 0, -0.891015649, 0, 1, 0, .891015649, 0, .453972578);
-				PosM = CFrame.new(-6341.3666992188, 15.951770782471, -5723.162109375);
-			elseif e == 1175 or e <= 1199 then
-				Mon = "Magma Ninja";
-				Qdata = 1;
-				Qname = "FireSideQuest";
-				NameMon = "Magma Ninja";
-				PosQ = CFrame.new(-5428.03174, 15.0622921, -5299.43457, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213);
-				PosM = CFrame.new(-5449.6728515625, 76.658744812012, -5808.2006835938);
-			elseif e == 1200 or e <= 1249 then
-				Mon = "Lava Pirate";
-				Qdata = 2;
-				Qname = "FireSideQuest";
-				NameMon = "Lava Pirate";
-				PosQ = CFrame.new(-5428.03174, 15.0622921, -5299.43457, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213);
-				PosM = CFrame.new(-5213.3315429688, 49.737880706787, -4701.451171875);
-			elseif e == 1250 or e <= 1274 then
-				Mon = "Ship Deckhand";
-				Qdata = 1;
-				Qname = "ShipQuest1";
-				NameMon = "Ship Deckhand";
-				PosQ = CFrame.new(1037.80127, 125.092171, 32911.6016);
-				PosM = CFrame.new(1212.0111083984, 150.79205322266, 33059.24609375);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
-			elseif e == 1275 or e <= 1299 then
-				Mon = "Ship Engineer";
-				Qdata = 2;
-				Qname = "ShipQuest1";
-				NameMon = "Ship Engineer";
-				PosQ = CFrame.new(1037.80127, 125.092171, 32911.6016);
-				PosM = CFrame.new(919.47863769531, 43.544013977051, 32779.96875);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
-			elseif e == 1300 or e <= 1324 then
-				Mon = "Ship Steward";
-				Qdata = 1;
-				Qname = "ShipQuest2";
-				NameMon = "Ship Steward";
-				PosQ = CFrame.new(968.80957, 125.092171, 33244.125);
-				PosM = CFrame.new(919.43853759766, 129.55599975586, 33436.03515625);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
-			elseif e == 1325 or e <= 1349 then
-				Mon = "Ship Officer";
-				Qdata = 2;
-				Qname = "ShipQuest2";
-				NameMon = "Ship Officer";
-				PosQ = CFrame.new(968.80957, 125.092171, 33244.125);
-				PosM = CFrame.new(1036.0179443359, 181.4390411377, 33315.7265625);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
-			elseif e == 1350 or e <= 1374 then
-				Mon = "Arctic Warrior";
-				Qdata = 1;
-				Qname = "FrostQuest";
-				NameMon = "Arctic Warrior";
-				PosQ = CFrame.new(5667.6582, 26.7997818, -6486.08984, -0.933587909, 0, -0.358349502, 0, 1, 0, .358349502, 0, -0.933587909);
-				PosM = CFrame.new(5966.24609375, 62.970020294189, -6179.3828125);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 1000 then
-					BTP(PosM);
-				end;
-			elseif e == 1375 or e <= 1424 then
-				Mon = "Snow Lurker";
-				Qdata = 2;
-				Qname = "FrostQuest";
-				NameMon = "Snow Lurker";
-				PosQ = CFrame.new(5667.6582, 26.7997818, -6486.08984, -0.933587909, 0, -0.358349502, 0, 1, 0, .358349502, 0, -0.933587909);
-				PosM = CFrame.new(5407.0737304688, 69.194374084473, -6880.8803710938);
-			elseif e == 1425 or e <= 1449 then
-				Mon = "Sea Soldier";
-				Qdata = 1;
-				Qname = "ForgottenQuest";
-				NameMon = "Sea Soldier";
-				PosQ = CFrame.new(-3054.44458, 235.544281, -10142.8193, .990270376, 0, -0.13915664, 0, 1, 0, .13915664, 0, .990270376);
-				PosM = CFrame.new(-3028.2236328125, 64.674514770508, -9775.4267578125);
-			elseif e >= 1450 then
-				Mon = "Water Fighter";
-				Qdata = 2;
-				Qname = "ForgottenQuest";
-				NameMon = "Water Fighter";
-				PosQ = CFrame.new(-3054.44458, 235.544281, -10142.8193, .990270376, 0, -0.13915664, 0, 1, 0, .13915664, 0, .990270376);
-				PosM = CFrame.new(-3352.9013671875, 285.01556396484, -10534.841796875);
-			end;
-		elseif World3 then
-			if e == 1500 or e <= 1524 then
-				Mon = "Pirate Millionaire";
-				Qdata = 1;
-				Qname = "PiratePortQuest";
-				NameMon = "Pirate Millionaire";
-				PosQ = CFrame.new(-712.82727050781, 98.577049255371, 5711.9541015625);
-				PosM = CFrame.new(-712.82727050781, 98.577049255371, 5711.9541015625);
-			elseif e == 1525 or e <= 1574 then
-				Mon = "Pistol Billionaire";
-				Qdata = 2;
-				Qname = "PiratePortQuest";
-				NameMon = "Pistol Billionaire";
-				PosQ = CFrame.new(-723.43316650391, 147.42906188965, 5931.9931640625);
-				PosM = CFrame.new(-723.43316650391, 147.42906188965, 5931.9931640625);
-			elseif e == 1575 or e <= 1599 then
-				Mon = "Dragon Crew Warrior";
-				Qdata = 1;
-				Qname = "AmazonQuest";
-				NameMon = "Dragon Crew Warrior";
-				PosQ = CFrame.new(6779.0327148438, 111.16865539551, -801.21307373047);
-				PosM = CFrame.new(6779.0327148438, 111.16865539551, -801.21307373047);
-			elseif e == 1600 or e <= 1624 then
-				Mon = "Dragon Crew Archer";
-				Qname = "AmazonQuest";
-				Qdata = 2;
-				NameMon = "Dragon Crew Archer";
-				PosQ = CFrame.new(6955.8974609375, 546.66589355469, 309.04013061523);
-				PosM = CFrame.new(6955.8974609375, 546.66589355469, 309.04013061523);
-			elseif e == 1625 or e <= 1649 then
-				Mon = "Hydra Enforcer";
-				Qname = "VenomCrewQuest";
-				Qdata = 1;
-				NameMon = "Hydra Enforcer";
-				PosQ = CFrame.new(4620.6157226562, 1002.2954711914, 399.08688354492);
-				PosM = CFrame.new(4620.6157226562, 1002.2954711914, 399.08688354492);
-			elseif e == 1650 or e <= 1699 then
-				Mon = "Venomous Assailant";
-				Qname = "VenomCrewQuest";
-				Qdata = 2;
-				NameMon = "Venomous Assailant";
-				PosQ = CFrame.new(4697.5918, 1100.65137, 946.401978, .579397917, -4.19689783e-10, .81504482, -1.49287818e-10, 1, 6.21053986e-10, -0.81504482, -4.81513662e-10, .579397917);
-				PosM = CFrame.new(4697.5918, 1100.65137, 946.401978, .579397917, -4.19689783e-10, .81504482, -1.49287818e-10, 1, 6.21053986e-10, -0.81504482, -4.81513662e-10, .579397917);
-			elseif e == 1700 or e <= 1724 then
-				Mon = "Marine Commodore";
-				Qdata = 1;
-				Qname = "MarineTreeIsland";
-				NameMon = "Marine Commodore";
-				PosQ = CFrame.new(2180.54126, 27.8156815, -6741.5498, -0.965929747, 0, .258804798, 0, 1, 0, -0.258804798, 0, -0.965929747);
-				PosM = CFrame.new(2286.0078125, 73.133918762207, -7159.8090820312);
-			elseif e == 1725 or e <= 1774 then
-				Mon = "Marine Rear Admiral";
-				NameMon = "Marine Rear Admiral";
-				Qname = "MarineTreeIsland";
-				Qdata = 2;
-				PosQ = CFrame.new(2179.98828125, 28.731239318848, -6740.0551757813);
-				PosM = CFrame.new(3656.7736816406, 160.52406311035, -7001.5986328125);
-			elseif e == 1775 or e <= 1799 then
-				Mon = "Fishman Raider";
-				Qdata = 1;
-				Qname = "DeepForestIsland3";
-				NameMon = "Fishman Raider";
-				PosQ = CFrame.new(-10581.6563, 330.872955, -8761.18652, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213);
-				PosM = CFrame.new(-10407.526367188, 331.76263427734, -8368.5166015625);
-			elseif e == 1800 or e <= 1824 then
-				Mon = "Fishman Captain";
-				Qdata = 2;
-				Qname = "DeepForestIsland3";
-				NameMon = "Fishman Captain";
-				PosQ = CFrame.new(-10581.6563, 330.872955, -8761.18652, -0.882952213, 0, .469463557, 0, 1, 0, -0.469463557, 0, -0.882952213);
-				PosM = CFrame.new(-10994.701171875, 352.38140869141, -9002.1103515625);
-			elseif e == 1825 or e <= 1849 then
-				Mon = "Forest Pirate";
-				Qdata = 1;
-				Qname = "DeepForestIsland";
-				NameMon = "Forest Pirate";
-				PosQ = CFrame.new(-13234.04, 331.488495, -7625.40137, .707134247, 0, -0.707079291, 0, 1, 0, .707079291, 0, .707134247);
-				PosM = CFrame.new(-13274.478515625, 332.37814331055, -7769.5805664062);
-			elseif e == 1850 or e <= 1899 then
-				Mon = "Mythological Pirate";
-				Qdata = 2;
-				Qname = "DeepForestIsland";
-				NameMon = "Mythological Pirate";
-				PosQ = CFrame.new(-13234.04, 331.488495, -7625.40137, .707134247, 0, -0.707079291, 0, 1, 0, .707079291, 0, .707134247);
-				PosM = CFrame.new(-13680.607421875, 501.08154296875, -6991.189453125);
-			elseif e == 1900 or e <= 1924 then
-				Mon = "Jungle Pirate";
-				Qdata = 1;
-				Qname = "DeepForestIsland2";
-				NameMon = "Jungle Pirate";
-				PosQ = CFrame.new(-12680.3818, 389.971039, -9902.01953, -0.0871315002, 0, .996196866, 0, 1, 0, -0.996196866, 0, -0.0871315002);
-				PosM = CFrame.new(-12256.16015625, 331.73828125, -10485.836914062);
-			elseif e == 1925 or e <= 1974 then
-				Mon = "Musketeer Pirate";
-				Qdata = 2;
-				Qname = "DeepForestIsland2";
-				NameMon = "Musketeer Pirate";
-				PosQ = CFrame.new(-12680.3818, 389.971039, -9902.01953, -0.0871315002, 0, .996196866, 0, 1, 0, -0.996196866, 0, -0.0871315002);
-				PosM = CFrame.new(-13457.904296875, 391.54565429688, -9859.177734375);
-			elseif e == 1975 or e <= 1999 then
-				Mon = "Reborn Skeleton";
-				Qdata = 1;
-				Qname = "HauntedQuest1";
-				NameMon = "Reborn Skeleton";
-				PosQ = CFrame.new(-9479.2168, 141.215088, 5566.09277, 0, 0, 1, 0, 1, 0, -1, 0, 0);
-				PosM = CFrame.new(-8763.7236328125, 165.72299194336, 6159.8618164062);
-			elseif e == 2000 or e <= 2024 then
-				Mon = "Living Zombie";
-				Qdata = 2;
-				Qname = "HauntedQuest1";
-				NameMon = "Living Zombie";
-				PosQ = CFrame.new(-9479.2168, 141.215088, 5566.09277, 0, 0, 1, 0, 1, 0, -1, 0, 0);
-				PosM = CFrame.new(-10144.131835938, 138.6266784668, 5838.0888671875);
-			elseif e == 2025 or e <= 2049 then
-				Mon = "Demonic Soul";
-				Qdata = 1;
-				Qname = "HauntedQuest2";
-				NameMon = "Demonic Soul";
-				PosQ = CFrame.new(-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-9505.8720703125, 172.10482788086, 6158.9931640625);
-			elseif e == 2050 or e <= 2074 then
-				Mon = "Posessed Mummy";
-				Qdata = 2;
-				Qname = "HauntedQuest2";
-				NameMon = "Posessed Mummy";
-				PosQ = CFrame.new(-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-9582.0224609375, 6.2515273094177, 6205.478515625);
-			elseif e == 2075 or e <= 2099 then
-				Mon = "Peanut Scout";
-				Qdata = 1;
-				Qname = "NutsIslandQuest";
-				NameMon = "Peanut Scout";
-				PosQ = CFrame.new(-2104.3908691406, 38.104167938232, -10194.21875, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-2143.2419433594, 47.721984863281, -10029.995117188);
-			elseif e == 2100 or e <= 2124 then
-				Mon = "Peanut President";
-				Qdata = 2;
-				Qname = "NutsIslandQuest";
-				NameMon = "Peanut President";
-				PosQ = CFrame.new(-2104.3908691406, 38.104167938232, -10194.21875, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-1859.3540039062, 38.103168487549, -10422.4296875);
-			elseif e == 2125 or e <= 2149 then
-				Mon = "Ice Cream Chef";
-				Qdata = 1;
-				Qname = "IceCreamIslandQuest";
-				NameMon = "Ice Cream Chef";
-				PosQ = CFrame.new(-820.64825439453, 65.819526672363, -10965.795898438, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-872.24658203125, 65.81957244873, -10919.95703125);
-			elseif e == 2150 or e <= 2199 then
-				Mon = "Ice Cream Commander";
-				Qdata = 2;
-				Qname = "IceCreamIslandQuest";
-				NameMon = "Ice Cream Commander";
-				PosQ = CFrame.new(-820.64825439453, 65.819526672363, -10965.795898438, 0, 0, -1, 0, 1, 0, 1, 0, 0);
-				PosM = CFrame.new(-558.06103515625, 112.04895782471, -11290.774414062);
-			elseif e == 2200 or e <= 2224 then
-				Mon = "Cookie Crafter";
-				Qdata = 1;
-				Qname = "CakeQuest1";
-				NameMon = "Cookie Crafter";
-				PosQ = CFrame.new(-2021.32007, 37.7982254, -12028.7295, .957576931, -8.80302053e-08, .288177818, 6.9301187e-08, 1, 7.51931211e-08, -0.288177818, -5.2032135e-08, .957576931);
-				PosM = CFrame.new(-2374.13671875, 37.798263549805, -12125.30859375);
-			elseif e == 2225 or e <= 2249 then
-				Mon = "Cake Guard";
-				Qdata = 2;
-				Qname = "CakeQuest1";
-				NameMon = "Cake Guard";
-				PosQ = CFrame.new(-2021.32007, 37.7982254, -12028.7295, .957576931, -8.80302053e-08, .288177818, 6.9301187e-08, 1, 7.51931211e-08, -0.288177818, -5.2032135e-08, .957576931);
-				PosM = CFrame.new(-1598.3070068359, 43.773197174072, -12244.581054688);
-			elseif e == 2250 or e <= 2274 then
-				Mon = "Baking Staff";
-				Qdata = 1;
-				Qname = "CakeQuest2";
-				NameMon = "Baking Staff";
-				PosQ = CFrame.new(-1927.91602, 37.7981339, -12842.5391, -0.96804446, 4.22142143e-08, .250778586, 4.74911062e-08, 1, 1.49904711e-08, -0.250778586, 2.64211941e-08, -0.96804446);
-				PosM = CFrame.new(-1887.8099365234, 77.618507385254, -12998.350585938);
-			elseif e == 2275 or e <= 2299 then
-				Mon = "Head Baker";
-				Qdata = 2;
-				Qname = "CakeQuest2";
-				NameMon = "Head Baker";
-				PosQ = CFrame.new(-1927.91602, 37.7981339, -12842.5391, -0.96804446, 4.22142143e-08, .250778586, 4.74911062e-08, 1, 1.49904711e-08, -0.250778586, 2.64211941e-08, -0.96804446);
-				PosM = CFrame.new(-2216.1882324219, 82.884521484375, -12869.293945312);
-			elseif e == 2300 or e <= 2324 then
-				Mon = "Cocoa Warrior";
-				Qdata = 1;
-				Qname = "ChocQuest1";
-				NameMon = "Cocoa Warrior";
-				PosQ = CFrame.new(233.22836303711, 29.876001358032, -12201.233398438);
-				PosM = CFrame.new(-21.553283691406, 80.574996948242, -12352.387695312);
-			elseif e == 2325 or e <= 2349 then
-				Mon = "Chocolate Bar Battler";
-				Qdata = 2;
-				Qname = "ChocQuest1";
-				NameMon = "Chocolate Bar Battler";
-				PosQ = CFrame.new(233.22836303711, 29.876001358032, -12201.233398438);
-				PosM = CFrame.new(582.59057617188, 77.188095092773, -12463.162109375);
-			elseif e == 2350 or e <= 2374 then
-				Mon = "Sweet Thief";
-				Qdata = 1;
-				Qname = "ChocQuest2";
-				NameMon = "Sweet Thief";
-				PosQ = CFrame.new(150.50663757324, 30.693693161011, -12774.502929688);
-				PosM = CFrame.new(165.1884765625, 76.058853149414, -12600.836914062);
-			elseif e == 2375 or e <= 2399 then
-				Mon = "Candy Rebel";
-				Qdata = 2;
-				Qname = "ChocQuest2";
-				NameMon = "Candy Rebel";
-				PosQ = CFrame.new(150.50663757324, 30.693693161011, -12774.502929688);
-				PosM = CFrame.new(134.86563110352, 77.247680664062, -12876.547851562);
-			elseif e == 2400 or e <= 2449 then
-				Mon = "Candy Pirate";
-				Qdata = 1;
-				Qname = "CandyQuest1";
-				NameMon = "Candy Pirate";
-				PosQ = CFrame.new(-1150.0400390625, 20.378934860229, -14446.334960938);
-				PosM = CFrame.new(-1310.5003662109, 26.016523361206, -14562.404296875);
-			elseif e == 2450 or e <= 2474 then
-				Mon = "Isle Outlaw";
-				Qdata = 1;
-				Qname = "TikiQuest1";
-				NameMon = "Isle Outlaw";
-				PosQ = CFrame.new(-16548.8164, 55.6059914, -172.8125, .213092566, 0, -0.977032006, 0, 1, 0, .977032006, 0, .213092566);
-				PosM = CFrame.new(-16479.900390625, 226.6117401123, -300.31143188477);
-			elseif e == 2475 or e <= 2499 then
-				Mon = "Island Boy";
-				Qdata = 2;
-				Qname = "TikiQuest1";
-				NameMon = "Island Boy";
-				PosQ = CFrame.new(-16548.8164, 55.6059914, -172.8125, .213092566, 0, -0.977032006, 0, 1, 0, .977032006, 0, .213092566);
-				PosM = CFrame.new(-16849.396484375, 192.86505126953, -150.78532409668);
-			elseif e == 2500 or e <= 2524 then
-				Mon = "Sun-kissed Warrior";
-				Qdata = 1;
-				Qname = "TikiQuest2";
-				NameMon = "kissed Warrior";
-				PosM = CFrame.new(-16347, 64, 984);
-				PosQ = CFrame.new(-16538, 55, 1049);
-			elseif e == 2525 or e <= 2550 then
-				Mon = "Isle Champion";
-				Qdata = 2;
-				Qname = "TikiQuest2";
-				NameMon = "Isle Champion";
-				PosQ = CFrame.new(-16541.0215, 57.3082275, 1051.46118, .0410757065, 0, -0.999156058, 0, 1, 0, .999156058, 0, .0410757065);
-				PosM = CFrame.new(-16602.1015625, 130.38734436035, 1087.2456054688);
-			elseif e == 2551 or e <= 2574 then
-				Mon = "Serpent Hunter";
-				Qdata = 1;
-				Qname = "TikiQuest3";
-				NameMon = "Serpent Hunter";
-				PosQ = CFrame.new(-16679.478515625, 176.74737548828, 1474.3995361328);
-				PosM = CFrame.new(-16679.478515625, 176.74737548828, 1474.3995361328);
-			elseif e >= 2575 then
-				Mon = "Skull Slayer";
-				Qdata = 2;
-				Qname = "TikiQuest3";
-				NameMon = "Skull Slayer";
-				PosQ = CFrame.new(-16759.58984375, 71.283767700195, 1595.3399658203);
-				PosM = CFrame.new(-16759.58984375, 71.283767700195, 1595.3399658203);
-			end;
-		end;
-	end;
 
-QuestNeta = function()
-	QuestCheck()
+-- Bảng dữ liệu quest theo level
+local QuestData = {
+    -- World 1
+    World1 = {
+        {1, 9, "Bandit", 1, "BanditQuest1", "Bandit", CFrame.new(1059, 17, 1546), CFrame.new(943, 45, 1562)},
+        {10, 14, "Monkey", 1, "JungleQuest", "Monkey", CFrame.new(-1598, 37, 153), CFrame.new(-1524, 50, 37)},
+        {15, 29, "Gorilla", 2, "JungleQuest", "Gorilla", CFrame.new(-1598, 37, 153), CFrame.new(-1128, 40, -451)},
+        {30, 39, "Pirate", 1, "BuggyQuest1", "Pirate", CFrame.new(-1140, 4, 3829), CFrame.new(-1262, 40, 3905)},
+        {40, 59, "Brute", 2, "BuggyQuest1", "Brute", CFrame.new(-1140, 4, 3829), CFrame.new(-976, 55, 4304)},
+        {60, 74, "Desert Bandit", 1, "DesertQuest", "Desert Bandit", CFrame.new(897, 6, 4389), CFrame.new(924, 7, 4482)},
+        {75, 89, "Desert Officer", 2, "DesertQuest", "Desert Officer", CFrame.new(897, 6, 4389), CFrame.new(1608, 9, 4371)},
+        {90, 99, "Snow Bandit", 1, "SnowQuest", "Snow Bandit", CFrame.new(1385, 87, -1298), CFrame.new(1362, 120, -1531)},
+        {100, 119, "Snowman", 2, "SnowQuest", "Snowman", CFrame.new(1385, 87, -1298), CFrame.new(1243, 140, -1437)},
+        {120, 149, "Chief Petty Officer", 1, "MarineQuest2", "Chief Petty Officer", CFrame.new(-5035, 29, 4326), CFrame.new(-4881, 23, 4274)},
+        {150, 174, "Sky Bandit", 1, "SkyQuest", "Sky Bandit", CFrame.new(-4844, 718, -2621), CFrame.new(-4953, 296, -2899)},
+        {175, 189, "Dark Master", 2, "SkyQuest", "Dark Master", CFrame.new(-4844, 718, -2621), CFrame.new(-5260, 391, -2229)},
+        {190, 209, "Prisoner", 1, "PrisonerQuest", "Prisoner", CFrame.new(5306, 2, 477), CFrame.new(5099, 0, 474)},
+        {210, 249, "Dangerous Prisoner", 2, "PrisonerQuest", "Dangerous Prisoner", CFrame.new(5306, 2, 477), CFrame.new(5655, 16, 866)},
+        {250, 299, "Toga Warrior", 1, "ColosseumQuest", "Toga Warrior", CFrame.new(-1581, 7, -2982), CFrame.new(-1692.509765625, 9.30445384979248, -2931.4755859375)},
+        {300, 324, "Military Soldier", 1, "MagmaQuest", "Military Soldier", CFrame.new(-5319, 12, 8515), CFrame.new(-5335, 46, 8638)},
+        {325, 374, "Military Spy", 2, "MagmaQuest", "Military Spy", CFrame.new(-5319, 12, 8515), CFrame.new(-5803, 86, 8829)},
+        {375, 399, "Fishman Warrior", 1, "FishmanQuest", "Fishman Warrior", CFrame.new(61122, 18, 1567), CFrame.new(60998, 50, 1534)},
+        {400, 449, "Fishman Commando", 2, "FishmanQuest", "Fishman Commando", CFrame.new(61122, 18, 1567), CFrame.new(61866, 55, 1655)},
+        {450, 474, "God's Guard", 1, "SkyExp1Quest", "God's Guard", CFrame.new(-4720, 846, -1951), CFrame.new(-4720, 846, -1951)},
+        {475, 524, "Shanda", 2, "SkyExp1Quest", "Shanda", CFrame.new(-7861, 5545, -381), CFrame.new(-7741, 5580, -395)},
+        {525, 549, "Royal Squad", 1, "SkyExp2Quest", "Royal Squad", CFrame.new(-7903, 5636, -1412), CFrame.new(-7727, 5650, -1410)},
+        {550, 624, "Royal Soldier", 2, "SkyExp2Quest", "Royal Soldier", CFrame.new(-7903, 5636, -1412), CFrame.new(-7894, 5640, -1629)},
+        {625, 649, "Galley Pirate", 1, "FountainQuest", "Galley Pirate", CFrame.new(5258, 39, 4052), CFrame.new(5391, 70, 4023)},
+        {650, math.huge, "Galley Captain", 2, "FountainQuest", "Galley Captain", CFrame.new(5258, 39, 4052), CFrame.new(5985, 70, 4790)}
+    },
+    
+    -- World 2
+    World2 = {
+        {700, 724, "Raider", 1, "Area1Quest", "Raider", CFrame.new(-427, 73, 1835), CFrame.new(-614, 90, 2240)},
+        {725, 774, "Mercenary", 2, "Area1Quest", "Mercenary", CFrame.new(-427, 73, 1835), CFrame.new(-867, 110, 1621)},
+        {775, 874, "Swan Pirate", 1, "Area2Quest", "Swan Pirate", CFrame.new(635, 73, 919), CFrame.new(898.23, 73.00, 1311.18)},
+        {875, 899, "Marine Lieutenant", 1, "MarineQuest3", "Marine Lieutenant", CFrame.new(-2441, 73, -3219), CFrame.new(-2552, 110, -3050)},
+        {900, 949, "Marine Captain", 2, "MarineQuest3", "Marine Captain", CFrame.new(-2441, 73, -3219), CFrame.new(-1695, 110, -3299)},
+        {950, 974, "Zombie", 1, "ZombieQuest", "Zombie", CFrame.new(-5495, 48, -794), CFrame.new(-5715, 90, -917)},
+        {975, 999, "Vampire", 2, "ZombieQuest", "Vampire", CFrame.new(-5495, 48, -794), CFrame.new(-6027, 50, -1130)},
+        {1000, 1049, "Snow Trooper", 1, "SnowMountainQuest", "Snow Trooper", CFrame.new(607, 401, -5371), CFrame.new(445, 440, -5175)},
+        {1050, 1099, "Winter Warrior", 2, "SnowMountainQuest", "Winter Warrior", CFrame.new(607, 401, -5371), CFrame.new(1224, 460, -5332)},
+        {1100, 1124, "Lab Subordinate", 1, "IceSideQuest", "Lab Subordinate", CFrame.new(-6061, 16, -4904), CFrame.new(-5941, 50, -4322)},
+        {1125, 1174, "Horned Warrior", 2, "IceSideQuest", "Horned Warrior", CFrame.new(-6061, 16, -4904), CFrame.new(-6306, 50, -5752)},
+        {1175, 1199, "Magma Ninja", 1, "FireSideQuest", "Magma Ninja", CFrame.new(-5430, 16, -5298), CFrame.new(-5233, 60, -6227)},
+        {1200, 1249, "Lava Pirate", 2, "FireSideQuest", "Lava Pirate", CFrame.new(-5430, 16, -5298), CFrame.new(-4955, 60, -4836)},
+        {1250, 1274, "Ship Deckhand", 1, "ShipQuest1", "Ship Deckhand", CFrame.new(1033, 125, 32909), CFrame.new(1033, 125, 32909)},
+        {1275, 1299, "Ship Engineer", 2, "ShipQuest1", "Ship Engineer", CFrame.new(1033, 125, 32909), CFrame.new(809, 80, 33090)},
+        {1300, 1324, "Ship Steward", 1, "ShipQuest2", "Ship Steward", CFrame.new(973, 125, 33245), CFrame.new(838, 160, 33408)},
+        {1325, 1349, "Ship Officer", 2, "ShipQuest2", "Ship Officer", CFrame.new(973, 125, 33245), CFrame.new(1238, 220, 33148)},
+        {1350, 1374, "Arctic Warrior", 1, "FrostQuest", "Arctic Warrior", CFrame.new(5668, 28, -6484), CFrame.new(5836, 80, -6257)},
+        {1375, 1424, "Snow Lurker", 2, "FrostQuest", "Snow Lurker", CFrame.new(5668, 28, -6484), CFrame.new(5700, 80, -6724)},
+        {1425, 1449, "Sea Soldier", 1, "ForgottenQuest", "Sea Soldier", CFrame.new(-3056, 240, -10145), CFrame.new(-2583, 80, -9821)},
+        {1450, math.huge, "Water Fighter", 2, "ForgottenQuest", "Water Fighter", CFrame.new(-3056, 240, -10145), CFrame.new(-3339, 290, -10412)}
+    },
+    
+    -- World 3
+    World3 = {
+        {1500, 1524, "Pirate Millionaire", 1, "PiratePortQuest", "Pirate Millionaire", CFrame.new(-291, 44, 5580), CFrame.new(-44, 70, 5623)},
+        {1525, 1574, "Pistol Billionaire", 2, "PiratePortQuest", "Pistol Billionaire", CFrame.new(-291, 44, 5580), CFrame.new(219, 105, 6018)},
+        {1575, 1599, "Dragon Crew Warrior", 1, "AmazonQuest", "Dragon Crew Warrior", CFrame.new(5834, 51, -1103), CFrame.new(5992, 90, -1581)},
+        {1600, 1624, "Dragon Crew Archer", 2, "AmazonQuest", "Dragon Crew Archer", CFrame.new(5834, 51, -1103), CFrame.new(6472, 370, -151)},
+        {1625, 1649, "Female Islander", 1, "AmazonQuest2", "Female Islander", CFrame.new(5448, 602, 748), CFrame.new(4836, 740, 928)},
+        {1650, 1699, "Giant Islander", 2, "AmazonQuest2", "Giant Islander", CFrame.new(5448, 602, 748), CFrame.new(4784, 660, 155)},
+        {1700, 1724, "Marine Commodore", 1, "MarineTreeIsland", "Marine Commodore", CFrame.new(2180, 29, -6738), CFrame.new(3156, 120, -7837)},
+        {1725, 1774, "Marine Rear Admiral", 2, "MarineTreeIsland", "Marine Rear Admiral", CFrame.new(2180, 29, -6738), CFrame.new(3205, 120, -6742)},
+        {1775, 1799, "Fishman Raider", 1, "DeepForestIsland3", "Fishman Raider", CFrame.new(-10581, 332, -8758), CFrame.new(-10550, 380, -8574)},
+        {1800, 1824, "Fishman Captain", 2, "DeepForestIsland3", "Fishman Captain", CFrame.new(-10581, 332, -8758), CFrame.new(-10764, 380, -8799)},
+        {1825, 1849, "Forest Pirate", 1, "DeepForestIsland", "Forest Pirate", CFrame.new(-13233, 332, -7626), CFrame.new(-13335, 380, -7660)},
+        {1850, 1899, "Mythological Pirate", 2, "DeepForestIsland", "Mythological Pirate", CFrame.new(-13233, 332, -7626), CFrame.new(-13844, 520, -7016)},
+        {1900, 1924, "Jungle Pirate", 1, "DeepForestIsland2", "Jungle Pirate", CFrame.new(-12682, 391, -9901), CFrame.new(-12166, 380, -10375)},
+        {1925, 1974, "Musketeer Pirate", 2, "DeepForestIsland2", "Musketeer Pirate", CFrame.new(-12682, 391, -9901), CFrame.new(-13098, 450, -9831)},
+        {1975, 1999, "Reborn Skeleton", 1, "HauntedQuest1", "Reborn Skeleton", CFrame.new(-9481, 142, 5565), CFrame.new(-8680, 190, 5852)},
+        {2000, 2024, "Living Zombie", 2, "HauntedQuest1", "Living Zombie", CFrame.new(-9481, 142, 5565), CFrame.new(-10144, 140, 5932)},
+        {2025, 2049, "Demonic Soul", 1, "HauntedQuest2", "Demonic Soul", CFrame.new(-9515, 172, 607), CFrame.new(-9275, 210, 6166)},
+        {2050, 2074, "Posessed Mummy", 2, "HauntedQuest2", "Posessed Mummy", CFrame.new(-9515, 172, 607), CFrame.new(-9442, 60, 6304)},
+        {2075, 2099, "Peanut Scout", 1, "NutsIslandQuest", "Peanut Scout", CFrame.new(-2104, 38, -10194), CFrame.new(-1870, 100, -10225)},
+        {2100, 2124, "Peanut President", 2, "NutsIslandQuest", "Peanut President", CFrame.new(-2104, 38, -10194), CFrame.new(-2005, 100, -10585)},
+        {2125, 2149, "Ice Cream Chef", 1, "IceCreamIslandQuest", "Ice Cream Chef", CFrame.new(-818, 66, -10964), CFrame.new(-501, 100, -10883)},
+        {2150, 2199, "Ice Cream Commander", 2, "IceCreamIslandQuest", "Ice Cream Commander", CFrame.new(-818, 66, -10964), CFrame.new(-690, 100, -11350)},
+        {2200, 2224, "Cookie Crafter", 1, "CakeQuest1", "Cookie Crafter", CFrame.new(-2023, 38, -12028), CFrame.new(-2332, 90, -12049)},
+        {2225, 2249, "Cake Guard", 2, "CakeQuest1", "Cake Guard", CFrame.new(-2023, 38, -12028), CFrame.new(-1514, 90, -12422)},
+        {2250, 2274, "Baking Staff", 1, "CakeQuest2", "Baking Staff", CFrame.new(-1931, 38, -12840), CFrame.new(-1930, 90, -12963)},
+        {2275, 2299, "Head Baker", 2, "CakeQuest2", "Head Baker", CFrame.new(-1931, 38, -12840), CFrame.new(-2123, 110, -12777)},
+        {2300, 2324, "Cocoa Warrior", 1, "ChocQuest1", "Cocoa Warrior", CFrame.new(235, 25, -12199), CFrame.new(110, 80, -12245)},
+        {2325, 2349, "Chocolate Bar Battler", 2, "ChocQuest1", "Chocolate Bar Battler", CFrame.new(235, 25, -12199), CFrame.new(579, 80, -12413)},
+        {2350, 2374, "Sweet Thief", 1, "ChocQuest2", "Sweet Thief", CFrame.new(150, 25, -12777), CFrame.new(-68, 80, -12692)},
+        {2375, 2399, "Candy Rebel", 2, "ChocQuest2", "Candy Rebel", CFrame.new(150, 25, -12777), CFrame.new(17, 80, -12962)},
+        {2400, 2424, "Candy Pirate", 1, "CandyQuest1", "Candy Pirate", CFrame.new(-1148, 14, -14446), CFrame.new(-1371, 70, -14405)},
+        {2425, 2449, "Snow Demon", 2, "CandyQuest1", "Snow Demon", CFrame.new(-1148, 14, -14446), CFrame.new(-836, 70, -14326)},
+        {2450, 2474, "Isle Outlaw", 1, "TikiQuest1", "Isle Outlaw", CFrame.new(-16547, 56, -172), CFrame.new(-16431, 90, -223)},
+        {2475, 2499, "Island Boy", 2, "TikiQuest1", "Island Boy", CFrame.new(-16547, 56, -172), CFrame.new(-16668, 70, -243)},
+        {2500, 2524, "Sun-kissed Warrior", 1, "TikiQuest2", "kissed", CFrame.new(-16540, 56, 1051), CFrame.new(-16345, 80, 1004)},
+        {2525, 2549, "Isle Champion", 2, "TikiQuest2", "Isle Champion", CFrame.new(-16540, 56, 1051), CFrame.new(-16634, 85, 1106)},
+        {2550, 2574, "Serpent Hunter", 1, "TikiQuest3", "Serpent Hunter", CFrame.new(-16665, 105, 1580), CFrame.new(-16542.4824, 146.675156, 1529.61401, -0.999948919, 1.0729811e-8, 0.0101067368, 1.0128324e-8, 1, -5.9564663e-8, -0.0101067368, -5.9459257e-8, -0.999948919)},
+        {2575, 2600, "Skull Slayer", 2, "TikiQuest3", "Skull Slayer", CFrame.new(-16665, 105, 1580), CFrame.new(-16849.9336, 147.005066, 1640.88354, 0.470148534, 0.491874039, -0.732816696, 1.72165e-8, 0.83030504, 0.55730921, 0.882587314, -0.262018114, 0.390366673)}
+    }
+}
 
-	return {
-		MonName     = Mon,      -- Tên quái
-		QuestLevel  = Qdata,    -- Level quest (number)
-		QuestName   = Qname,    -- Quest name (string)
-		MobSpawnPos = PosM,     -- CFrame spawn quái
-		QuestText   = NameMon,  -- Text kiểm tra quest GUI
-		QuestNpcPos = PosQ,     -- CFrame NPC quest
-	}
+function CheckQuest()
+    local MyLevel = game:GetService("Players").LocalPlayer.Data.Level.Value
+    
+    -- Xác định world hiện tại
+    local currentWorld = World1 and "World1" or World2 and "World2" or World3 and "World3"
+    
+    if not currentWorld then return end
+    
+    -- Tìm quest phù hợp với level
+    local worldData = QuestData[currentWorld]
+    for _, questInfo in ipairs(worldData) do
+        local minLevel, maxLevel = questInfo[1], questInfo[2]
+        
+        if MyLevel >= minLevel and MyLevel <= maxLevel then
+            Mon = questInfo[3]
+            LevelQuest = questInfo[4]
+            NameQuest = questInfo[5]
+            NameMon = questInfo[6]
+            CFrameQuest = questInfo[7]
+            CFrameMon = questInfo[8]
+            return
+        end
+    end
 end
 
 MaterialMon = function()
@@ -1962,7 +1447,7 @@ MaterialMon = function()
 				MPos = CFrame.new(61123, 19, 1569);
 				SP = "Default";
 				local e = Vector3.new(61163.8515625, 5.342342376709, 1819.7841796875);
-				shouldRequestEntrance(e, 17000);
+				shouldRequestEntrance(e, 2500);
 			end;
 		elseif World2 then
 			if SelectMaterial == "Leather + Scrap Metal" then
@@ -1983,7 +1468,7 @@ MaterialMon = function()
 				MPos = CFrame.new(911.35827636719, 125.95812988281, 33159.5390625);
 				SP = "Default";
 				local e = Vector3.new(61163.8515625, 5.342342376709, 1819.7841796875);
-				shouldRequestEntrance(e, 18000);
+				shouldRequestEntrance(e, 2500);
 			elseif SelectMaterial == "Mystic Droplet" then
 				MMon = { "Water Fighter" };
 				MPos = CFrame.new(-3385, 239, -10542);
@@ -2030,8 +1515,7 @@ MaterialMon = function()
 		end;
 	end;
 
-local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
-local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
+
 ---Tab----------------
 local x = e:NewWindow();
 local sv = x:T("Tab Server");
@@ -2352,13 +1836,14 @@ SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
 
-local FrameMode = { "Level", "Cake", "Bone", "Nearest" }
+-- ================== FRAME MODE ==================
+local FrameMode = { "Level", "Cake", "Nearest" }
 
 local function UpdateFramMode()
 	_G.Level = (_G.SelectFramMode == "Level" and _G.StartFram)
-	_G.Auto_Cake_Prince = (_G.SelectFramMode == "Cake" and _G.StartFram)
 end
 
+-- ================== UI ==================
 B:AddDropdown({
 	Title = "Select Fram:",
 	Values = FrameMode,
@@ -2379,181 +1864,79 @@ B:AddToggle({
 	end,
 })
 
-spawn(function()
-	while task.wait(Sec) do
-		if not _G.Level then
-			continue
-		end
 
-		pcall(function()
-			local Q = QuestNeta()
-			local QuestGui = plr.PlayerGui.Main.Quest
-			local QuestTitle = QuestGui.Container.QuestTitle.Title
+task.spawn(function()
+    while task.wait(Sec) do
+        if _G.Level then
+            pcall(function()
+                local player = game:GetService("Players").LocalPlayer
+                local questUI = player.PlayerGui.Main.Quest
+                local questTitle = questUI.Container.QuestTitle.Title.Text
+                --Hủy Quest nếu nhận sai 
+                if not string.find(questTitle, NameMon) then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                end
+                --Chưa có Quest thì Quest
+                if not questUI.Visible then
+                    CheckQuest()
+                    _tp(CFrameQuest)
+                    
+                    if (player.Character.HumanoidRootPart.Position - CFrameQuest.Position).Magnitude <= 5 then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+                    end
 
-			-- ================== ABANDON QUEST SAI ==================
-			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
-				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-				task.wait(0.6)
-			end
+                elseif questUI.Visible then
+                    CheckQuest()
+                    local foundEnemy = false
 
-			-- ================== NHẬN QUEST (FIX CHUẨN) ==================
-			if not QuestGui.Visible then
-				_tp(Q.QuestNpcPos)
+                    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                        if enemy.Name == Mon 
+                            and enemy:FindFirstChild("HumanoidRootPart") 
+                            and enemy:FindFirstChild("Humanoid") 
+                            and enemy.Humanoid.Health > 0 then
 
-				repeat task.wait()
-				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 6
-					or not _G.Level
+                            if string.find(questTitle, NameMon) then
+                                foundEnemy = true
+                                repeat
+                                	O.Kill(enemy,_G.Level)
+                                	BringEnemy(enemy)
+                                until not _G.Level 
+                                    or enemy.Humanoid.Health <= 0 
+                                    or not enemy.Parent 
+                                    or not questUI.Visible
+                            else
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                            end
+                        end
+                    end
 
-				if not _G.Level then return end
+                    if not foundEnemy then
+                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp and CFrameMon then
+                            local scanHeight = 35  -- độ cao
+                            local scanRadius = 100 -- bán kính hình vuông
 
-				replicated.Remotes.CommF_:InvokeServer(
-					"StartQuest",
-					Q.QuestName,
-					Q.QuestLevel
-				)
+                            local offsets = {
+                                Vector3.new(scanRadius, scanHeight, scanRadius),
+                                Vector3.new(-scanRadius, scanHeight, scanRadius),
+                                Vector3.new(scanRadius, scanHeight, -scanRadius),
+                                Vector3.new(-scanRadius, scanHeight, -scanRadius)
+                            }
 
-				-- 🔒 CHỜ QUEST THẬT SỰ NHẬN
-				local t = tick()
-				repeat
-					task.wait()
-				until (
-					QuestGui.Visible
-					and string.find(QuestTitle.Text, Q.QuestText)
-				)
-				or tick() - t > 5
-				or not _G.Level
-
-				return
-			end
-
-			-- ================== FARM QUÁI ==================
-			for _, mob in pairs(workspace.Enemies:GetChildren()) do
-				if not _G.Level then break end
-
-				if O.Alive(mob) and mob.Name == Q.MonName then
-					repeat
-						task.wait()
-						O.Kill(mob, true)
-						BringEnemy(mob)
-					until not mob.Parent
-						or mob.Humanoid.Health <= 0
-						or not QuestGui.Visible
-						or not _G.Level
-				end
-			end
-
-			-- ================== KHÔNG CÓ QUÁI → RA SPAWN ==================
-			if QuestGui.Visible then
-				_tp(Q.MobSpawnPos)
-			end
-		end)
-	end
+                            for _, offset in ipairs(offsets) do
+                                if not _G.Level or not questUI.Visible then break end
+                                local targetCF = CFrameMon * CFrame.new(offset)
+                                _tp(targetCF)
+                                task.wait(1)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
 end)
 
-
-spawn(function()
-	while wait(Sec) do
-		if _G.Auto_Cake_Prince then
-			pcall(function()
-				local Workspace = game:GetService("Workspace")
-				local ReplicatedStorage = game:GetService("ReplicatedStorage")
-				local Enemies = Workspace.Enemies
-				local Player = game.Players.LocalPlayer
-				local Character = Player.Character
-				
-				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-					return
-				end
-				
-				local HRP = Character.HumanoidRootPart
-				
-				-- Check for Cake Prince
-				local cakePrince = nil
-				for _, v in pairs(Enemies:GetChildren()) do
-					if v.Name == "Cake Prince" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-						cakePrince = v
-						break
-					end
-				end
-				
-				if cakePrince then
-					-- Kill Cake Prince
-					O.Kill2(cakePrince, _G.Auto_Cake_Prince)
-					BringEnemy(cakePrince)
-					return
-				end
-				
-				local BigMirror = Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("CakeLoaf") and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
-				if BigMirror and BigMirror:FindFirstChild("Other") then
-					if BigMirror.Other.Transparency == 0 then
-						local mirrorPos = CFrame.new(-1990.67, 4533, -14973.67)
-						if (mirrorPos.Position - HRP.Position).Magnitude >= 2000 then
-							_tp(CFrame.new(-2151.82, 149.32, -12404.91))
-							return
-						end
-					end
-				end
-				
-				-- Check for minions
-				local minion = nil
-				local minionNames = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
-				for _, v in pairs(Enemies:GetChildren()) do
-					for _, name in pairs(minionNames) do
-						if v.Name == name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-							minion = v
-							break
-						end
-					end
-					if minion then break end
-				end
-				
-				if minion then
-					-- Check if quest is visible and AcceptQuestC is enabled
-					local QuestGui = Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("Main") and Player.PlayerGui.Main:FindFirstChild("Quest")
-					
-					if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
-						-- Accept quest if needed
-						local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
-						if (questPos.Position - HRP.Position).Magnitude > 50 then
-							_tp(questPos)
-							return
-						end
-						
-						local questData = {
-							{"StartQuest", "CakeQuest2", 2},
-							{"StartQuest", "CakeQuest2", 1},
-							{"StartQuest", "CakeQuest1", 1},
-							{"StartQuest", "CakeQuest1", 2},
-						}
-						
-						pcall(function()
-							ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(questData[math.random(1, 4)]))
-						end)
-					end
-					
-					local bossCount = nil
-					pcall(function()
-						local response = ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-						local count = string.match(response, "%d+")
-						if count then
-							bossCount = tonumber(count)
-							if bossCount == 0 then
-								ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner", true)
-							end
-						end
-					end)
-					
-					O.Kill(minion, _G.Auto_Cake_Prince)
-					BringEnemy(minion)
-					return
-				end
-				
-				_tp(CFrame.new(-2091.91, 70.01, -12142.84))
-				
-			end)
-		end
-	end
-end)
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",
@@ -2913,6 +2296,39 @@ spawn(function()
 				A();
 			end);
 		end;
+	end;
+end);
+B:AddToggle({
+	Title = "Auto Farm Ectoplasm",
+	Description = "",
+	Default = false,
+	Callback = function(e)
+		_G.AutoEctoplasm = e;
+	end,
+});
+spawn(function()
+	while wait(Sec) do
+		pcall(function()
+			if _G.AutoEctoplasm then
+				local e = {
+						"Ship Deckhand",
+						"Ship Engineer",
+						"Ship Steward",
+						"Ship Officer",
+						"Arctic Warrior",
+					};
+				local A = GetConnectionEnemies(e);
+				if O.Alive(A) then
+					repeat
+						wait();
+						O.Kill(A, _G.AutoEctoplasm);
+						BringEnemy(A)
+					until not _G.AutoEctoplasm or not A.Parent or A.Humanoid.Health <= 0;
+				else
+					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
+				end;
+			end;
+		end);
 	end;
 end);
 B:AddToggle({
@@ -3419,8 +2835,118 @@ spawn(function()
 		end);
 	end;
 end);
-
-
+B:AddToggle({
+	Title = "Auto Cake Prince",
+	Description = "",
+	Default = false,
+	Callback = function(e)
+		_G.Auto_Cake_Prince = e;
+	end,
+});
+spawn(function()
+	while wait(Sec) do
+		if _G.Auto_Cake_Prince then
+			pcall(function()
+				local Workspace = game:GetService("Workspace")
+				local ReplicatedStorage = game:GetService("ReplicatedStorage")
+				local Enemies = Workspace.Enemies
+				local Player = game.Players.LocalPlayer
+				local Character = Player.Character
+				
+				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+					return
+				end
+				
+				local HRP = Character.HumanoidRootPart
+				
+				-- Check for Cake Prince
+				local cakePrince = nil
+				for _, v in pairs(Enemies:GetChildren()) do
+					if v.Name == "Cake Prince" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+						cakePrince = v
+						break
+					end
+				end
+				
+				if cakePrince then
+					-- Kill Cake Prince
+					O.Kill2(cakePrince, _G.Auto_Cake_Prince)
+					BringEnemy(cakePrince)
+					return
+				end
+				
+				-- Check if Big Mirror is active and far away
+				local BigMirror = Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("CakeLoaf") and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
+				if BigMirror and BigMirror:FindFirstChild("Other") then
+					if BigMirror.Other.Transparency == 0 then
+						local mirrorPos = CFrame.new(-1990.67, 4533, -14973.67)
+						if (mirrorPos.Position - HRP.Position).Magnitude >= 2000 then
+							_tp(CFrame.new(-2151.82, 149.32, -12404.91))
+							return
+						end
+					end
+				end
+				
+				-- Check for minions
+				local minion = nil
+				local minionNames = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
+				for _, v in pairs(Enemies:GetChildren()) do
+					for _, name in pairs(minionNames) do
+						if v.Name == name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+							minion = v
+							break
+						end
+					end
+					if minion then break end
+				end
+				
+				if minion then
+					-- Check if quest is visible and AcceptQuestC is enabled
+					local QuestGui = Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("Main") and Player.PlayerGui.Main:FindFirstChild("Quest")
+					
+					if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
+						-- Accept quest if needed
+						local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
+						if (questPos.Position - HRP.Position).Magnitude > 50 then
+							_tp(questPos)
+							return
+						end
+						
+						local questData = {
+							{"StartQuest", "CakeQuest2", 2},
+							{"StartQuest", "CakeQuest2", 1},
+							{"StartQuest", "CakeQuest1", 1},
+							{"StartQuest", "CakeQuest1", 2},
+						}
+						
+						pcall(function()
+							ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(questData[math.random(1, 4)]))
+						end)
+					end
+					
+					local bossCount = nil
+					pcall(function()
+						local response = ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner")
+						local count = string.match(response, "%d+")
+						if count then
+							bossCount = tonumber(count)
+							if bossCount == 0 then
+								ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner", true)
+							end
+						end
+					end)
+					
+					O.Kill(minion, _G.Auto_Cake_Prince)
+					BringEnemy(minion)
+					return
+				end
+				
+				_tp(CFrame.new(-2091.91, 70.01, -12142.84))
+				
+			end)
+		end
+	end
+end)
 
 B:AddToggle({
 	Title = "Auto Bones",

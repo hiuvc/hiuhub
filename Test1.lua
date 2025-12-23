@@ -1864,79 +1864,73 @@ B:AddToggle({
 	end,
 })
 
-
 task.spawn(function()
     while task.wait(Sec) do
-        if _G.Level then
-            pcall(function()
-                local player = game:GetService("Players").LocalPlayer
-                local questUI = player.PlayerGui.Main.Quest
-                local questTitle = questUI.Container.QuestTitle.Title.Text
-                --Hủy Quest nếu nhận sai 
-                if not string.find(questTitle, NameMon) then
-                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+        if not _G.Level then return end
+        
+        pcall(function()
+            local player = game:GetService("Players").LocalPlayer
+            local questUI = player.PlayerGui.Main.Quest
+            local questTitle = questUI.Container.QuestTitle.Title.Text
+
+            -- Kiểm tra quest đúng không
+            if questUI.Visible and not string.find(questTitle, NameMon) then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                return
+            end
+
+            if not questUI.Visible then
+                -- Nhận quest
+                CheckQuest()
+                _tp(CFrameQuest)
+                task.wait(0.5)
+                
+                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if hrp and (hrp.Position - CFrameQuest.Position).Magnitude <= 5 then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
                 end
-                --Chưa có Quest thì Quest
-                if not questUI.Visible then
-                    CheckQuest()
-                    _tp(CFrameQuest)
-                    
-                    if (player.Character.HumanoidRootPart.Position - CFrameQuest.Position).Magnitude <= 5 then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+            else
+                -- Làm quest
+                CheckQuest()
+                local foundEnemy = false
+
+                for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                    if enemy.Name == Mon and enemy:FindFirstChild("HumanoidRootPart") and enemy:FindFirstChild("Humanoid") and enemy.Humanoid.Health > 0 then
+                        foundEnemy = true
+                        repeat
+                            if not _G.Level or not questUI.Visible or enemy.Humanoid.Health <= 0 or not enemy.Parent then break end
+                            O.Kill(enemy, _G.Level)
+                            task.wait(0.1)
+                            BringEnemy(enemy)
+                            task.wait(0.1)
+                        until enemy.Humanoid.Health <= 0 or not enemy.Parent
+                        break
                     end
+                end
 
-                elseif questUI.Visible then
-                    CheckQuest()
-                    local foundEnemy = false
-
-                    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
-                        if enemy.Name == Mon 
-                            and enemy:FindFirstChild("HumanoidRootPart") 
-                            and enemy:FindFirstChild("Humanoid") 
-                            and enemy.Humanoid.Health > 0 then
-
-                            if string.find(questTitle, NameMon) then
-                                foundEnemy = true
-                                repeat
-                                	O.Kill(enemy,_G.Level)
-                                	BringEnemy(enemy)
-                                until not _G.Level 
-                                    or enemy.Humanoid.Health <= 0 
-                                    or not enemy.Parent 
-                                    or not questUI.Visible
-                            else
-                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
-                            end
-                        end
-                    end
-
-                    if not foundEnemy then
-                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp and CFrameMon then
-                            local scanHeight = 35  -- độ cao
-                            local scanRadius = 100 -- bán kính hình vuông
-
-                            local offsets = {
-                                Vector3.new(scanRadius, scanHeight, scanRadius),
-                                Vector3.new(-scanRadius, scanHeight, scanRadius),
-                                Vector3.new(scanRadius, scanHeight, -scanRadius),
-                                Vector3.new(-scanRadius, scanHeight, -scanRadius)
-                            }
-
-                            for _, offset in ipairs(offsets) do
-                                if not _G.Level or not questUI.Visible then break end
-                                local targetCF = CFrameMon * CFrame.new(offset)
-                                _tp(targetCF)
-                                task.wait(1)
-                            end
+                if not foundEnemy then
+                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp and CFrameMon then
+                        local scanHeight = 35
+                        local scanRadius = 100
+                        local offsets = {
+                            Vector3.new(scanRadius, scanHeight, scanRadius),
+                            Vector3.new(-scanRadius, scanHeight, scanRadius),
+                            Vector3.new(scanRadius, scanHeight, -scanRadius),
+                            Vector3.new(-scanRadius, scanHeight, -scanRadius)
+                        }
+                        
+                        for _, offset in ipairs(offsets) do
+                            if not _G.Level or not questUI.Visible then break end
+                            _tp(CFrameMon * CFrame.new(offset))
+                            task.wait(1)
                         end
                     end
                 end
-            end)
-        end
+            end
+        end)
     end
 end)
-
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",

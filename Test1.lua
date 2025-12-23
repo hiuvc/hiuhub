@@ -836,91 +836,192 @@ Hop = function()
 			HopServerModule:Teleport(game.PlaceId)
 		end)
 	end;
-local c = Instance.new("Part", workspace);
-c.Size = Vector3.new(1, 1, 1);
-c.Name = "Rip_Indra";
-c.Anchored = true;
-c.CanCollide = false;
-c.CanTouch = false;
-c.Transparency = 1;
-local r = workspace:FindFirstChild(c.Name);
-if r and r ~= c then
-	r:Destroy();
-end;
+local plr = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- // 1. TẠO PART ĐIỀU KHIỂN //
+local c = Instance.new("Part", workspace)
+c.Size = Vector3.new(1, 1, 1)
+c.Name = "Rip_Indra"
+c.Anchored = true
+c.CanCollide = false
+c.CanTouch = false
+c.Transparency = 1
+
+-- Xóa part cũ
+local oldPart = workspace:FindFirstChild(c.Name)
+if oldPart and oldPart ~= c then
+    oldPart:Destroy()
+end
+
+
+-- // 3. LOGIC FARM & LOOP GIỮ NHÂN VẬT //
 task.spawn(function()
-	while task.wait() do
-		if c and c.Parent == workspace then
-			if shouldTween then
-				(getgenv()).OnFarm = true;
-			else
-				(getgenv()).OnFarm = false;
-			end;
-		else
-			(getgenv()).OnFarm = false;
-		end;
-	end;
-end);
+    while task.wait() do
+        if c and c.Parent == workspace then
+            getgenv().OnFarm = shouldTween
+        else
+            getgenv().OnFarm = false
+        end
+    end
+end)
+
 task.spawn(function()
-	local e = game.Players.LocalPlayer;
-	repeat
-		task.wait();
-	until e.Character and e.Character.PrimaryPart;
-	c.CFrame = e.Character.PrimaryPart.CFrame;
-	while task.wait() do
-		pcall(function()
-			if (getgenv()).OnFarm then
-				if c and c.Parent == workspace then
-					local A = e.Character and e.Character.PrimaryPart;
-					if A and (A.Position - c.Position).Magnitude <= 200 then
-						A.CFrame = c.CFrame;
-					else
-						c.CFrame = A.CFrame;
-					end;
-				end;
-				local A = e.Character;
-				if A then
-					for e, A in pairs(A:GetChildren()) do
-						if A:IsA("BasePart") then
-							A.CanCollide = false;
-						end;
-					end;
-				end;
-			else
-				local A = e.Character;
-				if A then
-					for e, A in pairs(A:GetChildren()) do
-						if A:IsA("BasePart") then
-							A.CanCollide = true;
-						end;
-					end;
-				end;
-			end;
-		end);
-	end;
-end);
-_tp = function(e)
-		local A = plr.Character;
-		if not A or not A:FindFirstChild("HumanoidRootPart") then
-			return;
-		end;
-		local u = A.HumanoidRootPart;
-		local Z = (e.Position - u.Position).Magnitude;
-		local X = TweenInfo.new(Z / 350, Enum.EasingStyle.Linear);
-		local C = (game:GetService("TweenService")):Create(c, X, { CFrame = e });
-		if plr.Character.Humanoid.Sit == true then
-			c.CFrame = CFrame.new(c.Position.X, e.Y, c.Position.Z);
-		end;
-		C:Play();
-		task.spawn(function()
-			while C.PlaybackState == Enum.PlaybackState.Playing do
-				if not shouldTween then
-					C:Cancel();
-					break;
-				end;
-				task.wait(.1);
-			end;
-		end);
-	end;
+    repeat task.wait() until plr.Character and plr.Character.PrimaryPart
+    c.CFrame = plr.Character.PrimaryPart.CFrame
+
+    while task.wait() do
+        pcall(function()
+            local char = plr.Character
+            if not char or not char.PrimaryPart then return end
+
+            if getgenv().OnFarm then
+                if c and c.Parent == workspace then
+                    local root = char.PrimaryPart
+                    -- Nếu nhân vật bị lệch quá xa (>200) do lag, kéo Part về lại nhân vật
+                    if (root.Position - c.Position).Magnitude > 200 then
+                        c.CFrame = root.CFrame
+                    else
+                        -- Bình thường: Kéo nhân vật theo Part
+                        root.CFrame = c.CFrame
+                    end
+                end
+                
+                -- Tắt va chạm để không bị kẹt tường
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") then v.CanCollide = false end
+                end
+            else
+                -- Bật lại va chạm khi dừng farm
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") then v.CanCollide = true end
+                end
+            end
+        end)
+    end
+end)
+
+-- // 4. HÀM TÌM CỔNG TELE (SEA 1, 2, 3) //
+local function CheckNearestTeleporter(targetCF)
+    local placeId = game.PlaceId
+    local targetPos = targetCF.Position
+    local teleList = {}
+
+    if placeId == 2753915549 then -- Sea 1
+        teleList = {
+            Sky3 = Vector3.new(-7894, 5547, -380),
+            Sky3Exit = Vector3.new(-4607, 874, -1667),
+            UnderWater = Vector3.new(61163, 11, 1819),
+            UnderwaterExit = Vector3.new(4050, -1, -1814)
+        }
+    elseif placeId == 4442272183 then -- Sea 2
+        teleList = {
+            ["Swan Mansion"] = Vector3.new(-390, 332, 673),
+            ["Swan Room"] = Vector3.new(2285, 15, 905),
+            ["Cursed Ship"] = Vector3.new(923, 126, 32852),
+            ["Zombie Island"] = Vector3.new(-6509, 83, -133)
+        }
+    elseif placeId == 7449423635 then -- Sea 3
+        teleList = {
+            ["Floating Turtle"] = Vector3.new(-12462, 375, -7552),
+            ["Hydra Island"] = Vector3.new(5745, 610, -267),
+            Mansion = Vector3.new(-12462, 375, -7552),
+            Castle = Vector3.new(-5036, 315, -3179),
+            ["Beautiful Pirate"] = Vector3.new(5319, 23, -93),
+            ["Beautiful Room"] = Vector3.new(5314.58, 22.53, -125.94),
+            ["Temple of Time"] = Vector3.new(28286, 14897, 103)
+        }
+    end
+
+    local nearest, minDist = nil, math.huge
+    for _, pos in pairs(teleList) do
+        local dist = (pos - targetPos).Magnitude
+        if dist < minDist then
+            minDist = dist
+            nearest = pos
+        end
+    end
+
+    local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local distToTarget = (targetPos - hrp.Position).Magnitude
+        if minDist < 2000 and distToTarget > 3000 then
+            return nearest
+        end
+    end
+    return nil
+end
+
+local function RequestEntrance(pos)
+    pcall(function()
+        game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", pos)
+    end)
+end
+
+-- // 5. HÀM _tp ĐÃ FIX LỖI //
+_tp = function(target)
+    local char = plr.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local targetCF = target
+    if typeof(target) == "Vector3" then
+        targetCF = CFrame.new(target)
+    end
+
+    c.CFrame = char.HumanoidRootPart.CFrame
+    task.wait() 
+
+    -- BƯỚC 1: Thử tìm cổng dịch chuyển
+    local bestPortal = CheckNearestTeleporter(targetCF)
+    if bestPortal then
+        RequestEntrance(bestPortal)
+        task.wait(0.5) -- Chờ server load map
+        -- Sau khi qua cổng, CẬP NHẬT LẠI vị trí Part c theo nhân vật ở đảo mới
+        if char.PrimaryPart then
+            c.CFrame = char.PrimaryPart.CFrame
+        end
+    end
+
+    -- BƯỚC 2: Bay thường (Tween) đến đích (Dù có dùng cổng hay không vẫn chạy đoạn này để đi nốt quãng đường còn lại)
+    local currentPos = c.Position
+    local finalPos = targetCF.Position
+    local distance = (finalPos - currentPos).Magnitude
+
+    -- Nếu khoảng cách quá gần (< 10 studs) thì không cần tween nữa
+    if distance < 10 then 
+        c.CFrame = targetCF
+        return 
+    end
+    local speed = 350
+    if distance < 250 then speed = 350 end 
+
+    local tweenInfo = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(c, tweenInfo, { CFrame = targetCF })
+
+    -- Xử lý ngồi ghế (nếu có)
+    if char.Humanoid.Sit then
+        char.Humanoid.Sit = false
+    end
+
+    tween:Play()
+
+    -- Sử dụng Heartbeat thay vì Loop để mượt hơn và tránh treo script
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if tween.PlaybackState ~= Enum.PlaybackState.Playing then
+            connection:Disconnect()
+            return
+        end
+        
+        -- Nếu tắt tool farm hoặc Part bị mất -> Hủy tween
+        if not shouldTween or not c or c.Parent ~= workspace then
+            tween:Cancel()
+            connection:Disconnect()
+        end
+    end)
+end
+
 TeleportToTarget = function(e)
 		if (e.Position - plr.Character.HumanoidRootPart.Position).Magnitude > 1000 then
 			_tp(e);
@@ -931,24 +1032,7 @@ TeleportToTarget = function(e)
 notween = function(e)
 		plr.Character.HumanoidRootPart.CFrame = e;
 	end;
-function BTP(e)
-	local A = game.Players.LocalPlayer;
-	local u = A.Character.HumanoidRootPart;
-	local Z = A.Character.Humanoid;
-	local X = A.PlayerGui.Main;
-	local C = e.Position;
-	local v = u.Position;
-	repeat
-		Z.Health = 0;
-		u.CFrame = e;
-		X.Quest.Visible = false;
-		if (u.Position - v).Magnitude > 1 then
-			v = u.Position;
-			u.CFrame = e;
-		end;
-		task.wait(.5);
-	until (e.Position - u.Position).Magnitude <= 2000;
-end;
+
 spawn(function()
 	while task.wait() do
 		pcall(function()
@@ -1554,9 +1638,6 @@ QuestCheck = function()
 				NameMon = "Arctic Warrior";
 				PosQ = CFrame.new(5667.6582, 26.7997818, -6486.08984, -0.933587909, 0, -0.358349502, 0, 1, 0, .358349502, 0, -0.933587909);
 				PosM = CFrame.new(5966.24609375, 62.970020294189, -6179.3828125);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 1000 then
-					BTP(PosM);
-				end;
 			elseif e == 1375 or e <= 1424 then
 				Mon = "Snow Lurker";
 				Qdata = 2;
@@ -1880,7 +1961,7 @@ MaterialMon = function()
 				MPos = CFrame.new(61123, 19, 1569);
 				SP = "Default";
 				local e = Vector3.new(61163.8515625, 5.342342376709, 1819.7841796875);
-				shouldRequestEntrance(e, 17000);
+				shouldRequestEntrance(e, 2500);
 			end;
 		elseif World2 then
 			if SelectMaterial == "Leather + Scrap Metal" then
@@ -1901,7 +1982,7 @@ MaterialMon = function()
 				MPos = CFrame.new(911.35827636719, 125.95812988281, 33159.5390625);
 				SP = "Default";
 				local e = Vector3.new(61163.8515625, 5.342342376709, 1819.7841796875);
-				shouldRequestEntrance(e, 18000);
+				shouldRequestEntrance(e, 2500);
 			elseif SelectMaterial == "Mystic Droplet" then
 				MMon = { "Water Fighter" };
 				MPos = CFrame.new(-3385, 239, -10542);

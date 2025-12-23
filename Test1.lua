@@ -1443,39 +1443,30 @@ local QuestData = {
 }
 
 function CheckQuest()
-    local plr = game:GetService("Players").LocalPlayer
-    local MyLevel = plr.Data.Level.Value
-
-    local currentWorld =
-        World1 and "World1"
-        or World2 and "World2"
-        or World3 and "World3"
-
-    if not currentWorld then return nil end
-
+    local MyLevel = game:GetService("Players").LocalPlayer.Data.Level.Value
+    
+    -- Xác định world hiện tại
+    local currentWorld = World1 and "World1" or World2 and "World2" or World3 and "World3"
+    
+    if not currentWorld then return end
+    
+    -- Tìm quest phù hợp với level
     local worldData = QuestData[currentWorld]
-    if not worldData then return nil end
-
     for _, questInfo in ipairs(worldData) do
         local minLevel, maxLevel = questInfo[1], questInfo[2]
-
+        
         if MyLevel >= minLevel and MyLevel <= maxLevel then
-            return {
-                MonName      = questInfo[3], -- Tên quái
-                QuestLevel  = questInfo[4], -- Level quest
-                QuestName   = questInfo[5], -- Tên quest
-                QuestText   = questInfo[6], -- Text trong GUI
-                QuestNpcPos = questInfo[7], -- CFrame NPC
-                MobSpawnPos = questInfo[8], -- CFrame quái
-            }
+            Mon = questInfo[3]
+            LevelQuest = questInfo[4]
+            NameQuest = questInfo[5]
+            NameMon = questInfo[6]
+            CFrameQuest = questInfo[7]
+            CFrameMon = questInfo[8]
+            return
         end
     end
+end
 
-    return nil
-end
-function QuestNeta()
-    return CheckQuest()
-end
 MaterialMon = function()
 		local e = game.Players.LocalPlayer;
 		local A = e.Character and e.Character:FindFirstChild("HumanoidRootPart");
@@ -1931,77 +1922,77 @@ B:AddToggle({
 	end,
 })
 
-spawn(function()
+task.spawn(function()
     while task.wait(Sec) do
-        if not _G.Level then
-            continue
-        end
-
-        pcall(function()
-            local Q = QuestNeta()
-            if not Q then return end
-
-            local plr = game.Players.LocalPlayer
-            local QuestGui = plr.PlayerGui.Main.Quest
-            local QuestTitle = QuestGui.Container.QuestTitle.Title
-            local Root = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-            if not Root then return end
-
-            -- ================== ABANDON QUEST SAI ==================
-            if QuestGui.Visible
-            and not string.find(QuestTitle.Text, Q.QuestText)
-            and tick() - (_G.LastAbandon or 0) > 2 then
-                _G.LastAbandon = tick()
-                replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-                task.wait(0.6)
-            end
-
-            -- ================== NHẬN QUEST ==================
-            if not QuestGui.Visible then
-                _tp(Q.QuestNpcPos)
-
-                repeat task.wait()
-                until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 6
-                    or not _G.Level
-
-                if not _G.Level then return end
-
-                replicated.Remotes.CommF_:InvokeServer(
-                    "StartQuest",
-                    Q.QuestName,
-                    Q.QuestLevel
-                )
-
-                local t = tick()
-                repeat task.wait()
-                until (QuestGui.Visible and string.find(QuestTitle.Text, Q.QuestText))
-                    or tick() - t > 5
-                    or not _G.Level
-
-                return
-            end
-
-            -- ================== FARM QUÁI ==================
-            for _, mob in pairs(workspace.Enemies:GetChildren()) do
-                if not _G.Level then break end
-
-                if O.Alive(mob) and mob.Name == Q.MonName then
-                    repeat
-                        task.wait()
-                        O.Kill(mob, _G.Level)
-                        BringEnemy(mob)
-                    until not mob.Parent
-                        or mob.Humanoid.Health <= 0
-                        or not QuestGui.Visible
-                        or not _G.Level
+        if _G.Level then
+            pcall(function()
+                local player = game:GetService("Players").LocalPlayer
+                local questUI = player.PlayerGui.Main.Quest
+                local questTitle = questUI.Container.QuestTitle.Title.Text
+                if not string.find(questTitle, NameMon) then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
                 end
-            end
+                if not questUI.Visible then
+                    CheckQuest()
+                    _tp(CFrameQuest)
+                    
+                    if (player.Character.HumanoidRootPart.Position - CFrameQuest.Position).Magnitude <= 5 then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StartQuest", NameQuest, LevelQuest)
+                    end
 
-            -- ================== QUAY VỀ KHU QUÁI ==================
-            if QuestGui.Visible then
-                _tp(Q.MobSpawnPos)
-            end
-        end)
+                elseif questUI.Visible then
+                    CheckQuest()
+                    local foundEnemy = false
+
+                    for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                        if enemy.Name == Mon 
+                            and enemy:FindFirstChild("HumanoidRootPart") 
+                            and enemy:FindFirstChild("Humanoid") 
+                            and enemy.Humanoid.Health > 0 then
+
+                            if string.find(questTitle, NameMon) then
+                                foundEnemy = true
+                                repeat
+                                    _tp(enemy.HumanoidRootPart.CFrame * 35)
+                                    BringEnemy(enemy)
+                                    EquipWeapon(_G.SelectWeapon)
+                                    enemy.HumanoidRootPart.CanCollide = false
+                                    enemy.Humanoid.WalkSpeed = 0
+                                    enemy.Head.CanCollide = false
+                                until not _G.Level 
+                                    or enemy.Humanoid.Health <= 0 
+                                    or not enemy.Parent 
+                                    or not questUI.Visible
+                            else
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("AbandonQuest")
+                            end
+                        end
+                    end
+
+                    if not foundEnemy then
+                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp and CFrameMon then
+                            local scanHeight = 35  -- độ cao
+                            local scanRadius = 100 -- bán kính hình vuông
+
+                            local offsets = {
+                                Vector3.new(scanRadius, scanHeight, scanRadius),
+                                Vector3.new(-scanRadius, scanHeight, scanRadius),
+                                Vector3.new(scanRadius, scanHeight, -scanRadius),
+                                Vector3.new(-scanRadius, scanHeight, -scanRadius)
+                            }
+
+                            for _, offset in ipairs(offsets) do
+                                if not _G.Level or not questUI.Visible then break end
+                                local targetCF = CFrameMon * CFrame.new(offset)
+                                _tp(targetCF)
+                                task.wait(1)
+                            end
+                        end
+                    end
+                end
+            end)
+        end
     end
 end)
 

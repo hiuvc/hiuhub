@@ -2355,7 +2355,7 @@ end
 B:AddDropdown({
 	Title = "Select Fram:",
 	Values = FrameMode,
-	Default = "Level",
+	Default = "Fram Level",
 	Multi = false,
 	Callback = function(e)
 		_G.SelectFramMode = e

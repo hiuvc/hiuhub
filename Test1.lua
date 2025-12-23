@@ -1,12 +1,3 @@
-if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
-    repeat
-        wait()
-        local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
-        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
-        task.wait(3)
-    until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
-end
-
 do
 	ply = game.Players;
 	plr = ply.LocalPlayer;
@@ -39,9 +30,15 @@ do
 	ClickState = 0;
 	Num_self = 25;
 end;
+if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
+    repeat
+        wait()
+        local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
+        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
+        task.wait(3)
+    until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
+end
 
-local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
-local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
 	World1 = true;
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
@@ -896,7 +893,6 @@ local function CheckNearestTele(targetCF)
     return nil
 end
 
--- 2. Hàm dừng Tween và dọn dẹp (StopTween)
 function StopTween()
     TweenConfig.IsTweening = false
     
@@ -921,7 +917,6 @@ function StopTween()
     end
 end
 
--- 3. Hàm thực hiện Tween tới đích (topos)
 function topos(target)
     -- Kiểm tra nhân vật hợp lệ
     local char = plr.Character
@@ -994,7 +989,7 @@ function topos(target)
     end)
 end
 
-function TP1(target)
+function _tp(target)
     topos(target)
 end
 
@@ -1008,24 +1003,6 @@ TeleportToTarget = function(e)
 notween = function(e)
 		plr.Character.HumanoidRootPart.CFrame = e;
 	end;
-function BTP(e)
-	local A = game.Players.LocalPlayer;
-	local u = A.Character.HumanoidRootPart;
-	local Z = A.Character.Humanoid;
-	local X = A.PlayerGui.Main;
-	local C = e.Position;
-	local v = u.Position;
-	repeat
-		Z.Health = 0;
-		u.CFrame = e;
-		X.Quest.Visible = false;
-		if (u.Position - v).Magnitude > 1 then
-			v = u.Position;
-			u.CFrame = e;
-		end;
-		task.wait(.5);
-	until (e.Position - u.Position).Magnitude <= 2000;
-end;
 spawn(function()
 	while task.wait() do
 		pcall(function()
@@ -2016,7 +1993,8 @@ MaterialMon = function()
 		end;
 	end;
 
-
+local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 ---Tab----------------
 local x = e:NewWindow();
 local sv = x:T("Tab Server");
@@ -2395,8 +2373,6 @@ spawn(function()
 					Q.QuestName,
 					Q.QuestLevel
 				)
-
-				-- 🔒 CHỜ QUEST THẬT SỰ NHẬN
 				local t = tick()
 				repeat
 					task.wait()

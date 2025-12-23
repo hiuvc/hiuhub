@@ -1080,7 +1080,7 @@ function ToPos(target)
 end
 
 function _tp(target)
-    topos(target)
+    ToPos(target)
 end
 
 TeleportToTarget = function(e)

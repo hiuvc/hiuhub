@@ -2587,19 +2587,28 @@ spawn(function()
         end)
     end
 end)
+
+-- ===================== CACHE EYES (ANTI LAG) =====================
+local EyeCache = {}
+for _, obj in ipairs(workspace:GetDescendants()) do
+    if obj:IsA("BasePart") and obj.Name:match("^Eye%d+$") then
+        table.insert(EyeCache, obj)
+    end
+end
+
 function CheckEyes()
     local count = 0
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart")
-        and obj.Name:match("^Eye%d+$")
-        and obj.Material == Enum.Material.Neon
-        and obj.Transparency == 0 then
+    for _, eye in ipairs(EyeCache) do
+        if eye and eye.Parent
+        and eye.Material == Enum.Material.Neon
+        and eye.Transparency == 0 then
             count += 1
         end
     end
     return count
 end
 
+-- ===================== PHÁ BÌNH POINT =====================
 local PhaBinhPoints = {
     CFrame.new(-16332.526, 158.072, 1440.324),
     CFrame.new(-16288.609, 158.167, 1470.368),
@@ -2611,6 +2620,7 @@ local PhaBinhPoints = {
     CFrame.new(-16335.097, 159.334, 1324.886),
 }
 
+-- ===================== MOB LIST =====================
 local mobList = {
     ["Serpent Hunter"] = true,
     ["Skull Slayer"] = true,
@@ -2618,23 +2628,30 @@ local mobList = {
     ["Sun-kissed Warrior"] = true
 }
 
+-- ===================== STATE =====================
+local DonePhaBinh = false
+
+-- ===================== MAIN LOOP =====================
 task.spawn(function()
     while task.wait(Sec) do
         if not _G.FramTyrent then continue end
+
         pcall(function()
             local plr = game.Players.LocalPlayer
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             local hum = char and char:FindFirstChildOfClass("Humanoid")
             if not (hrp and hum and hum.Health > 0) then return end
-            
+
             local enemies = workspace:FindFirstChild("Enemies")
             if not enemies then return end
-            
+
             local Eyes = CheckEyes()
-            
-            -- Ưu tiên 1: Kill Tyrant
-            for _, enemy in pairs(enemies:GetChildren()) do
+
+            -- =================================================
+            -- 1️⃣ ƯU TIÊN CAO NHẤT: ĐÁNH BOSS TYRANT
+            -- =================================================
+            for _, enemy in ipairs(enemies:GetChildren()) do
                 if enemy.Name == "Tyrant of the Skies" then
                     local eh = enemy:FindFirstChildOfClass("Humanoid")
                     if eh and eh.Health > 0 then
@@ -2644,73 +2661,82 @@ task.spawn(function()
                     end
                 end
             end
-            
-            -- Ưu tiên 2: Nếu đủ Eyes, farm tại các điểm Pha Bình
-            if Eyes >= 4 then
+
+            -- =================================================
+            -- 2️⃣ ĐỦ 4 EYES → PHÁ BÌNH (CHỈ 1 LẦN)
+            -- =================================================
+            if Eyes >= 4 and not DonePhaBinh then
+                DonePhaBinh = true
+
                 for _, point in ipairs(PhaBinhPoints) do
                     if not _G.FramTyrent then return end
-                    
+
                     if _tp then
                         _tp(point)
                     else
                         hrp.CFrame = point
                     end
-                    
-                    -- Chờ đến vị trí
-                    local start = tick()
-                    while tick() - start < 10 do
-                        if not _G.FramTyrent then return end
+
+                    local t = tick()
+                    while tick() - t < 10 do
                         if (hrp.Position - point.Position).Magnitude <= 3 then
                             break
                         end
                         task.wait(0.1)
                     end
-                    
-                    -- Sử dụng kỹ năng
+
+                    -- phá bình
                     Useskills("Melee", "Z")
-                    task.wait(0.5)
+                    task.wait(0.4)
                     Useskills("Melee", "X")
-                    task.wait(0.5)
+                    task.wait(0.4)
                     Useskills("Melee", "C")
-                    task.wait(0.5)
+                    task.wait(0.4)
                     Useskills("Blox Fruit", "Z")
-                    task.wait(0.5)
+                    task.wait(0.4)
                     Useskills("Blox Fruit", "X")
-                    task.wait(0.5)
+                    task.wait(0.4)
                     Useskills("Blox Fruit", "C")
-                    task.wait(1) -- Chờ để quái chết
+                    task.wait(1)
                 end
                 return
             end
-            
-            -- Ưu tiên 3: Nếu chưa đủ Eyes, farm quái thường
-            local foundEnemy = false
-            for _, enemy in pairs(enemies:GetChildren()) do
-                if not _G.FramTyrent then return end
-                
+
+            -- reset trạng thái sau khi Eye giảm
+            if Eyes < 4 then
+                DonePhaBinh = false
+            end
+
+            -- =================================================
+            -- 3️⃣ FARM QUÁI THƯỜNG
+            -- =================================================
+            for _, enemy in ipairs(enemies:GetChildren()) do
                 local eh = enemy:FindFirstChildOfClass("Humanoid")
                 if eh and eh.Health > 0 and mobList[enemy.Name] then
                     BringEnemy(enemy)
                     O.Kill(enemy, true)
-                    foundEnemy = true
-                    -- Đợi quái chết
-                    local killWait = tick()
-                    while tick() - killWait < 15 do
+
+                    local w = tick()
+                    while tick() - w < 15 do
                         if eh.Health <= 0 then break end
                         task.wait(0.1)
                     end
                     return
                 end
             end
-            
-            -- Nếu không tìm thấy quái thường, teleport về điểm farm
-            if not foundEnemy then
+
+            -- =================================================
+            -- 4️⃣ VỀ ĐIỂM CHỜ
+            -- =================================================
+            if _tp then
                 _tp(CFrame.new(-16268.287, 152.616, 1390.773))
-                task.wait(2) -- Chờ để spawn quái
+            else
+                hrp.CFrame = CFrame.new(-16268.287, 152.616, 1390.773)
             end
         end)
     end
 end)
+
 
 
 -- Accept Quest Toggle

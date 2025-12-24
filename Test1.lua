@@ -2251,18 +2251,28 @@ if World3 then
             end)
         end
     end)
-	local TyrantStatus = SV:AddParagraph({ Title = "Tyrant of the Skies", Content = "" })
+	function CheskEyes()
+	    local results = {}
+	    for _, obj in pairs(workspace:GetDescendants()) do
+	        if obj:IsA("BasePart") then
+	            if obj.Name:match("^Eye%d+$") and obj.Material == Enum.Material.Neon and obj.Transparency == 0 then
+	                table.insert(results, obj)
+	            end
+	        end
+	    end
+	    return #results
+	end
+
+	local TyrantStatus = SV:AddParagraph({ Title = "Tyrant Of The Skies", Content = "" })
 	task.spawn(function()
 		pcall(function()
+			local Eyes = CheskEyes()
 			while wait(.5) do
-				if game:GetService("Workspace").Enemies:FindFirstChild("Tyrant of the Skies") then
-					TyrantStatus:SetDesc("Status : ✅")
-				else
-					TyrantStatus:SetDesc("Status : ❌")
-				end
+				TyrantStatus:SetDesc("Status : ",Eyes,"/4 Eyes")
 			end
 		end)
 	end) 
+
     local EliteHunterStatus = SV:AddParagraph({ Title = "Elite Hunter", Content = "" })
     task.spawn(function()
         while task.wait(1) do
@@ -2557,7 +2567,7 @@ end)
 task.spawn(function()
     while task.wait(Sec) do
         if not _G.FarmTyrant then
-            task.wait(1)
+            continue
         else
             pcall(function()
                 local char = plr.Character
@@ -2567,20 +2577,17 @@ task.spawn(function()
                 local enemies = workspace:FindFirstChild("Enemies")
                 if not enemies then return end
 
-                -- 1️⃣ Ưu tiên Tyrant
                 for _, enemy in pairs(enemies:GetChildren()) do
                     if enemy.Name == "Tyrant of the Skies" then
                         local hum = enemy:FindFirstChildOfClass("Humanoid")
                         if hum and hum.Health > 0 then
                             BringEnemy(enemy)
-                            task.wait(0.15)
                             O.Kill2(enemy, true)
                             return
                         end
                     end
                 end
 
-                -- 2️⃣ Kill mob để spawn Tyrant
                 local mobList = {
                     ["Serpent Hunter"] = true,
                     ["Skull Slayer"] = true,
@@ -2592,7 +2599,6 @@ task.spawn(function()
                     local hum = enemy:FindFirstChildOfClass("Humanoid")
                     if hum and hum.Health > 0 and mobList[enemy.Name] then
                         BringEnemy(enemy)
-                        task.wait(0.15)
                         O.Kill(enemy, true)
                         return
                     end

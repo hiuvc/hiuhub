@@ -2251,27 +2251,32 @@ if World3 then
             end)
         end
     end)
-	function CheskEyes()
-	    local results = {}
-	    for _, obj in pairs(workspace:GetDescendants()) do
-	        if obj:IsA("BasePart") then
-	            if obj.Name:match("^Eye%d+$") and obj.Material == Enum.Material.Neon and obj.Transparency == 0 then
-	                table.insert(results, obj)
-	            end
+	function CheckEyes()
+	    local count = 0
+	    for _, obj in ipairs(workspace:GetDescendants()) do
+	        if obj:IsA("BasePart")
+	        and obj.Name:match("^Eye%d+$")
+	        and obj.Material == Enum.Material.Neon
+	        and obj.Transparency == 0 then
+	            count += 1
 	        end
 	    end
-	    return #results
+	    return count
 	end
 
-	local TyrantStatus = SV:AddParagraph({ Title = "Tyrant Of The Skies", Content = "" })
+	local TyrantStatus = SV:AddParagraph({
+	    Title = "Tyrant Of The Skies",
+	    Content = "Status : 0/4 Eyes"
+	})
+
 	task.spawn(function()
-		pcall(function()
-			local Eyes = CheskEyes()
-			while wait(.5) do
-				TyrantStatus:SetDesc("Status : ",Eyes,"/4 Eyes")
-			end
-		end)
-	end) 
+	    while task.wait(0.5) do
+	        pcall(function()
+	            local eyes = CheckEyes()
+	            TyrantStatus:SetDesc("Status : "..eyes.."/4 Eyes")
+	        end)
+	    end
+	end)
 
     local EliteHunterStatus = SV:AddParagraph({ Title = "Elite Hunter", Content = "" })
     task.spawn(function()

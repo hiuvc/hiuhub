@@ -2605,46 +2605,42 @@ spawn(function()
     end
 end)
 
-local function sendSkillKey(skillKey)
-    local virtualInputManager = game:GetService("VirtualInputManager")
-    virtualInputManager:SendKeyEvent(true, skillKey, false, game)
-    wait(0.05)
-    virtualInputManager:SendKeyEvent(false, skillKey, false, game)
+local PhaBinhPoints = {
+    CFrame.new(-16332.526, 158.072, 1440.325),
+    CFrame.new(-16288.609, 158.167, 1470.368),
+    CFrame.new(-16245.412, 158.437, 1463.366),
+    CFrame.new(-16212.469, 158.167, 1466.344),
+    CFrame.new(-16211.946, 158.072, 1322.398),
+    CFrame.new(-16260.922, 154.921, 1323.616),
+    CFrame.new(-16297.060, 159.323, 1317.224),
+    CFrame.new(-16335.097, 159.334, 1324.886),
+}
+
+local MobNeedEyes = {
+    ["Serpent Hunter"] = true,
+    ["Skull Slayer"] = true,
+    ["Isle Champion"] = true,
+    ["Sun-kissed Warrior"] = true
+}
+
+-- ================== FUNCTIONS ==================
+local function IsAlive(char)
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    return hum and hrp and hum.Health > 0
 end
 
-local function equipAndUseSkill(toolType)
-    local player = game.Players.LocalPlayer
-    local character = player.Character
-    local backpack = player.Backpack
-    if not (character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0) then return end
-
-    for _, item in pairs(backpack:GetChildren()) do
-        if item:IsA("Tool") and item.ToolTip == toolType then
-            item.Parent = character
-            wait(0.12)
-            for _, skill in ipairs({"Z", "X", "C", "V", "F"}) do
-                if not _G.FarmTyrant then break end
-                pcall(function() sendSkillKey(skill) end)
-                wait(0.12)
+local function FindTyrant(enemies)
+    for _, enemy in ipairs(enemies:GetChildren()) do
+        if enemy.Name == "Tyrant of the Skies" then
+            local hum = enemy:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health > 0 then
+                return enemy
             end
-            item.Parent = backpack
-            break
         end
     end
 end
 
-local PhaBinhPoints = {
-    CFrame.new(-16332.5263671875, 158.07200622558594, 1440.324951171875),
-    CFrame.new(-16288.609375, 158.16700744628906, 1470.3680419921875),
-    CFrame.new(-16245.412109375, 158.43699645996094, 1463.365966796875),
-    CFrame.new(-16212.46875, 158.16700744628906, 1466.343994140625),
-    CFrame.new(-16211.9462890625, 158.07200622558594, 1322.39794921875),
-    CFrame.new(-16260.921875, 154.92100524902344, 1323.615966796875),
-    CFrame.new(-16297.0595703125, 159.322998046875, 1317.2239990234375),
-    CFrame.new(-16335.0966796875, 159.33399963378906, 1324.885986328125),
-}
-
--- Farm Tyrant Logic
 task.spawn(function()
     while task.wait(Sec) do
         if not _G.FarmTyrant then
@@ -2654,86 +2650,78 @@ task.spawn(function()
         pcall(function()
             local plr = game.Players.LocalPlayer
             local char = plr.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if not hrp or not hum or hum.Health <= 0 then return end
+            if not IsAlive(char) then return end
 
             local enemies = workspace:FindFirstChild("Enemies")
             if not enemies then return end
 
             local Eyes = CheckEyes()
+            local Tyrant = FindTyrant(enemies)
 
-            -- Ưu tiên 1: Nếu có đủ 4 eyes, farm tại các điểm cố định
-            if Eyes == 4 then
+            -- ================== CASE 1: CÓ TYRANT ==================
+            if Tyrant then
+                BringEnemy(Tyrant)
+                O.Kill2(Tyrant, true)
+                return -- đánh xong -> vòng lặp quay lại farm quái
+            end
+
+            -- ================== CASE 2: CHƯA CÓ TYRANT ==================
+
+            -- ❌ CHƯA ĐỦ EYES → FARM QUÁI
+            if Eyes < 4 then
+                for _, enemy in ipairs(enemies:GetChildren()) do
+                    local hum = enemy:FindFirstChildOfClass("Humanoid")
+                    if hum and hum.Health > 0 and MobNeedEyes[enemy.Name] then
+                        BringEnemy(enemy)
+                        O.Kill(enemy, true)
+                        return
+                    end
+                end
+
+                -- fallback đứng chờ
+                if _tp then
+                    _tp(CFrame.new(-16268.287, 152.616, 1390.773))
+                end
+                return
+            end
+
+            -- ✅ ĐỦ EYES & CHƯA CÓ TYRANT → PHÁ BÌNH
+            if Eyes >= 4 then
                 for _, point in ipairs(PhaBinhPoints) do
                     if not _G.FarmTyrant then break end
+
+                    -- Nếu Tyrant spawn giữa chừng → đánh ngay
+                    local TyrantNow = FindTyrant(enemies)
+                    if TyrantNow then
+                        BringEnemy(TyrantNow)
+                        O.Kill2(TyrantNow, true)
+                        return
+                    end
 
                     if _tp then
                         _tp(point)
                     end
 
-                    local arrived = false
                     local start = tick()
-                    while tick() - start < 12 and _G.FarmTyrant do
-                        local hrp2 = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-                        local hum2 = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
-                        if not hrp2 or not hum2 or hum2.Health <= 0 then break end
-
-                        if (hrp2.Position - point.Position).Magnitude <= 3 then
-                            arrived = true
-                            break
+                    while tick() - start < 10 and _G.FarmTyrant do
+                        local TyrantMid = FindTyrant(enemies)
+                        if TyrantMid then
+                            BringEnemy(TyrantMid)
+                            O.Kill2(TyrantMid, true)
+                            return
                         end
-                        task.wait(0.1)
+                        task.wait(0.2)
                     end
 
-                    if arrived then
-						Useskills("Melee", "Z");
-						wait(.5);
-						Useskills("Melee", "X");
-						wait(.5);
-						Useskills("Melee", "C");
-						wait(.5);
-						Useskills("Blox Fruit", "Z");
-						wait(.5);
-						Useskills("Blox Fruit", "X");
-						wait(.5);
-						Useskills("Blox Fruit", "C");
-                    end
+                    -- phá bình
+                    Useskills("Melee","Z"); task.wait(0.5)
+                    Useskills("Melee","X"); task.wait(0.5)
+                    Useskills("Melee","C"); task.wait(0.5)
+                    Useskills("Blox Fruit","Z"); task.wait(0.5)
+                    Useskills("Blox Fruit","X"); task.wait(0.5)
+                    Useskills("Blox Fruit","C"); task.wait(0.5)
                 end
-            end
-
-            -- Ưu tiên 2: Tìm và kill Tyrant (ngay cả khi chưa đủ eyes)
-            for _, enemy in ipairs(enemies:GetChildren()) do
-                if enemy.Name == "Tyrant of the Skies" then
-                    local eh = enemy:FindFirstChildOfClass("Humanoid")
-                    if eh and eh.Health > 0 then
-                        BringEnemy(enemy)
-                        O.Kill2(enemy, true)
-                        return
-                    end
-                end
-            end
-
-            -- Ưu tiên 3: Farm những quái cần để lấy eyes
-            local mobList = {
-                ["Serpent Hunter"] = true,
-                ["Skull Slayer"] = true,
-                ["Isle Champion"] = true,
-                ["Sun-kissed Warrior"] = true
-            }
-
-            for _, enemy in ipairs(enemies:GetChildren()) do
-                local eh = enemy:FindFirstChildOfClass("Humanoid")
-                if eh and eh.Health > 0 and mobList[enemy.Name] then
-                    BringEnemy(enemy)
-                    O.Kill(enemy, true)
-                    return
-                end
-            end
-
-            -- Fallback: Đứng chờ tại điểm chỉ định nếu không tìm thấy quái trong danh sách
-            if _tp then
-                _tp(CFrame.new(-16268.287, 152.616, 1390.773))
+                return
             end
         end)
     end

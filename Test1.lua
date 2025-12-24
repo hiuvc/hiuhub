@@ -2445,20 +2445,15 @@ spawn(function()
     end
 end)
 
--- ===== POSITION =====
 local QUEST_POS = CFrame.new(-1927.92, 37.8, -12842.54)
 local WAIT_POS  = CFrame.new(-2091.91, 70.01, -12142.84)
 local MIRROR_TP = CFrame.new(-2151.82, 149.32, -12404.91)
-
--- ===== MINIONS =====
 local Minions = {
     ["Cookie Crafter"] = true,
     ["Cake Guard"] = true,
     ["Baking Staff"] = true,
     ["Head Baker"] = true
 }
-
--- ===== COOLDOWN =====
 local LastSpawner = 0
 local SpawnerCD = 10
 
@@ -2478,9 +2473,6 @@ task.spawn(function()
             local Enemies = Workspace:FindFirstChild("Enemies")
             if not Enemies then return end
 
-            -- ===============================
-            -- 1️⃣ ƯU TIÊN CAKE PRINCE
-            -- ===============================
             for _, enemy in ipairs(Enemies:GetChildren()) do
                 if enemy.Name == "Cake Prince"
                 and enemy:FindFirstChild("Humanoid")
@@ -2491,9 +2483,7 @@ task.spawn(function()
                 end
             end
 
-            -- ===============================
-            -- 2️⃣ CHECK BIG MIRROR
-            -- ===============================
+
             local BigMirror = Workspace:FindFirstChild("Map")
                 and Workspace.Map:FindFirstChild("CakeLoaf")
                 and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
@@ -2506,9 +2496,6 @@ task.spawn(function()
                 end
             end
 
-            -- ===============================
-            -- 3️⃣ FARM MINION
-            -- ===============================
             local FoundMinion = false
 
             for _, enemy in ipairs(Enemies:GetChildren()) do
@@ -2527,7 +2514,6 @@ task.spawn(function()
                         return
                     end
 
-                    -- Spawn Cake Prince (cooldown)
                     if tick() - LastSpawner > SpawnerCD then
                         local res = CommF:InvokeServer("CakePrinceSpawner")
                         local num = tonumber(string.match(res or "", "%d+"))
@@ -2543,9 +2529,6 @@ task.spawn(function()
                 end
             end
 
-            -- ===============================
-            -- 4️⃣ KHÔNG CÓ MOB → ĐỨNG CHỜ
-            -- ===============================
             if not FoundMinion then
                 if (HRP.Position - WAIT_POS.Position).Magnitude > 30 then
                     _tp(WAIT_POS)
@@ -2605,52 +2588,98 @@ spawn(function()
     end
 end)
 
--- Farm Tyrant Logic
+local PhaBinhPoints = {
+    CFrame.new(-16332.526, 158.072, 1440.324),
+    CFrame.new(-16288.609, 158.167, 1470.368),
+    CFrame.new(-16245.412, 158.437, 1463.366),
+    CFrame.new(-16212.469, 158.167, 1466.344),
+    CFrame.new(-16211.946, 158.072, 1322.398),
+    CFrame.new(-16260.922, 154.921, 1323.616),
+    CFrame.new(-16297.060, 159.323, 1317.224),
+    CFrame.new(-16335.097, 159.334, 1324.886),
+}
+
 task.spawn(function()
     while task.wait(Sec) do
-        if not _G.FarmTyrant then
-            continue
-        else
-            pcall(function()
-                local char = plr.Character
-                local hrp = char and char:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
+        if not _G.FramTyrent then continue end
 
-                local enemies = workspace:FindFirstChild("Enemies")
-                if not enemies then return end
+        pcall(function()
+            local plr = game.Players.LocalPlayer
+            local char = plr.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if not (hrp and hum and hum.Health > 0) then return end
 
-                for _, enemy in pairs(enemies:GetChildren()) do
-                    if enemy.Name == "Tyrant of the Skies" then
-                        local hum = enemy:FindFirstChildOfClass("Humanoid")
-                        if hum and hum.Health > 0 then
-                            BringEnemy(enemy)
-                            O.Kill2(enemy, true)
-                            return
-                        end
-                    end
-                end
+            local enemies = workspace:FindFirstChild("Enemies")
+            if not enemies then return end
 
-                local mobList = {
-                    ["Serpent Hunter"] = true,
-                    ["Skull Slayer"] = true,
-                    ["Isle Champion"] = true,
-                    ["Sun-kissed Warrior"] = true
-                }
+            local Eyes = CheckEyes()
 
-                for _, enemy in pairs(enemies:GetChildren()) do
-                    local hum = enemy:FindFirstChildOfClass("Humanoid")
-                    if hum and hum.Health > 0 and mobList[enemy.Name] then
+            for _, enemy in pairs(enemies:GetChildren()) do
+                if enemy.Name == "Tyrant of the Skies" then
+                    local eh = enemy:FindFirstChildOfClass("Humanoid")
+                    if eh and eh.Health > 0 then
                         BringEnemy(enemy)
-                        O.Kill(enemy, true)
+                        O.Kill2(enemy, true)
                         return
                     end
                 end
+            end
 
-                _tp(CFrame.new(-16268.287, 152.616, 1390.773))
-            end)
-        end
+            if Eyes >= 4 then
+                for _, point in ipairs(PhaBinhPoints) do
+                    if not _G.FramTyrent then return end
+
+                    if _tp then
+                        _tp(point)
+                    else
+                        hrp.CFrame = point
+                    end
+
+                    local start = tick()
+                    while tick() - start < 10 do
+                        if not _G.FramTyrent then return end
+                        if (hrp.Position - point.Position).Magnitude <= 3 then
+                            break
+                        end
+                        task.wait(0.1)
+                    end
+	    				Useskills("Melee", "Z");
+						wait(.5);
+						Useskills("Melee", "X");
+						wait(.5);
+						Useskills("Melee", "C");
+						wait(.5);
+						Useskills("Blox Fruit", "Z");
+						wait(.5);
+						Useskills("Blox Fruit", "X");
+						wait(.5);
+						Useskills("Blox Fruit", "C");
+                end
+                return
+            end
+
+            local mobList = {
+                ["Serpent Hunter"] = true,
+                ["Skull Slayer"] = true,
+                ["Isle Champion"] = true,
+                ["Sun-kissed Warrior"] = true
+            }
+
+            for _, enemy in pairs(enemies:GetChildren()) do
+                local eh = enemy:FindFirstChildOfClass("Humanoid")
+                if eh and eh.Health > 0 and mobList[enemy.Name] then
+                    BringEnemy(enemy)
+                    O.Kill(enemy, true)
+                    return
+                end
+            end
+
+            _tp(CFrame.new(-16268.287, 152.616, 1390.773))
+        end)
     end
 end)
+
 
 -- Accept Quest Toggle
 B:AddToggle({

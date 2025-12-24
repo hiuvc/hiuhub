@@ -2687,9 +2687,17 @@ task.spawn(function()
                     end
 
                     if arrived then
-                        equipAndUseSkill("Melee")
-                        equipAndUseSkill("Sword")
-                        equipAndUseSkill("Gun")
+						Useskills("Melee", "Z");
+						wait(.5);
+						Useskills("Melee", "X");
+						wait(.5);
+						Useskills("Melee", "C");
+						wait(.5);
+						Useskills("Blox Fruit", "Z");
+						wait(.5);
+						Useskills("Blox Fruit", "X");
+						wait(.5);
+						Useskills("Blox Fruit", "C");
                     end
                 end
             end

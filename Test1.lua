@@ -2346,323 +2346,265 @@ SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 end });
 
 
-local FrameMode = { "Fram Level", "Fram Cake Prince","Fram Bone","Fram The Tyrant of Skies", "Fram Nearest" }
+local FrameMode = {"Fram Level", "Fram Cake Prince", "Fram Bone", "Fram Tyrant of The Skies", "Fram Nearest"}
 
+-- Update farm mode function
 local function UpdateFramMode()
-	_G.Level = (_G.SelectFramMode == "Fram Level" and _G.StartFram)
-	_G.Auto_Cake_Prince = (_G.SelectFramMode == "Fram Cake Prince" and _G.StartFram)
-	_G.AutoFarm_Bone = (_G.SelectFramMode == "Fram Bone" and _G.StartFram)
-	_G.AutoFarmNear = (_G.SelectFramMode == "Fram Nearest" and _G.StartFram)
-	_G.FarmTyrant = (_G.SelectFramMode == "Fram The Tyrant of Skies" and _G.StartFram)
+    local active = _G.StartFram
+    _G.Level = (_G.SelectFramMode == "Fram Level" and active)
+    _G.Auto_Cake_Prince = (_G.SelectFramMode == "Fram Cake Prince" and active)
+    _G.AutoFarm_Bone = (_G.SelectFramMode == "Fram Bone" and active)
+    _G.AutoFarmNear = (_G.SelectFramMode == "Fram Nearest" and active)
+    _G.FarmTyrant = (_G.SelectFramMode == "Fram Tyrant of The Skies" and active)
 end
 
+-- UI Components
 B:AddDropdown({
-	Title = "Select Fram:",
-	Values = FrameMode,
-	Default = "Fram Level",
-	Multi = false,
-	Callback = function(e)
-		_G.SelectFramMode = e
-		UpdateFramMode()
-	end,
+    Title = "Select Fram:",
+    Values = FrameMode,
+    Default = "Fram Level",
+    Multi = false,
+    Callback = function(e)
+        _G.SelectFramMode = e
+        UpdateFramMode()
+    end,
 })
 
 B:AddToggle({
-	Title = "Start Fram",
-	Default = false,
-	Callback = function(e)
-		_G.StartFram = e
-		UpdateFramMode()
-	end,
+    Title = "Start Fram",
+    Default = false,
+    Callback = function(e)
+        _G.StartFram = e
+        UpdateFramMode()
+    end,
 })
 
+-- Farm Level Logic
 spawn(function()
-	while task.wait(Sec) do
-		if not _G.Level then
-			continue
-		end
-
-		pcall(function()
-			local Q = QuestNeta()
-			local QuestGui = plr.PlayerGui.Main.Quest
-			local QuestTitle = QuestGui.Container.QuestTitle.Title
-
-			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
-				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-				task.wait(0.5)
-			end
-
-			if not QuestGui.Visible then
-				_tp(Q.QuestNpcPos)
-
-				repeat task.wait()
-				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 10
-					or not _G.Level
-
-				if not _G.Level then return end
-
-				replicated.Remotes.CommF_:InvokeServer(
-					"StartQuest",
-					Q.QuestName,
-					Q.QuestLevel
-				)
-
-				local t = tick()
-				repeat
-					task.wait()
-				until (
-					QuestGui.Visible
-					and string.find(QuestTitle.Text, Q.QuestText)
-				)
-				or tick() - t > 5
-				or not _G.Level
-
-				return
-			end
-			for _, mob in pairs(workspace.Enemies:GetChildren()) do
-				if not _G.Level then break end
-
-				if O.Alive(mob) and mob.Name == Q.MonName then
-					repeat
-						task.wait()
-						O.Kill(mob, true)
-						BringEnemy(mob)
-					until not mob.Parent
-						or mob.Humanoid.Health <= 0
-						or not QuestGui.Visible
-						or not _G.Level
-				end
-			end
-
-			if QuestGui.Visible then
-				_tp(Q.MobSpawnPos)
-			end
-		end)
-	end
+    while task.wait(Sec) do
+        if not _G.Level then continue end
+        
+        pcall(function()
+            local Q = QuestNeta()
+            local QuestGui = plr.PlayerGui.Main.Quest
+            local QuestTitle = QuestGui.Container.QuestTitle.Title
+            local Root = plr.Character.HumanoidRootPart
+            
+            -- Abandon quest if wrong target
+            if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
+                CommF:InvokeServer("AbandonQuest")
+                task.wait(0.5)
+            end
+            
+            -- Start quest if not active
+            if not QuestGui.Visible then
+                _tp(Q.QuestNpcPos)
+                repeat task.wait() until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 10 or not _G.Level
+                if not _G.Level then return end
+                
+                CommF:InvokeServer("StartQuest", Q.QuestName, Q.QuestLevel)
+                
+                local t = tick()
+                repeat task.wait()
+                until (QuestGui.Visible and string.find(QuestTitle.Text, Q.QuestText)) or tick() - t > 5 or not _G.Level
+                return
+            end
+            
+            -- Kill target mobs
+            for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                if not _G.Level then break end
+                if O.Alive(mob) and mob.Name == Q.MonName then
+                    repeat
+                        task.wait()
+                        O.Kill(mob, true)
+                        BringEnemy(mob)
+                    until not mob.Parent or mob.Humanoid.Health <= 0 or not QuestGui.Visible or not _G.Level
+                end
+            end
+            
+            -- Teleport to mob spawn area
+            if QuestGui.Visible then
+                _tp(Q.MobSpawnPos)
+            end
+        end)
+    end
 end)
 
+-- Farm Cake Prince Logic
 spawn(function()
-	while wait(Sec) do
-		if _G.Auto_Cake_Prince then
-			pcall(function()
-				local Workspace = game:GetService("Workspace")
-				local ReplicatedStorage = game:GetService("ReplicatedStorage")
-				local Enemies = Workspace.Enemies
-				local Player = game.Players.LocalPlayer
-				local Character = Player.Character
-				
-				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-					return
-				end
-				
-				local HRP = Character.HumanoidRootPart
-				
-				-- Check for Cake Prince
-				local cakePrince = nil
-				for _, v in pairs(Enemies:GetChildren()) do
-					if v.Name == "Cake Prince" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-						cakePrince = v
-						break
-					end
-				end
-				
-				if cakePrince then
-					-- Kill Cake Prince
-					O.Kill2(cakePrince, _G.Auto_Cake_Prince)
-					BringEnemy(cakePrince)
-					return
-				end
-				
-				-- Check if Big Mirror is active and far away
-				local BigMirror = Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("CakeLoaf") and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
-				if BigMirror and BigMirror:FindFirstChild("Other") then
-					if BigMirror.Other.Transparency == 0 then
-						local mirrorPos = CFrame.new(-1990.67, 4533, -14973.67)
-						if (mirrorPos.Position - HRP.Position).Magnitude >= 2000 then
-							_tp(CFrame.new(-2151.82, 149.32, -12404.91))
-							return
-						end
-					end
-				end
-				
-				-- Check for minions
-				local minion = nil
-				local minionNames = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
-				for _, v in pairs(Enemies:GetChildren()) do
-					for _, name in pairs(minionNames) do
-						if v.Name == name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-							minion = v
-							break
-						end
-					end
-					if minion then break end
-				end
-				
-				if minion then
-					-- Check if quest is visible and AcceptQuestC is enabled
-					local QuestGui = Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("Main") and Player.PlayerGui.Main:FindFirstChild("Quest")
-					
-					if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
-						-- Accept quest if needed
-						local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
-						if (questPos.Position - HRP.Position).Magnitude > 50 then
-							_tp(questPos)
-							return
-						end
-						
-						local questData = {
-							{"StartQuest", "CakeQuest2", 2},
-							{"StartQuest", "CakeQuest2", 1},
-							{"StartQuest", "CakeQuest1", 1},
-							{"StartQuest", "CakeQuest1", 2},
-						}
-						
-						pcall(function()
-							ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(questData[math.random(1, 4)]))
-						end)
-					end
-					
-					local bossCount = nil
-					pcall(function()
-						local response = ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-						local count = string.match(response, "%d+")
-						if count then
-							bossCount = tonumber(count)
-							if bossCount == 0 then
-								ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner", true)
-							end
-						end
-					end)
-					
-					O.Kill(minion, _G.Auto_Cake_Prince)
-					BringEnemy(minion)
-					return
-				end
-				
-				_tp(CFrame.new(-2091.91, 70.01, -12142.84))
-				
-			end)
-		end
-	end
+    while task.wait(Sec) do
+        if not _G.Auto_Cake_Prince then continue end
+        
+        pcall(function()
+            local Player = plr
+            local Character = Player.Character
+            if not Character or not Character.HumanoidRootPart then return end
+            
+            local HRP = Character.HumanoidRootPart
+            local QuestGui = Player.PlayerGui.Main.Quest
+            
+            -- Find Cake Prince
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                if enemy.Name == "Cake Prince" and enemy.Humanoid and enemy.Humanoid.Health > 0 then
+                    O.Kill2(enemy, true)
+                    BringEnemy(enemy)
+                    return
+                end
+            end
+            
+            -- Check Big Mirror
+            local BigMirror = workspace.Map and workspace.Map.CakeLoaf and workspace.Map.CakeLoaf.BigMirror
+            if BigMirror and BigMirror.Other and BigMirror.Other.Transparency == 0 then
+                local mirrorPos = CFrame.new(-1990.67, 4533, -14973.67)
+                if (mirrorPos.Position - HRP.Position).Magnitude >= 2000 then
+                    _tp(CFrame.new(-2151.82, 149.32, -12404.91))
+                    return
+                end
+            end
+            
+            -- Kill minions
+            local minionNames = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                for _, name in pairs(minionNames) do
+                    if enemy.Name == name and enemy.Humanoid and enemy.Humanoid.Health > 0 then
+                        -- Accept quest if needed
+                        if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
+                            local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
+                            if (questPos.Position - HRP.Position).Magnitude > 50 then
+                                _tp(questPos)
+                                return
+                            end
+                            
+                            local questData = {
+                                {"StartQuest", "CakeQuest2", 2},
+                                {"StartQuest", "CakeQuest2", 1},
+                                {"StartQuest", "CakeQuest1", 1},
+                                {"StartQuest", "CakeQuest1", 2},
+                            }
+                            CommF:InvokeServer(unpack(questData[math.random(1, 4)]))
+                        end
+                        
+                        -- Spawn boss if needed
+                        local response = CommF:InvokeServer("CakePrinceSpawner")
+                        local count = string.match(response, "%d+")
+                        if count and tonumber(count) == 0 then
+                            CommF:InvokeServer("CakePrinceSpawner", true)
+                        end
+                        
+                        O.Kill(enemy, true)
+                        BringEnemy(enemy)
+                        return
+                    end
+                end
+            end
+            
+            -- Default position
+            _tp(CFrame.new(-2091.91, 70.01, -12142.84))
+        end)
+    end
 end)
 
-
-local EnemyOrder = {
-	"Reborn Skeleton",
-	"Living Zombie",
-	"Demonic Soul",
-	"Posessed Mummy",
-}
-spawn(function()
-	while task.wait(Sec) do
-		if not _G.AutoFarm_Bone then continue end
-
-		pcall(function()
-			local char = plr.Character
-			local hrp = char and char:FindFirstChild("HumanoidRootPart")
-			local QuestGui = plr.PlayerGui.Main.Quest
-			if not hrp then return end
-
-			for _, EnemyName in ipairs(EnemyOrder) do
-				if not _G.AutoFarm_Bone then break end
-
-				local Enemy = GetEnemyByName(EnemyName)
-				if Enemy then
-
-					if _G.AcceptQuestC and not QuestGui.Visible then
-						local QuestPos = CFrame.new(
-							-9516.99316, 172.017181, 6078.46533,
-							0,0,-1, 0,1,0, 1,0,0
-						)
-						_tp(QuestPos)
-
-						repeat task.wait(0.2)
-						until (QuestPos.Position - hrp.Position).Magnitude < 50
-
-						local QuestList = {
-							{"StartQuest","HauntedQuest2",2},
-							{"StartQuest","HauntedQuest2",1},
-							{"StartQuest","HauntedQuest1",1},
-							{"StartQuest","HauntedQuest1",2},
-						}
-						CommF:InvokeServer(unpack(QuestList[math.random(1,#QuestList)]))
-					end
-
-					repeat
-						task.wait()
-						O.Kill(Enemy, true)
-						BringEnemy(Enemy)
-					until not _G.AutoFarm_Bone
-						or Enemy.Humanoid.Health <= 0
-						or not Enemy.Parent
-						or (_G.AcceptQuestC and not QuestGui.Visible)
-				end
-			end
-			_tp(CFrame.new(-9495.68, 453.58, 5977.34))
-		end)
-	end
-end)
+-- Farm Bone Logic
+local BoneEnemies = {"Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"}
 
 spawn(function()
-	while wait(Sec) do
-		if _G.FarmTyrant then
-			pcall(function()
-				local Workspace = game:GetService("Workspace")
-				local ReplicatedStorage = game:GetService("ReplicatedStorage")
-				local Enemies = Workspace.Enemies
-				local Player = game.Players.LocalPlayer
-				local Character = Player.Character
-				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-					return
-				end
-				local HRP = Character.HumanoidRootPart
-				-- Check for Tyrant
-				local Tyrant = nil
-				for _, v in pairs(Enemies:GetChildren()) do
-					if v.Name == "Tyrant of the Skies" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-						Tyrant = v
-						break
-					end
-				end
-				
-				if Tyrant then
-					-- Kill Tyrant
-					O.Kill2(Tyrant, _G.FarmTyrant)
-					BringEnemy(Tyrant)
-					return
-				end
-				
-				-- Check for mobs
-				local mob = nil
-				local mobList = {"Serpent Hunter","Skull Slayer","Isle Champion","Sun-kissed Warrior"}
-				for _, v in pairs(Enemies:GetChildren()) do
-					for _, name in pairs(mobList) do
-						if v.Name == name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-							mob = v
-							break
-						end
-					end
-					if mob then break end
-				end
-				
-				if mob then
-					O.Kill(mob, _G.FarmTyrant)
-					BringEnemy(mob)
-					return
-				end
-				_tp(CFrame.new(-16634, 85, 1106))
-			end)
-		end
-	end
+    while task.wait(Sec) do
+        if not _G.AutoFarm_Bone then continue end
+        
+        pcall(function()
+            local Character = plr.Character
+            local HRP = Character and Character.HumanoidRootPart
+            local QuestGui = plr.PlayerGui.Main.Quest
+            if not HRP then return end
+            
+            for _, enemyName in ipairs(BoneEnemies) do
+                if not _G.AutoFarm_Bone then break end
+                
+                local enemy = GetEnemyByName(enemyName)
+                if enemy then
+                    -- Accept quest if needed
+                    if _G.AcceptQuestC and not QuestGui.Visible then
+                        local questPos = CFrame.new(-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        _tp(questPos)
+                        repeat task.wait(0.2) until (questPos.Position - HRP.Position).Magnitude < 50
+                        
+                        local questList = {
+                            {"StartQuest", "HauntedQuest2", 2},
+                            {"StartQuest", "HauntedQuest2", 1},
+                            {"StartQuest", "HauntedQuest1", 1},
+                            {"StartQuest", "HauntedQuest1", 2},
+                        }
+                        CommF:InvokeServer(unpack(questList[math.random(1, #questList)]))
+                    end
+                    
+                    -- Kill enemy
+                    repeat
+                        task.wait()
+                        O.Kill(enemy, true)
+                        BringEnemy(enemy)
+                    until not _G.AutoFarm_Bone or enemy.Humanoid.Health <= 0 or not enemy.Parent 
+                        or (_G.AcceptQuestC and not QuestGui.Visible)
+                end
+            end
+            
+            -- Default position
+            _tp(CFrame.new(-9495.68, 453.58, 5977.34))
+        end)
+    end
 end)
+
+-- Farm Tyrant Logic
+spawn(function()
+    while task.wait(Sec) do
+        if not _G.FarmTyrant then continue end
+        
+        pcall(function()
+            local Character = plr.Character
+            if not Character or not Character.HumanoidRootPart then return end
+            
+            local HRP = Character.HumanoidRootPart
+            
+            -- Find Tyrant
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                if enemy.Name == "Tyrant of the Skies" and enemy.Humanoid and enemy.Humanoid.Health > 0 then
+                    BringEnemy(enemy)
+                    task.wait(0.1)
+                    O.Kill2(enemy, true)
+                    return
+                end
+            end
+            
+            -- Kill mobs to spawn Tyrant
+            local mobList = {"Serpent Hunter", "Skull Slayer", "Isle Champion", "Sun-kissed Warrior"}
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                if enemy.Humanoid and enemy.Humanoid.Health > 0 then
+                    for _, mobName in ipairs(mobList) do
+                        if enemy.Name == mobName then
+                            BringEnemy(enemy)
+                            task.wait(0.1)
+                            O.Kill(enemy, true)
+                            return
+                        end
+                    end
+                end
+            end
+            
+            -- Default position
+            _tp(CFrame.new(-16268.287, 152.616, 1390.773))
+            task.wait(1)
+        end)
+    end
+end)
+
+-- Accept Quest Toggle
 B:AddToggle({
-	Title = "Accept Quests [Bone/CakePrince]",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.AcceptQuestC = e;
-	end,
-});
+    Title = "Accept Quests [Bone/CakePrince]",
+    Description = "",
+    Default = false,
+    Callback = function(e)
+        _G.AcceptQuestC = e
+    end,
+})
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",

@@ -2612,13 +2612,10 @@ spawn(function()
 				local Enemies = Workspace.Enemies
 				local Player = game.Players.LocalPlayer
 				local Character = Player.Character
-				
 				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
 					return
 				end
-				
 				local HRP = Character.HumanoidRootPart
-				
 				-- Check for Tyrant
 				local Tyrant = nil
 				for _, v in pairs(Enemies:GetChildren()) do
@@ -2649,7 +2646,7 @@ spawn(function()
 				end
 				
 				if mob then
-					O.Kill(mob, _G.Auto_Cake_Prince)
+					O.Kill(mob, _G.FarmTyrant)
 					BringEnemy(mob)
 					return
 				end
@@ -2659,7 +2656,7 @@ spawn(function()
 	end
 end)
 B:AddToggle({
-	Title = "Accept Quests [Bone/Cake Prince]",
+	Title = "Accept Quests [Bone/CakePrince]",
 	Description = "",
 	Default = false,
 	Callback = function(e)

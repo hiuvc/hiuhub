@@ -2443,12 +2443,11 @@ spawn(function()
     end
 end)
 
--- ===== POSITION =====
 local QUEST_POS = CFrame.new(-1927.92, 37.8, -12842.54)
 local WAIT_POS  = CFrame.new(-2091.91, 70.01, -12142.84)
 local MIRROR_TP = CFrame.new(-2151.82, 149.32, -12404.91)
 
--- ===== MINIONS =====
+
 local Minions = {
     ["Cookie Crafter"] = true,
     ["Cake Guard"] = true,
@@ -8814,6 +8813,42 @@ spawn(function()
         end
     end)
 end)
+function UnStoreCheapFruit()
+    local player = game.Players.LocalPlayer
+    local backpack = player:FindFirstChild("Backpack")
+
+    if backpack then
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool.Name:find("Fruit") then
+                return
+            end
+        end
+    end
+
+    local inv = CommF:InvokeServer("getInventory")
+    if type(inv) ~= "table" then return end
+
+    local fruitName, fruitValue
+
+    for _, item in pairs(inv) do
+        if item.Type == "Blox Fruit"
+        and item.Value
+        and item.Value < 1e6
+        and not item.Equipped then
+            if not fruitValue or item.Value < fruitValue then
+                fruitName = item.Name
+                fruitValue = item.Value
+            end
+        end
+    end
+
+    if fruitName then
+        pcall(function()
+            CommF:InvokeServer("LoadFruit", fruitName)
+        end)
+        return fruitName, fruitValue
+    end
+end
 
 g:AddToggle({
     Title = "Get Low Fruits Under 1M",
@@ -8824,42 +8859,11 @@ g:AddToggle({
     end
 })
 
-function UnStoreCheapFruit()
-
-    local backpack = game.Players.LocalPlayer:FindFirstChild("Backpack")
-    if backpack then
-        for _, tool in pairs(backpack:GetChildren()) do
-            if tool:IsA("Tool") and tool:FindFirstChild("Fruit") then
-                return
-            end
-        end
-    end
-
-    local inv = CommF:InvokeServer("getInventory")
-    if type(inv) ~= "table" then return end
-
-    local fruitName, fruitValue
-    for _, i in pairs(inv) do
-        if i.Type == "Blox Fruit" and i.Value and i.Value < 1e6 and not i.Equipped then
-            if not fruitValue or i.Value < fruitValue then
-                fruitName = i.Name
-                fruitValue = i.Value
-            end
-        end
-    end
-
-    if fruitName then
-        CommF:InvokeServer("LoadFruit", fruitName)
-        return fruitName, fruitValue
-    end
-end
-
 spawn(function()
     pcall(function()
         while task.wait(Sec) do
             if _G.UnStoreFruit then
                 local char = plr.Character
-                
                 if char and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
                     UnStoreCheapFruit()
                 end
@@ -8887,7 +8891,7 @@ end
 
 
 g:AddToggle({ 
-    Title = "Auto Raid [Fully]", 
+    Title = "Auto Raid", 
     Description = "Start Raid and Complete Raid", 
     Default = false, 
     Callback = function(e) 
@@ -8898,7 +8902,6 @@ g:AddToggle({
 spawn(function()
     while task.wait(Sec) do
         if not _G.Raiding then continue end
-        
         if GetBP("Special Microchip") and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
             StartRaid()
         end

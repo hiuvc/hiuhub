@@ -2603,74 +2603,61 @@ spawn(function()
 	end
 end)
 
-local function farmBoss()
-    local player = game.Players.LocalPlayer
-    local enemies = workspace:FindFirstChild("Enemies")
-    local boss = enemies and enemies:FindFirstChild("Tyrant of the Skies")
-    
-    if boss and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
-        repeat
-            O.Kill(boss, _G.FarmTyrant)
-            BringEnemy(boss)
-            wait()
-        until not _G.FarmTyrant or not boss.Parent or boss.Humanoid.Health <= 0
-        return true
-    end
-    return false
-end
-
-local function farmMobs()
-    local player = game.Players.LocalPlayer
-    local enemies = workspace:FindFirstChild("Enemies") or workspace
-    local mobs = {"Serpent Hunter", "Skull Slayer", "Isle Champion", "Sun-kissed Warrior"}
-    local bossPos = CFrame.new(-16268.287, 152.616, 1390.773)
-    local foundMob = false
-    
-    for _, mobName in ipairs(mobs) do
-        if not _G.FarmTyrant then break end
-        
-        for _, mob in ipairs(enemies:GetChildren()) do
-            if not _G.FarmTyrant or not mob:FindFirstChild("Humanoid") or mob.Humanoid.Health <= 0 then break end
-            if mob.Name == mobName and mob:FindFirstChild("HumanoidRootPart") then
-                foundMob = true
-                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-                if not hrp then return end
-                
-                -- Di chuyển nếu quá xa
-                local dist = (hrp.Position - mob.HumanoidRootPart.Position).Magnitude
-                if dist > 5000 then
-                    _tp(mob.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
-                    local t0 = tick()
-                    repeat wait() until not _G.FarmTyrant or (player.Character and (player.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude <= 6) or tick() - t0 > 8
-                end
-                
-                -- Tấn công quái
-                repeat
-                    O.Kill(mob, _G.FarmTyrant)
-                    BringEnemy(mob)
-                    wait()
-                until not _G.FarmTyrant or not mob.Parent or mob.Humanoid.Health <= 0
-            end
-        end
-    end
-    
-    -- Nếu không có quái thì di chuyển về vị trí boss
-    if not foundMob and _G.FarmTyrant then
-        _tp(bossPos)
-    end
-end
-
 spawn(function()
-    while wait(Sec) do
-        if _G.FarmTyrant then
-            pcall(function()
-                if farmBoss() then return end
-                farmMobs()
-            end)
-        end
-    end
+	while wait(Sec) do
+		if _G.FarmTyrant then
+			pcall(function()
+				local Workspace = game:GetService("Workspace")
+				local ReplicatedStorage = game:GetService("ReplicatedStorage")
+				local Enemies = Workspace.Enemies
+				local Player = game.Players.LocalPlayer
+				local Character = Player.Character
+				
+				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+					return
+				end
+				
+				local HRP = Character.HumanoidRootPart
+				
+				-- Check for Tyrant
+				local Tyrant = nil
+				for _, v in pairs(Enemies:GetChildren()) do
+					if v.Name == "Tyrant of the Skies" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+						Tyrant = v
+						break
+					end
+				end
+				
+				if Tyrant then
+					-- Kill Tyrant
+					O.Kill2(Tyrant, _G.FarmTyrant)
+					BringEnemy(Tyrant)
+					return
+				end
+				
+				-- Check for mobs
+				local mob = nil
+				local mobList = {"Serpent Hunter","Skull Slayer","Isle Champion","Sun-kissed Warrior"}
+				for _, v in pairs(Enemies:GetChildren()) do
+					for _, name in pairs(mobList) do
+						if v.Name == name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+							mob = v
+							break
+						end
+					end
+					if mob then break end
+				end
+				
+				if mob then
+					O.Kill(mob, _G.Auto_Cake_Prince)
+					BringEnemy(mob)
+					return
+				end
+				_tp(CFrame.new(-16634, 85, 1106))
+			end)
+		end
+	end
 end)
-
 B:AddToggle({
 	Title = "Accept Quests [Bone/Cake Prince]",
 	Description = "",

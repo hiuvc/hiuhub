@@ -8861,7 +8861,7 @@ g:AddToggle({
 
 spawn(function()
     pcall(function()
-        while task.wait(Sec) do
+        while task.wait(.5) do
             if _G.UnStoreFruit then
                 local char = plr.Character
                 if char and plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then
@@ -8871,7 +8871,6 @@ spawn(function()
         end
     end)
 end)
-
 
 local function StartRaid()
     if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false and not game:GetService("Workspace")._WorldOrigin.Locations:FindFirstChild("Island 1") then

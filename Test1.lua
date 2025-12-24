@@ -2623,7 +2623,7 @@ local function equipAndUseSkill(toolType)
             item.Parent = character
             wait(0.12)
             for _, skill in ipairs({"Z", "X", "C", "V", "F"}) do
-                if not _G.FarmPhaBinh then break end
+                if not _G.FarmTyrant then break end
                 pcall(function() sendSkillKey(skill) end)
                 wait(0.12)
             end
@@ -2632,6 +2632,7 @@ local function equipAndUseSkill(toolType)
         end
     end
 end
+
 local PhaBinhPoints = {
     CFrame.new(-16332.5263671875, 158.07200622558594, 1440.324951171875),
     CFrame.new(-16288.609375, 158.16700744628906, 1470.3680419921875),
@@ -2642,6 +2643,7 @@ local PhaBinhPoints = {
     CFrame.new(-16297.0595703125, 159.322998046875, 1317.2239990234375),
     CFrame.new(-16335.0966796875, 159.33399963378906, 1324.885986328125),
 }
+
 -- Farm Tyrant Logic
 task.spawn(function()
     while task.wait(Sec) do
@@ -2661,9 +2663,7 @@ task.spawn(function()
 
             local Eyes = CheckEyes()
 
-            ----------------------------------------------------------------
-            -- 1️⃣ PHÁ BÌNH (khi đủ Eye)
-            ----------------------------------------------------------------
+            -- Ưu tiên 1: Nếu có đủ 4 eyes, farm tại các điểm cố định
             if Eyes == 4 then
                 for _, point in ipairs(PhaBinhPoints) do
                     if not _G.FarmTyrant then break end
@@ -2694,9 +2694,7 @@ task.spawn(function()
                 end
             end
 
-            ----------------------------------------------------------------
-            -- 2️⃣ ƯU TIÊN TYRANT
-            ----------------------------------------------------------------
+            -- Ưu tiên 2: Tìm và kill Tyrant (ngay cả khi chưa đủ eyes)
             for _, enemy in ipairs(enemies:GetChildren()) do
                 if enemy.Name == "Tyrant of the Skies" then
                     local eh = enemy:FindFirstChildOfClass("Humanoid")
@@ -2708,9 +2706,7 @@ task.spawn(function()
                 end
             end
 
-            ----------------------------------------------------------------
-            -- 3️⃣ FARM MOB PHỤ (để spawn Tyrant)
-            ----------------------------------------------------------------
+            -- Ưu tiên 3: Farm những quái cần để lấy eyes
             local mobList = {
                 ["Serpent Hunter"] = true,
                 ["Skull Slayer"] = true,
@@ -2727,9 +2723,7 @@ task.spawn(function()
                 end
             end
 
-            ----------------------------------------------------------------
-            -- 4️⃣ ĐỨNG CHỜ (fallback)
-            ----------------------------------------------------------------
+            -- Fallback: Đứng chờ tại điểm chỉ định nếu không tìm thấy quái trong danh sách
             if _tp then
                 _tp(CFrame.new(-16268.287, 152.616, 1390.773))
             end

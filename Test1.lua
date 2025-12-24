@@ -39,9 +39,6 @@ do
 	ClickState = 0;
 	Num_self = 25;
 end;
-
-local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
-local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
 	World1 = true;
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
@@ -2022,6 +2019,8 @@ local function GetEnemyByName(name)
 		end
 	end
 end
+local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 ---Tab----------------
 local x = e:NewWindow();
 local sv = x:T("Tab Server");
@@ -2333,23 +2332,28 @@ SV:AddButton({ Title = "Join Server With JobId", Description = "", Callback = fu
 	replicated.__ServerBrowser:InvokeServer("teleport", _G.JobId)
 end})
 SV:AddButton({ Title = "Hop Server", Description = "", Callback = function()
-	Hop()
+	pcall(function()
+		Hop()
+	end)
 end})
 SV:AddButton({ Title = "Hop to Lowest Players", Description = "", Callback = function()
-	loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
+	pcall(function()
+		loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
+	end)
 end })
 SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
 
 
-local FrameMode = { "Fram Level", "Fram Cake Prince","Fram Bone", "Fram Nearest" }
+local FrameMode = { "Fram Level", "Fram Cake Prince","Fram Bone","Fram The Tyrant of Skies", "Fram Nearest" }
 
 local function UpdateFramMode()
 	_G.Level = (_G.SelectFramMode == "Fram Level" and _G.StartFram)
 	_G.Auto_Cake_Prince = (_G.SelectFramMode == "Fram Cake Prince" and _G.StartFram)
 	_G.AutoFarm_Bone = (_G.SelectFramMode == "Fram Bone" and _G.StartFram)
 	_G.AutoFarmNear = (_G.SelectFramMode == "Fram Nearest" and _G.StartFram)
+	_G.FarmTyrant = ((_G.SelectFramMode == "Fram The Tyrant of Skies" and _G.StartFram))
 end
 
 B:AddDropdown({
@@ -2594,21 +2598,103 @@ spawn(function()
 						or (_G.AcceptQuestC and not QuestGui.Visible)
 				end
 			end
-
-			-- không có quái → đứng chờ
 			_tp(CFrame.new(-9495.68, 453.58, 5977.34))
 		end)
 	end
 end)
 
+spawn(function()
+    while wait(Sec) do
+        if _G.FarmTyrant then
+            pcall(function()
+                local player = plr or game.Players.LocalPlayer
+                if not (player and player.Character) then return end
+                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                local enemiesFolder = workspace:FindFirstChild("Enemies")
+                local bossPos = Vector3.new(-16268.287, 152.616, 1390.773)
+                if (hrp.Position - bossPos).Magnitude > 5 then
+                    if _tp then pcall(_tp, CFrame.new(bossPos))
+                    elseif Tween then pcall(Tween, CFrame.new(bossPos))
+                    elseif notween then pcall(notween, CFrame.new(bossPos))
+                    else pcall(function() player.Character.HumanoidRootPart.CFrame = CFrame.new(bossPos) end)
+                    end
+                    repeat wait() until not _G.FarmTyrant or (player.Character and player.Character:FindFirstChild("HumanoidRootPart") and (player.Character.HumanoidRootPart.Position - bossPos).Magnitude <= 5)
+                end
+
+                local boss = enemiesFolder and enemiesFolder:FindFirstChild("Tyrant of the Skies")
+                if boss and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                    repeat
+                        if not _G.FarmTyrant then break end
+                        O.Kill(boss,_G.FarmTyrant)
+                        BringEnemy(boss)
+                        wait()
+                    until not _G.FarmTyrant or not boss.Parent or not boss:FindFirstChild("Humanoid") or boss.Humanoid.Health <= 0
+                    return
+                end
+
+                local mobList = {"Serpent Hunter","Skull Slayer","Isle Champion","Sun-kissed Warrior"}
+                if enemiesFolder then
+                    for _, mobName in ipairs(mobList) do
+                        if not _G.FarmTyrant then break end
+                        for _, mob in ipairs(enemiesFolder:GetChildren()) do
+                            if not _G.FarmTyrant then break end
+                            if mob and mob.Name == mobName and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                                hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                                if not hrp then break end
+                                if (hrp.Position - mob.HumanoidRootPart.Position).Magnitude > 5000 then
+                                    if _tp then pcall(_tp, mob.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                    elseif Tween then pcall(Tween, mob.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                    elseif notween then pcall(notween, mob.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                    else pcall(function() player.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0,30,0) end)
+                                    end
+                                    local t0 = tick()
+                                    repeat wait() hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart") until not _G.FarmTyrant or not hrp or (hrp.Position - mob.HumanoidRootPart.Position).Magnitude <= 6 or tick() - t0 > 8
+                                end
+                                repeat
+                                    if not _G.FarmTyrant then break end
+                                    O.Kill(mob,_G.FarmTyrant)
+                                    BringEnemy(mob)
+                                    wait()
+                                until not _G.FarmTyrant or not mob.Parent or not mob:FindFirstChild("Humanoid") or mob.Humanoid.Health <= 0
+                            end
+                        end
+                    end
+                else
+                    for _, mobName in ipairs(mobList) do
+                        if not _G.FarmTyrant then break end
+                        for _, mob in ipairs(workspace:GetChildren()) do
+                            if not _G.FarmTyrant then break end
+                            if mob and mob.Name == mobName and mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                                if _tp then pcall(_tp, mob.HumanoidRootPart.CFrame * CFrame.new(0,30,0))
+                                else pcall(function() player.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0,30,0) end)
+                                end
+                                repeat wait() until not _G.FarmTyrant or (player.Character and player.Character:FindFirstChild("HumanoidRootPart") and (player.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude <= 6)
+                                repeat
+                                    if not _G.FarmTyrant then break end
+                                    	wait()
+                                    	O.Kill(mob,_G.FarmTyrant)
+                                    	BringEnemy(mob)
+                                until not _G.FarmTyrant or not mob.Parent or mob.Humanoid.Health <= 0
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
 B:AddToggle({
-	Title = "Accept Quests",
+	Title = "Accept Quests [Bone/Cake Prince]",
 	Description = "",
 	Default = false,
 	Callback = function(e)
 		_G.AcceptQuestC = e;
 	end,
 });
+
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",
 	Description = "",

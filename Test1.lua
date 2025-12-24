@@ -829,9 +829,7 @@ getInfinity_Ability = function(e, A)
 		end;
 	end;
 Hop = function()
-		pcall(function()
-			HopServerModule:Teleport(game.PlaceId)
-		end)
+		HopServerModule:Teleport(game.PlaceId)
 	end;
 local plr = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
@@ -2623,7 +2621,6 @@ local MobNeedEyes = {
     ["Sun-kissed Warrior"] = true
 }
 
--- ================== FUNCTIONS ==================
 local function IsAlive(char)
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     local hrp = char and char:FindFirstChild("HumanoidRootPart")

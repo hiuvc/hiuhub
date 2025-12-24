@@ -39,9 +39,6 @@ do
 	ClickState = 0;
 	Num_self = 25;
 end;
-
-local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
-local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
 	World1 = true;
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
@@ -1036,7 +1033,7 @@ notween = function(e)
 spawn(function()
 	while task.wait() do
 		pcall(function()
-			if _G.SailBoat_Hydra or _G.WardenBoss or _G.AutoFactory or _G.HighestMirage or _G.HCM or _G.PGB or _G.Leviathan1 or _G.UPGDrago or _G.Complete_Trials or _G.TpDrago_Prehis or _G.BuyDrago or _G.AutoFireFlowers or _G.DT_Uzoth or _G.AutoBerry or _G.Prehis_Find or _G.Prehis_Skills or _G.Prehis_DB or _G.Prehis_DE or _G.FarmBlazeEM or _G.Dojoo or _G.CollectPresent or _G.AutoLawKak or _G.TpLab or _G.AutoPhoenixF or _G.AutoFarmChest or _G.AutoHytHallow or _G.LongsWord or _G.BlackSpikey or _G.AutoHolyTorch or _G.TrainDrago or _G.AutoSaber or _G.FarmMastery_Dev or _G.CitizenQuest or _G.AutoEctoplasm or _G.KeysRen or _G.Auto_Rainbow_Haki or _G.obsFarm or _G.AutoBigmom or _G.Doughv2 or _G.AuraBoss or _G.Raiding or _G.Auto_Cavender or _G.TpPly or _G.Bartilo_Quest or _G.Level or _G.FarmEliteHunt or _G.AutoZou or _G.AutoFarm_Bone or (getgenv()).AutoMaterial or _G.CraftVM or _G.FrozenTP or _G.TPDoor or _G.AcientOne or _G.AutoFarmNear or _G.AutoRaidCastle or _G.DarkBladev3 or _G.AutoFarmRaid or _G.Auto_Cake_Prince or _G.Addealer or _G.TPNpc or _G.TwinHook or _G.FindMirage or _G.FarmChestM or _G.Shark or _G.TerrorShark or _G.Piranha or _G.MobCrew or _G.SeaBeast1 or _G.FishBoat or _G.AutoPole or _G.AutoPoleV2 or _G.Auto_SuperHuman or _G.AutoDeathStep or _G.Auto_SharkMan_Karate or _G.Auto_Electric_Claw or _G.AutoDragonTalon or _G.Auto_Def_DarkCoat or _G.Auto_God_Human or _G.Auto_Tushita or _G.AutoMatSoul or _G.AutoKenVTWO or _G.AutoSerpentBow or _G.AutoFMon or _G.Auto_Soul_Guitar or _G.TPGEAR or _G.AutoSaw or _G.AutoTridentW2 or _G.Auto_StartRaid or _G.AutoEvoRace or _G.AutoGetQuestBounty or _G.MarinesCoat or _G.TravelDres or _G.Defeating or _G.DummyMan or _G.Auto_Yama or _G.Auto_SwanGG or _G.SwanCoat or _G.AutoEcBoss or _G.Auto_Mink or _G.Auto_Human or _G.Auto_Skypiea or _G.Auto_Fish or _G.CDK_TS or _G.CDK_YM or _G.CDK or _G.AutoFarmGodChalice or _G.AutoFistDarkness or _G.AutoMiror or _G.Teleport or _G.AutoKilo or _G.AutoGetUsoap or _G.Praying or _G.TryLucky or _G.AutoColShad or _G.AutoUnHaki or _G.Auto_DonAcces or _G.AutoRipIngay or _G.DragoV3 or _G.DragoV1 or _G.SailBoats or NextIs or _G.FarmGodChalice or _G.IceBossRen or senth or senth2 or _G.Lvthan or _G.beasthunter or _G.DangerLV or _G.Relic123 or _G.tweenKitsune or _G.Collect_Ember or _G.AutofindKitIs or _G.snaguine or _G.TwFruits or _G.tweenKitShrine or _G.Tp_LgS or _G.Tp_MasterA or _G.tweenShrine or _G.FarmMastery_G or _G.FarmMastery_S then
+			if _G.SailBoat_Hydra or _G.WardenBoss or _G.AutoFactory or _G.HighestMirage or _G.HCM or _G.PGB or _G.Leviathan1 or _G.UPGDrago or _G.Complete_Trials or _G.TpDrago_Prehis or _G.BuyDrago or _G.AutoFireFlowers or _G.DT_Uzoth or _G.AutoBerry or _G.Prehis_Find or _G.Prehis_Skills or _G.Prehis_DB or _G.Prehis_DE or _G.FarmBlazeEM or _G.Dojoo or _G.CollectPresent or _G.AutoLawKak or _G.TpLab or _G.AutoPhoenixF or _G.AutoFarmChest or _G.AutoHytHallow or _G.LongsWord or _G.BlackSpikey or _G.AutoHolyTorch or _G.TrainDrago or _G.AutoSaber or _G.FarmMastery_Dev or _G.CitizenQuest or _G.AutoEctoplasm or _G.KeysRen or _G.Auto_Rainbow_Haki or _G.obsFarm or _G.AutoBigmom or _G.Doughv2 or _G.AuraBoss or _G.Raiding or _G.Auto_Cavender or _G.TpPly or _G.Bartilo_Quest or _G.Level or _G.FarmEliteHunt or _G.AutoZou or _G.AutoFarm_Bone or (getgenv()).AutoMaterial or _G.CraftVM or _G.FrozenTP or _G.TPDoor or _G.AcientOne or _G.AutoFarmNear or _G.AutoRaidCastle or _G.DarkBladev3 or _G.AutoFarmRaid or _G.Auto_Cake_Prince or _G.Addealer or _G.TPNpc or _G.TwinHook or _G.FindMirage or _G.FarmChestM or _G.Shark or _G.TerrorShark or _G.Piranha or _G.MobCrew or _G.SeaBeast1 or _G.FishBoat or _G.AutoPole or _G.AutoPoleV2 or _G.Auto_SuperHuman or _G.AutoDeathStep or _G.Auto_SharkMan_Karate or _G.Auto_Electric_Claw or _G.AutoDragonTalon or _G.Auto_Def_DarkCoat or _G.Auto_God_Human or _G.Auto_Tushita or _G.AutoMatSoul or _G.AutoKenVTWO or _G.AutoSerpentBow or _G.AutoFMon or _G.Auto_Soul_Guitar or _G.TPGEAR or _G.AutoSaw or _G.AutoTridentW2 or _G.Auto_StartRaid or _G.AutoEvoRace or _G.AutoGetQuestBounty or _G.MarinesCoat or _G.TravelDres or _G.Defeating or _G.DummyMan or _G.Auto_Yama or _G.Auto_SwanGG or _G.SwanCoat or _G.AutoEcBoss or _G.Auto_Mink or _G.Auto_Human or _G.Auto_Skypiea or _G.Auto_Fish or _G.CDK_TS or _G.CDK_YM or _G.CDK or _G.AutoFarmGodChalice or _G.AutoFistDarkness or _G.AutoMiror or _G.Teleport or _G.AutoKilo or _G.AutoGetUsoap or _G.Praying or _G.TryLucky or _G.AutoColShad or _G.AutoUnHaki or _G.Auto_DonAcces or _G.AutoRipIngay or _G.DragoV3 or _G.DragoV1 or _G.SailBoats or NextIs or _G.FarmGodChalice or _G.IceBossRen or senth or senth2 or _G.Lvthan or _G.beasthunter or _G.DangerLV or _G.Relic123 or _G.tweenKitsune or _G.Collect_Ember or _G.AutofindKitIs or _G.snaguine or _G.TwFruits or _G.tweenKitShrine or _G.Tp_LgS or _G.Tp_MasterA or _G.tweenShrine or _G.FarmMastery_G or _G.FarmMastery_S or _G.FarmTyrant then
 				shouldTween = true;
 				if not plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
 					local e = Instance.new("BodyVelocity");
@@ -1430,9 +1427,6 @@ QuestCheck = function()
 				NameMon = "Fishman Warrior";
 				PosQ = CFrame.new(61122.65234375, 18.497442245483, 1569.3997802734);
 				PosM = CFrame.new(60878.30078125, 18.482830047607, 1543.7574462891);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 10000 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875));
-				end;
 			elseif e == 400 or e <= 449 then
 				Mon = "Fishman Commando";
 				Qdata = 2;
@@ -1589,9 +1583,6 @@ QuestCheck = function()
 				NameMon = "Ship Deckhand";
 				PosQ = CFrame.new(1037.80127, 125.092171, 32911.6016);
 				PosM = CFrame.new(1212.0111083984, 150.79205322266, 33059.24609375);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
 			elseif e == 1275 or e <= 1299 then
 				Mon = "Ship Engineer";
 				Qdata = 2;
@@ -1599,9 +1590,6 @@ QuestCheck = function()
 				NameMon = "Ship Engineer";
 				PosQ = CFrame.new(1037.80127, 125.092171, 32911.6016);
 				PosM = CFrame.new(919.47863769531, 43.544013977051, 32779.96875);
-				if _G.Level and (PosQ.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 500 then
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
 			elseif e == 1300 or e <= 1324 then
 				Mon = "Ship Steward";
 				Qdata = 1;
@@ -2021,7 +2009,18 @@ QuestNeta = function()
 		QuestNpcPos = PosQ,     -- CFrame NPC quest
 	}
 end
-
+local function GetEnemyByName(name)
+	for _, v in pairs(workspace.Enemies:GetChildren()) do
+		if v.Name == name
+		and v:FindFirstChild("Humanoid")
+		and v.Humanoid.Health > 0
+		and v:FindFirstChild("HumanoidRootPart") then
+			return v
+		end
+	end
+end
+local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/LoadUi.lua")))();
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 ---Tab----------------
 local x = e:NewWindow();
 local sv = x:T("Tab Server");
@@ -2252,18 +2251,33 @@ if World3 then
             end)
         end
     end)
-	local TyrantStatus = SV:AddParagraph({ Title = "Tyrant of the Skies", Content = "" })
+	function CheckEyes()
+	    local count = 0
+	    for _, obj in ipairs(workspace:GetDescendants()) do
+	        if obj:IsA("BasePart")
+	        and obj.Name:match("^Eye%d+$")
+	        and obj.Material == Enum.Material.Neon
+	        and obj.Transparency == 0 then
+	            count += 1
+	        end
+	    end
+	    return count
+	end
+
+	local TyrantStatus = SV:AddParagraph({
+	    Title = "Tyrant Of The Skies",
+	    Content = "Status : 0/4 Eyes"
+	})
+
 	task.spawn(function()
-		pcall(function()
-			while wait(.5) do
-				if game:GetService("Workspace").Enemies:FindFirstChild("Tyrant of the Skies") then
-					TyrantStatus:SetDesc("Status : ✅")
-				else
-					TyrantStatus:SetDesc("Status : ❌")
-				end
-			end
-		end)
-	end) 
+	    while task.wait(0.5) do
+	        pcall(function()
+	            local eyes = CheckEyes()
+	            TyrantStatus:SetDesc("Status : "..eyes.."/4 Eyes")
+	        end)
+	    end
+	end)
+
     local EliteHunterStatus = SV:AddParagraph({ Title = "Elite Hunter", Content = "" })
     task.spawn(function()
         while task.wait(1) do
@@ -2333,115 +2347,320 @@ SV:AddButton({ Title = "Join Server With JobId", Description = "", Callback = fu
 	replicated.__ServerBrowser:InvokeServer("teleport", _G.JobId)
 end})
 SV:AddButton({ Title = "Hop Server", Description = "", Callback = function()
-	Hop()
+	pcall(function()
+		Hop()
+	end)
 end})
 SV:AddButton({ Title = "Hop to Lowest Players", Description = "", Callback = function()
-	loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
+	pcall(function()
+		loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
+	end)
 end })
 SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
 
--- ================== FRAME MODE ==================
-local FrameMode = { "Level", "Cake", "Nearest" }
 
+local FrameMode = {"Fram Level", "Fram Cake Prince", "Fram Bone", "Fram Tyrant of The Skies", "Fram Nearest"}
+
+-- Update farm mode function
 local function UpdateFramMode()
-	_G.Level = (_G.SelectFramMode == "Level" and _G.StartFram)
+    local active = _G.StartFram
+    _G.Level = (_G.SelectFramMode == "Fram Level" and active)
+    _G.Auto_Cake_Prince = (_G.SelectFramMode == "Fram Cake Prince" and active)
+    _G.AutoFarm_Bone = (_G.SelectFramMode == "Fram Bone" and active)
+    _G.AutoFarmNear = (_G.SelectFramMode == "Fram Nearest" and active)
+    _G.FarmTyrant = (_G.SelectFramMode == "Fram Tyrant of The Skies" and active)
 end
 
--- ================== UI ==================
+-- UI Components
 B:AddDropdown({
-	Title = "Select Fram:",
-	Values = FrameMode,
-	Default = "Level",
-	Multi = false,
-	Callback = function(e)
-		_G.SelectFramMode = e
-		UpdateFramMode()
-	end,
+    Title = "Select Fram:",
+    Values = FrameMode,
+    Default = "Fram Level",
+    Multi = false,
+    Callback = function(e)
+        _G.SelectFramMode = e
+        UpdateFramMode()
+    end,
 })
 
 B:AddToggle({
-	Title = "Start Fram",
-	Default = false,
-	Callback = function(e)
-		_G.StartFram = e
-		UpdateFramMode()
-	end,
+    Title = "Start Fram",
+    Default = false,
+    Callback = function(e)
+        _G.StartFram = e
+        UpdateFramMode()
+    end,
 })
 
--- ================== MAIN LOOP ==================
+-- Farm Level Logic
 spawn(function()
-	while task.wait(Sec) do
-		if not _G.Level then
-			continue
-		end
-
-		pcall(function()
-			local Q = QuestNeta()
-			local QuestGui = plr.PlayerGui.Main.Quest
-			local QuestTitle = QuestGui.Container.QuestTitle.Title
-
-			-- ================== ABANDON QUEST SAI ==================
-			if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
-				replicated.Remotes.CommF_:InvokeServer("AbandonQuest")
-				task.wait(0.6)
-			end
-
-			-- ================== NHẬN QUEST (FIX CHUẨN) ==================
-			if not QuestGui.Visible then
-				_tp(Q.QuestNpcPos)
-
-				repeat task.wait()
-				until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 6
-					or not _G.Level
-
-				if not _G.Level then return end
-
-				replicated.Remotes.CommF_:InvokeServer(
-					"StartQuest",
-					Q.QuestName,
-					Q.QuestLevel
-				)
-
-				-- 🔒 CHỜ QUEST THẬT SỰ NHẬN
-				local t = tick()
-				repeat
-					task.wait()
-				until (
-					QuestGui.Visible
-					and string.find(QuestTitle.Text, Q.QuestText)
-				)
-				or tick() - t > 5
-				or not _G.Level
-
-				return
-			end
-
-			-- ================== FARM QUÁI ==================
-			for _, mob in pairs(workspace.Enemies:GetChildren()) do
-				if not _G.Level then break end
-
-				if O.Alive(mob) and mob.Name == Q.MonName then
-					repeat
-						task.wait()
-						O.Kill(mob, true)
-						BringEnemy(mob)
-					until not mob.Parent
-						or mob.Humanoid.Health <= 0
-						or not QuestGui.Visible
-						or not _G.Level
-				end
-			end
-
-			-- ================== KHÔNG CÓ QUÁI → RA SPAWN ==================
-			if QuestGui.Visible then
-				_tp(Q.MobSpawnPos)
-			end
-		end)
-	end
+    while task.wait(Sec) do
+        if not _G.Level then continue end
+        
+        pcall(function()
+            local Q = QuestNeta()
+            local QuestGui = plr.PlayerGui.Main.Quest
+            local QuestTitle = QuestGui.Container.QuestTitle.Title
+            local Root = plr.Character.HumanoidRootPart
+            
+            -- Abandon quest if wrong target
+            if QuestGui.Visible and not string.find(QuestTitle.Text, Q.QuestText) then
+                CommF:InvokeServer("AbandonQuest")
+                task.wait(0.5)
+            end
+            
+            -- Start quest if not active
+            if not QuestGui.Visible then
+                _tp(Q.QuestNpcPos)
+                repeat task.wait() until (Root.Position - Q.QuestNpcPos.Position).Magnitude <= 10 or not _G.Level
+                if not _G.Level then return end
+                
+                CommF:InvokeServer("StartQuest", Q.QuestName, Q.QuestLevel)
+                
+                local t = tick()
+                repeat task.wait()
+                until (QuestGui.Visible and string.find(QuestTitle.Text, Q.QuestText)) or tick() - t > 5 or not _G.Level
+                return
+            end
+            
+            -- Kill target mobs
+            for _, mob in pairs(workspace.Enemies:GetChildren()) do
+                if not _G.Level then break end
+                if O.Alive(mob) and mob.Name == Q.MonName then
+                    repeat
+                        task.wait()
+                        O.Kill(mob, true)
+                        BringEnemy(mob)
+                    until not mob.Parent or mob.Humanoid.Health <= 0 or not QuestGui.Visible or not _G.Level
+                end
+            end
+            
+            -- Teleport to mob spawn area
+            if QuestGui.Visible then
+                _tp(Q.MobSpawnPos)
+            end
+        end)
+    end
 end)
 
+-- ===== POSITION =====
+local QUEST_POS = CFrame.new(-1927.92, 37.8, -12842.54)
+local WAIT_POS  = CFrame.new(-2091.91, 70.01, -12142.84)
+local MIRROR_TP = CFrame.new(-2151.82, 149.32, -12404.91)
+
+-- ===== MINIONS =====
+local Minions = {
+    ["Cookie Crafter"] = true,
+    ["Cake Guard"] = true,
+    ["Baking Staff"] = true,
+    ["Head Baker"] = true
+}
+
+-- ===== COOLDOWN =====
+local LastSpawner = 0
+local SpawnerCD = 10
+
+-- ===== MAIN LOOP =====
+task.spawn(function()
+    while task.wait(Sec) do
+        if not _G.Auto_Cake_Prince then continue end
+
+        pcall(function()
+            local Character = plr.Character
+            if not Character or not Character:FindFirstChild("HumanoidRootPart") then return end
+            local HRP = Character.HumanoidRootPart
+
+            local QuestGui = plr.PlayerGui:FindFirstChild("Main")
+            QuestGui = QuestGui and QuestGui:FindFirstChild("Quest")
+
+            local Enemies = Workspace:FindFirstChild("Enemies")
+            if not Enemies then return end
+
+            -- ===============================
+            -- 1️⃣ ƯU TIÊN CAKE PRINCE
+            -- ===============================
+            for _, enemy in ipairs(Enemies:GetChildren()) do
+                if enemy.Name == "Cake Prince"
+                and enemy:FindFirstChild("Humanoid")
+                and enemy.Humanoid.Health > 0 then
+                    O.Kill2(enemy, true)
+                    BringEnemy(enemy)
+                    return
+                end
+            end
+
+            -- ===============================
+            -- 2️⃣ CHECK BIG MIRROR
+            -- ===============================
+            local BigMirror = Workspace:FindFirstChild("Map")
+                and Workspace.Map:FindFirstChild("CakeLoaf")
+                and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
+
+            if BigMirror and BigMirror:FindFirstChild("Other")
+            and BigMirror.Other.Transparency == 0 then
+                if (HRP.Position - Vector3.new(-1990,4533,-14973)).Magnitude > 2000 then
+                    _tp(MIRROR_TP)
+                    return
+                end
+            end
+
+            -- ===============================
+            -- 3️⃣ FARM MINION
+            -- ===============================
+            local FoundMinion = false
+
+            for _, enemy in ipairs(Enemies:GetChildren()) do
+                if Minions[enemy.Name]
+                and enemy:FindFirstChild("Humanoid")
+                and enemy.Humanoid.Health > 0 then
+                    FoundMinion = true
+
+                    -- Nhận quest nếu cần
+                    if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
+                        if (HRP.Position - QUEST_POS.Position).Magnitude > 50 then
+                            _tp(QUEST_POS)
+                            return
+                        end
+                        CommF:InvokeServer("StartQuest", "CakeQuest2", 2)
+                        return
+                    end
+
+                    -- Spawn Cake Prince (cooldown)
+                    if tick() - LastSpawner > SpawnerCD then
+                        local res = CommF:InvokeServer("CakePrinceSpawner")
+                        local num = tonumber(string.match(res or "", "%d+"))
+                        if num == 0 then
+                            CommF:InvokeServer("CakePrinceSpawner", true)
+                        end
+                        LastSpawner = tick()
+                    end
+
+                    O.Kill(enemy, true)
+                    BringEnemy(enemy)
+                    return
+                end
+            end
+
+            -- ===============================
+            -- 4️⃣ KHÔNG CÓ MOB → ĐỨNG CHỜ
+            -- ===============================
+            if not FoundMinion then
+                if (HRP.Position - WAIT_POS.Position).Magnitude > 30 then
+                    _tp(WAIT_POS)
+                end
+            end
+        end)
+    end
+end)
+
+
+-- Farm Bone Logic
+local BoneEnemies = {"Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"}
+
+spawn(function()
+    while task.wait(Sec) do
+        if not _G.AutoFarm_Bone then continue end
+        
+        pcall(function()
+            local Character = plr.Character
+            local HRP = Character and Character.HumanoidRootPart
+            local QuestGui = plr.PlayerGui.Main.Quest
+            if not HRP then return end
+            
+            for _, enemyName in ipairs(BoneEnemies) do
+                if not _G.AutoFarm_Bone then break end
+                
+                local enemy = GetEnemyByName(enemyName)
+                if enemy then
+                    -- Accept quest if needed
+                    if _G.AcceptQuestC and not QuestGui.Visible then
+                        local questPos = CFrame.new(-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        _tp(questPos)
+                        repeat task.wait(0.2) until (questPos.Position - HRP.Position).Magnitude < 50
+                        
+                        local questList = {
+                            {"StartQuest", "HauntedQuest2", 2},
+                            {"StartQuest", "HauntedQuest2", 1},
+                            {"StartQuest", "HauntedQuest1", 1},
+                            {"StartQuest", "HauntedQuest1", 2},
+                        }
+                        CommF:InvokeServer(unpack(questList[math.random(1, #questList)]))
+                    end
+                    
+                    -- Kill enemy
+                    repeat
+                        task.wait()
+                        O.Kill(enemy, true)
+                        BringEnemy(enemy)
+                    until not _G.AutoFarm_Bone or enemy.Humanoid.Health <= 0 or not enemy.Parent 
+                        or (_G.AcceptQuestC and not QuestGui.Visible)
+                end
+            end
+            
+            -- Default position
+            _tp(CFrame.new(-9495.68, 453.58, 5977.34))
+        end)
+    end
+end)
+
+-- Farm Tyrant Logic
+task.spawn(function()
+    while task.wait(Sec) do
+        if not _G.FarmTyrant then
+            continue
+        else
+            pcall(function()
+                local char = plr.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if not hrp then return end
+
+                local enemies = workspace:FindFirstChild("Enemies")
+                if not enemies then return end
+
+                for _, enemy in pairs(enemies:GetChildren()) do
+                    if enemy.Name == "Tyrant of the Skies" then
+                        local hum = enemy:FindFirstChildOfClass("Humanoid")
+                        if hum and hum.Health > 0 then
+                            BringEnemy(enemy)
+                            O.Kill2(enemy, true)
+                            return
+                        end
+                    end
+                end
+
+                local mobList = {
+                    ["Serpent Hunter"] = true,
+                    ["Skull Slayer"] = true,
+                    ["Isle Champion"] = true,
+                    ["Sun-kissed Warrior"] = true
+                }
+
+                for _, enemy in pairs(enemies:GetChildren()) do
+                    local hum = enemy:FindFirstChildOfClass("Humanoid")
+                    if hum and hum.Health > 0 and mobList[enemy.Name] then
+                        BringEnemy(enemy)
+                        O.Kill(enemy, true)
+                        return
+                    end
+                end
+
+                _tp(CFrame.new(-16268.287, 152.616, 1390.773))
+            end)
+        end
+    end
+end)
+
+-- Accept Quest Toggle
+B:AddToggle({
+    Title = "Accept Quests [Bone/CakePrince]",
+    Description = "",
+    Default = false,
+    Callback = function(e)
+        _G.AcceptQuestC = e
+    end,
+})
 
 B:AddToggle({
 	Title = "Auto Travel Dressrosa",
@@ -2628,15 +2847,7 @@ spawn(function()
 		end);
 	end;
 end);
-B:AddSeperator("Miscellanea / Quest");
-B:AddToggle({
-	Title = "Auto Farm Nearest",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.AutoFarmNear = e;
-	end,
-});
+
 spawn(function()
 	while wait() do
 		pcall(function()
@@ -2656,6 +2867,8 @@ spawn(function()
 		end);
 	end;
 end);
+B:AddSeperator("Miscellanea / Quest");
+
 B:AddToggle({
 	Title = "Auto Factory Raid",
 	Description = "",
@@ -3321,18 +3534,8 @@ spawn(function()
 	end;
 end);
 B:AddSeperator("Generals Quests / Items");
-local K = B:AddParagraph({ Title = "Cake Princes :", Content = "" });
 local j = B:AddParagraph({ Title = " Bones :", Content = "" });
-spawn(function()
-	while wait(.2) do
-		pcall(function()
-			local e = string.match(replicated.Remotes.CommF_:InvokeServer("CakePrinceSpawner"), "%d+");
-			if e then
-				K:SetDesc(" Killed : " .. 500 - e);
-			end;
-		end);
-	end;
-end);
+
 spawn(function()
 	while wait(.2) do
 		pcall(function()
@@ -3340,206 +3543,7 @@ spawn(function()
 		end);
 	end;
 end);
-B:AddToggle({
-	Title = "Auto Cake Prince",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.Auto_Cake_Prince = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		if _G.Auto_Cake_Prince then
-			pcall(function()
-				local Workspace = game:GetService("Workspace")
-				local ReplicatedStorage = game:GetService("ReplicatedStorage")
-				local Enemies = Workspace.Enemies
-				local Player = game.Players.LocalPlayer
-				local Character = Player.Character
-				
-				if not Character or not Character:FindFirstChild("HumanoidRootPart") then
-					return
-				end
-				
-				local HRP = Character.HumanoidRootPart
-				
-				-- Check for Cake Prince
-				local cakePrince = nil
-				for _, v in pairs(Enemies:GetChildren()) do
-					if v.Name == "Cake Prince" and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-						cakePrince = v
-						break
-					end
-				end
-				
-				if cakePrince then
-					-- Kill Cake Prince
-					O.Kill2(cakePrince, _G.Auto_Cake_Prince)
-					BringEnemy(cakePrince)
-					return
-				end
-				
-				-- Check if Big Mirror is active and far away
-				local BigMirror = Workspace:FindFirstChild("Map") and Workspace.Map:FindFirstChild("CakeLoaf") and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
-				if BigMirror and BigMirror:FindFirstChild("Other") then
-					if BigMirror.Other.Transparency == 0 then
-						local mirrorPos = CFrame.new(-1990.67, 4533, -14973.67)
-						if (mirrorPos.Position - HRP.Position).Magnitude >= 2000 then
-							_tp(CFrame.new(-2151.82, 149.32, -12404.91))
-							return
-						end
-					end
-				end
-				
-				-- Check for minions
-				local minion = nil
-				local minionNames = {"Cookie Crafter", "Cake Guard", "Baking Staff", "Head Baker"}
-				for _, v in pairs(Enemies:GetChildren()) do
-					for _, name in pairs(minionNames) do
-						if v.Name == name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-							minion = v
-							break
-						end
-					end
-					if minion then break end
-				end
-				
-				if minion then
-					-- Check if quest is visible and AcceptQuestC is enabled
-					local QuestGui = Player:FindFirstChild("PlayerGui") and Player.PlayerGui:FindFirstChild("Main") and Player.PlayerGui.Main:FindFirstChild("Quest")
-					
-					if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
-						-- Accept quest if needed
-						local questPos = CFrame.new(-1927.92, 37.8, -12842.54)
-						if (questPos.Position - HRP.Position).Magnitude > 50 then
-							_tp(questPos)
-							return
-						end
-						
-						local questData = {
-							{"StartQuest", "CakeQuest2", 2},
-							{"StartQuest", "CakeQuest2", 1},
-							{"StartQuest", "CakeQuest1", 1},
-							{"StartQuest", "CakeQuest1", 2},
-						}
-						
-						pcall(function()
-							ReplicatedStorage.Remotes.CommF_:InvokeServer(unpack(questData[math.random(1, 4)]))
-						end)
-					end
-					
-					local bossCount = nil
-					pcall(function()
-						local response = ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner")
-						local count = string.match(response, "%d+")
-						if count then
-							bossCount = tonumber(count)
-							if bossCount == 0 then
-								ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner", true)
-							end
-						end
-					end)
-					
-					O.Kill(minion, _G.Auto_Cake_Prince)
-					BringEnemy(minion)
-					return
-				end
-				
-				_tp(CFrame.new(-2091.91, 70.01, -12142.84))
-				
-			end)
-		end
-	end
-end)
 
-B:AddToggle({
-	Title = "Auto Bones",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.AutoFarm_Bone = e;
-	end,
-});
-
-local EnemyOrder = {
-	"Reborn Skeleton",
-	"Living Zombie",
-	"Demonic Soul",
-	"Posessed Mummy",
-}
-
-local function GetEnemyByName(name)
-	for _, v in pairs(workspace.Enemies:GetChildren()) do
-		if v.Name == name
-		and v:FindFirstChild("Humanoid")
-		and v.Humanoid.Health > 0
-		and v:FindFirstChild("HumanoidRootPart") then
-			return v
-		end
-	end
-end
-
-spawn(function()
-	while task.wait(Sec) do
-		if not _G.AutoFarm_Bone then continue end
-
-		pcall(function()
-			local char = plr.Character
-			local hrp = char and char:FindFirstChild("HumanoidRootPart")
-			local QuestGui = plr.PlayerGui.Main.Quest
-			if not hrp then return end
-
-			for _, EnemyName in ipairs(EnemyOrder) do
-				if not _G.AutoFarm_Bone then break end
-
-				local Enemy = GetEnemyByName(EnemyName)
-				if Enemy then
-
-					if _G.AcceptQuestC and not QuestGui.Visible then
-						local QuestPos = CFrame.new(
-							-9516.99316, 172.017181, 6078.46533,
-							0,0,-1, 0,1,0, 1,0,0
-						)
-						_tp(QuestPos)
-
-						repeat task.wait(0.2)
-						until (QuestPos.Position - hrp.Position).Magnitude < 50
-
-						local QuestList = {
-							{"StartQuest","HauntedQuest2",2},
-							{"StartQuest","HauntedQuest2",1},
-							{"StartQuest","HauntedQuest1",1},
-							{"StartQuest","HauntedQuest1",2},
-						}
-						CommF:InvokeServer(unpack(QuestList[math.random(1,#QuestList)]))
-					end
-
-					repeat
-						task.wait()
-						O.Kill(Enemy, true)
-						BringEnemy(Enemy)
-					until not _G.AutoFarm_Bone
-						or Enemy.Humanoid.Health <= 0
-						or not Enemy.Parent
-						or (_G.AcceptQuestC and not QuestGui.Visible)
-				end
-			end
-
-			-- không có quái → đứng chờ
-			_tp(CFrame.new(-9495.68, 453.58, 5977.34))
-		end)
-	end
-end)
-
-B:AddToggle({
-	Title = "Accept Quests",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.AcceptQuestC = e;
-	end,
-});
 B:AddToggle({
 	Title = "Auto Farm Mirror",
 	Description = "",

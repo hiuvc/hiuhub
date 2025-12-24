@@ -2587,6 +2587,18 @@ spawn(function()
         end)
     end
 end)
+function CheckEyes()
+    local count = 0
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart")
+        and obj.Name:match("^Eye%d+$")
+        and obj.Material == Enum.Material.Neon
+        and obj.Transparency == 0 then
+            count += 1
+        end
+    end
+    return count
+end
 
 local PhaBinhPoints = {
     CFrame.new(-16332.526, 158.072, 1440.324),
@@ -2599,22 +2611,29 @@ local PhaBinhPoints = {
     CFrame.new(-16335.097, 159.334, 1324.886),
 }
 
+local mobList = {
+    ["Serpent Hunter"] = true,
+    ["Skull Slayer"] = true,
+    ["Isle Champion"] = true,
+    ["Sun-kissed Warrior"] = true
+}
+
 task.spawn(function()
     while task.wait(Sec) do
         if not _G.FramTyrent then continue end
-
         pcall(function()
             local plr = game.Players.LocalPlayer
             local char = plr.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             local hum = char and char:FindFirstChildOfClass("Humanoid")
             if not (hrp and hum and hum.Health > 0) then return end
-
+            
             local enemies = workspace:FindFirstChild("Enemies")
             if not enemies then return end
-
+            
             local Eyes = CheckEyes()
-
+            
+            -- Ưu tiên 1: Kill Tyrant
             for _, enemy in pairs(enemies:GetChildren()) do
                 if enemy.Name == "Tyrant of the Skies" then
                     local eh = enemy:FindFirstChildOfClass("Humanoid")
@@ -2625,17 +2644,19 @@ task.spawn(function()
                     end
                 end
             end
-
+            
+            -- Ưu tiên 2: Nếu đủ Eyes, farm tại các điểm Pha Bình
             if Eyes >= 4 then
                 for _, point in ipairs(PhaBinhPoints) do
                     if not _G.FramTyrent then return end
-
+                    
                     if _tp then
                         _tp(point)
                     else
                         hrp.CFrame = point
                     end
-
+                    
+                    -- Chờ đến vị trí
                     local start = tick()
                     while tick() - start < 10 do
                         if not _G.FramTyrent then return end
@@ -2644,38 +2665,49 @@ task.spawn(function()
                         end
                         task.wait(0.1)
                     end
-	    				Useskills("Melee", "Z");
-						wait(.5);
-						Useskills("Melee", "X");
-						wait(.5);
-						Useskills("Melee", "C");
-						wait(.5);
-						Useskills("Blox Fruit", "Z");
-						wait(.5);
-						Useskills("Blox Fruit", "X");
-						wait(.5);
-						Useskills("Blox Fruit", "C");
+                    
+                    -- Sử dụng kỹ năng
+                    Useskills("Melee", "Z")
+                    task.wait(0.5)
+                    Useskills("Melee", "X")
+                    task.wait(0.5)
+                    Useskills("Melee", "C")
+                    task.wait(0.5)
+                    Useskills("Blox Fruit", "Z")
+                    task.wait(0.5)
+                    Useskills("Blox Fruit", "X")
+                    task.wait(0.5)
+                    Useskills("Blox Fruit", "C")
+                    task.wait(1) -- Chờ để quái chết
                 end
                 return
             end
-
-            local mobList = {
-                ["Serpent Hunter"] = true,
-                ["Skull Slayer"] = true,
-                ["Isle Champion"] = true,
-                ["Sun-kissed Warrior"] = true
-            }
-
+            
+            -- Ưu tiên 3: Nếu chưa đủ Eyes, farm quái thường
+            local foundEnemy = false
             for _, enemy in pairs(enemies:GetChildren()) do
+                if not _G.FramTyrent then return end
+                
                 local eh = enemy:FindFirstChildOfClass("Humanoid")
                 if eh and eh.Health > 0 and mobList[enemy.Name] then
                     BringEnemy(enemy)
                     O.Kill(enemy, true)
+                    foundEnemy = true
+                    -- Đợi quái chết
+                    local killWait = tick()
+                    while tick() - killWait < 15 do
+                        if eh.Health <= 0 then break end
+                        task.wait(0.1)
+                    end
                     return
                 end
             end
-
-            _tp(CFrame.new(-16268.287, 152.616, 1390.773))
+            
+            -- Nếu không tìm thấy quái thường, teleport về điểm farm
+            if not foundEnemy then
+                _tp(CFrame.new(-16268.287, 152.616, 1390.773))
+                task.wait(2) -- Chờ để spawn quái
+            end
         end)
     end
 end)

@@ -2626,8 +2626,6 @@ spawn(function()
     end
 end)
 
--- ================== CONFIG ==================
-
 local PhaBinhPoints = {
     CFrame.new(-16332.526, 158.072, 1440.325),
     CFrame.new(-16288.609, 158.167, 1470.368),
@@ -2668,12 +2666,17 @@ end
 -- ================== BREAK JAR ==================
 
 local function BreakJar()
-    Useskills("Melee", "Z"); task.wait(0.5)
-    Useskills("Melee", "X"); task.wait(0.5)
-    Useskills("Melee", "C"); task.wait(0.5)
-    Useskills("Blox Fruit", "Z"); task.wait(0.5)
-    Useskills("Blox Fruit", "X"); task.wait(0.5)
-    Useskills("Blox Fruit", "C")
+    Useskills("Melee", "Z"); 
+    Useskills("Melee", "X"); 
+    Useskills("Melee", "C"); 
+    wait(.1)
+	Useskills("Sword", "Z");
+	Useskills("Sword", "X");
+	wait(.1)
+    Useskills("Blox Fruit", "Z"); 
+    Useskills("Blox Fruit", "X"); 
+    Useskills("Blox Fruit", "C"); 
+    Useskills("Blox Fruit", "V"); 
 end
 
 -- ================== MAIN LOOP ==================
@@ -2735,15 +2738,13 @@ task.spawn(function()
                     return
                 end
 
-                if _tp then
+                if _tp and not Tyrant then
                     _tp(point)
 
-                    -- chờ tới vị trí phá bình
                     repeat task.wait()
                     until (hrp.Position - point.Position).Magnitude < 6
                 end
 
-                -- CHỈ spam skill khi tới điểm phá bình
                 BreakJar()
 
                 -- chờ Tyrant spawn

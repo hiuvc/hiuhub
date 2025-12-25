@@ -2055,7 +2055,7 @@ local y = n:AddSection("Tab Misc");
 SV:AddSeperator("Server - Status")
 local MoonStatus = SV:AddParagraph({ Title = "Moon", Content = "" })
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(1) do
         pcall(function()
             local lighting = game:GetService("Lighting")
             local moonTextureId = nil
@@ -2092,7 +2092,7 @@ end)
 if World1 then
     local TheSawStatus = SV:AddParagraph({ Title = "The Saw", Content = "" })
     task.spawn(function()
-        while task.wait(.5) do
+        while task.wait(1) do
             pcall(function()
                 if game:GetService("ReplicatedStorage"):FindFirstChild("The Saw") or game:GetService("Workspace").Enemies:FindFirstChild("The Saw") then
                     TheSawStatus:SetDesc("Status : ✅️")
@@ -2105,7 +2105,7 @@ if World1 then
 
     local GreyBeardStatus = SV:AddParagraph({ Title = "Grey Beard", Content = "" })
     task.spawn(function()
-        while task.wait(.5) do
+        while task.wait(1) do
             pcall(function()
                 if game:GetService("ReplicatedStorage"):FindFirstChild("Greybeard") or game:GetService("Workspace").Enemies:FindFirstChild("Greybeard") then
                     GreyBeardStatus:SetDesc("Status : ✅️")
@@ -2120,7 +2120,7 @@ end
 if World2 then
     local CursedCaptainStatus = SV:AddParagraph({ Title = "Cursed Captain", Content = "" })
     task.spawn(function()
-        while wait(.5) do
+        while wait(1) do
             pcall(function()
                 if game:GetService("ReplicatedStorage"):FindFirstChild("Cursed Captain") or game:GetService("Workspace").Enemies:FindFirstChild("Cursed Captain") then
                     CursedCaptainStatus:SetDesc("Status : ✅️")
@@ -2133,7 +2133,7 @@ if World2 then
     local LegendarySwordStatus = SV:AddParagraph({ Title = "Legendary Sword", Content = "" })
     task.spawn(function()
         local previousStatus = ""
-        while task.wait(.5) do
+        while task.wait(1) do
             local swordStatus = "Status : ❌"
             if game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("LegendarySwordDealer", "1") then
                 swordStatus = "Status: Shisui"
@@ -2150,7 +2150,7 @@ end
 if World3 then
     local MirageIslandStatus = SV:AddParagraph({ Title = "Mirage Island", Content = "" })
     task.spawn(function()
-        while task.wait(.5) do
+        while task.wait(1) do
             pcall(function()
                 if game.Workspace.Map:FindFirstChild("MysticIsland") then
                     MirageIslandStatus:SetDesc("Status : ✅")
@@ -2164,7 +2164,7 @@ if World3 then
     local LeviathanStatus = SV:AddParagraph({ Title = "Spy", Content = "" })
     task.spawn(function()
         pcall(function()
-            while task.wait(.5) do
+            while task.wait(1) do
                 local SpyStatus = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("InfoLeviathan", "1")
                 if (SpyStatus == 5) then
                     LeviathanStatus:SetDesc("Status : Leviathan Is Out There")
@@ -2200,7 +2200,7 @@ if World3 then
     end
     task.spawn(function()
         pcall(function()
-            while task.wait(.5) do
+            while task.wait(1) do
                 UpdateKitsune()
             end
         end)
@@ -2209,7 +2209,7 @@ if World3 then
     local PrehistoricIslandStatus = SV:AddParagraph({ Title = "Volcano Island", Content = "" })
     task.spawn(function()
         pcall(function()
-            while task.wait(.5) do
+            while task.wait(1) do
                 if game:GetService("Workspace").Map:FindFirstChild("PrehistoricIsland") then
                     PrehistoricIslandStatus:SetDesc("Status : ✅️")
                 else
@@ -2221,7 +2221,7 @@ if World3 then
 
     local CakePrinceStatus = SV:AddParagraph({ Title = "Cake Prince", Content = "" })
     task.spawn(function()
-        while task.wait(.1) do
+        while task.wait(.5) do
             pcall(function()
                 if string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 88 then
                     KillMob = (tonumber(string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,41)) - 500)
@@ -2235,7 +2235,7 @@ if World3 then
     end)
 
     task.spawn(function()
-        while task.wait(.1) do
+        while task.wait(.5) do
             pcall(function()
                 if string.len(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")) == 88 then
                     CakePrinceStatus:SetDesc("Defeat : "..string.sub(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner"),39,41).." Mobs")
@@ -2268,7 +2268,7 @@ if World3 then
 	})
 
 	task.spawn(function()
-	    while task.wait(0.5) do
+	    while task.wait(1) do
 	        pcall(function()
 	            local eyes = CheckEyes()
 	            TyrantStatus:SetDesc("Status : "..eyes.."/4 Eyes")
@@ -3093,39 +3093,7 @@ spawn(function()
 		end;
 	end;
 end);
-B:AddToggle({
-	Title = "Auto Farm Ectoplasm",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.AutoEctoplasm = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		pcall(function()
-			if _G.AutoEctoplasm then
-				local e = {
-						"Ship Deckhand",
-						"Ship Engineer",
-						"Ship Steward",
-						"Ship Officer",
-						"Arctic Warrior",
-					};
-				local A = GetConnectionEnemies(e);
-				if O.Alive(A) then
-					repeat
-						wait();
-						O.Kill(A, _G.AutoEctoplasm);
-						BringEnemy(A)
-					until not _G.AutoEctoplasm or not A.Parent or A.Humanoid.Health <= 0;
-				else
-					replicated.Remotes.CommF_:InvokeServer("requestEntrance", Vector3.new(923.21252441406, 126.9760055542, 32852.83203125));
-				end;
-			end;
-		end);
-	end;
-end);
+
 B:AddToggle({
 	Title = "Auto Done Bartilo Quest",
 	Description = "",

@@ -532,58 +532,50 @@ statsSetings = function(e, A)
 			end;
 		end;
 	end;
-Useskills = function(e, A)
-		if e == "Melee" then
-			weaponSc("Melee");
-			if A == "Z" then
-				vim1:SendKeyEvent(true, "Z", false, game);
-				vim1:SendKeyEvent(false, "Z", false, game);
-			elseif A == "X" then
-				vim1:SendKeyEvent(true, "X", false, game);
-				vim1:SendKeyEvent(false, "X", false, game);
-			elseif A == "C" then
-				vim1:SendKeyEvent(true, "C", false, game);
-				vim1:SendKeyEvent(false, "C", false, game);
-			end;
-		elseif e == "Sword" then
-			weaponSc("Sword");
-			if A == "Z" then
-				vim1:SendKeyEvent(true, "Z", false, game);
-				vim1:SendKeyEvent(false, "Z", false, game);
-			elseif A == "X" then
-				vim1:SendKeyEvent(true, "X", false, game);
-				vim1:SendKeyEvent(false, "X", false, game);
-			end;
-		elseif e == "Blox Fruit" then
-			weaponSc("Blox Fruit");
-			if A == "Z" then
-				vim1:SendKeyEvent(true, "Z", false, game);
-				vim1:SendKeyEvent(false, "Z", false, game);
-			elseif A == "X" then
-				vim1:SendKeyEvent(true, "X", false, game);
-				vim1:SendKeyEvent(false, "X", false, game);
-			elseif A == "C" then
-				vim1:SendKeyEvent(true, "C", false, game);
-				vim1:SendKeyEvent(false, "C", false, game);
-			elseif A == "V" then
-				vim1:SendKeyEvent(true, "V", false, game);
-				vim1:SendKeyEvent(false, "V", false, game);
-			end;
-		elseif e == "Gun" then
-			weaponSc("Gun");
-			if A == "Z" then
-				vim1:SendKeyEvent(true, "Z", false, game);
-				vim1:SendKeyEvent(false, "Z", false, game);
-			elseif A == "X" then
-				vim1:SendKeyEvent(true, "X", false, game);
-				vim1:SendKeyEvent(false, "X", false, game);
-			end;
-		end;
-		if e == "nil" and A == "Y" then
-			vim1:SendKeyEvent(true, "Y", false, game);
-			vim1:SendKeyEvent(false, "Y", false, game);
-		end;
-	end;
+local SkillDelay = {
+    Z = 0.2,
+    X = 0.3,
+    C = 0.4,
+    V = 0.5,
+    Y = 0.2
+}
+local SkillMap = {
+    ["Melee"] = {"Z", "X", "C"},
+    ["Sword"] = {"Z", "X"},
+    ["Blox Fruit"] = {"Z", "X", "C", "V"},
+    ["Gun"] = {"Z", "X"}
+}
+local DefaultCombo = {"Z", "X", "C"}
+
+local function pressKey(key)
+    vim1:SendKeyEvent(true, key, false, game)
+    task.wait(0.05)
+    vim1:SendKeyEvent(false, key, false, game)
+end
+local function UseSkill(weaponType, key)
+    if weaponType == "nil" and key == "Y" then
+        pressKey("Y")
+        task.wait(SkillDelay.Y or 0.2)
+        return
+    end
+
+    local skills = SkillMap[weaponType]
+    if not skills then return end
+
+    if not table.find(skills, key) then return end
+
+    weaponSc(weaponType)
+    pressKey(key)
+    task.wait(SkillDelay[key] or 0.2)
+end
+UseCombo = function(weaponType, combo)
+    combo = combo or DefaultCombo
+
+    for _, key in ipairs(combo) do
+        UseSkill(weaponType, key)
+    end
+end
+
 local H = getrawmetatable(game);
 local f = H.__namecall;
 setreadonly(H, false);
@@ -2666,17 +2658,11 @@ end
 -- ================== BREAK JAR ==================
 
 local function BreakJar()
-    Useskills("Melee", "Z"); 
-    Useskills("Melee", "X"); 
-    Useskills("Melee", "C"); 
-    wait(.1)
-	Useskills("Sword", "Z");
-	Useskills("Sword", "X");
-	wait(.1)
-    Useskills("Blox Fruit", "Z"); 
-    Useskills("Blox Fruit", "X"); 
-    Useskills("Blox Fruit", "C"); 
-    Useskills("Blox Fruit", "V"); 
+	UseCombo("Melee")
+	wait(1)
+	UseCombo("Blox Fruit", {"Z", "X", "C", "V"})
+	wait(1)
+	UseCombo("Sword", {"Z", "X"})
 end
 
 -- ================== MAIN LOOP ==================

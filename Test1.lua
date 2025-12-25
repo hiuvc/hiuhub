@@ -277,40 +277,64 @@ end
 
 BringEnemy = function(Target, Distance)
 	if not _B or not Target then return end
-	Distance = Distance or 250
-
+	Distance = Distance or 200
+	
 	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
 	if not rootTarget then return end
-
+	
 	local PosMon = rootTarget.Position
 	local TargetName = GetMobBaseName(Target.Name)
-
-	for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
-		local hum = Enemy:FindFirstChildOfClass("Humanoid")
-		local root = Enemy:FindFirstChild("HumanoidRootPart")
-
-		if hum and root and hum.Health > 0 then
-			if GetMobBaseName(Enemy.Name) == TargetName then
-				if (root.Position - PosMon).Magnitude <= Distance then
-					root.CFrame = CFrame.new(PosMon)
+	
+	-- Chỉ set SimulationRadius một lần
+	if plr.SimulationRadius ~= math.huge then
+		plr.SimulationRadius = math.huge
+	end
+	
+	-- Cache để tránh gọi FindFirstChild nhiều lần
+	local enemies = workspace.Enemies:GetChildren()
+	
+	for _, Enemy in pairs(enemies) do
+		-- Kiểm tra tên trước để tránh xử lý không cần thiết
+		if GetMobBaseName(Enemy.Name) == TargetName then
+			local root = Enemy:FindFirstChild("HumanoidRootPart")
+			local hum = Enemy:FindFirstChildOfClass("Humanoid")
+			
+			if root and hum and hum.Health > 0 then
+				local distance = (root.Position - PosMon).Magnitude
+				
+				if distance <= Distance then
+					-- Tối ưu: chỉ cập nhật khi cần thiết
+					if distance > 5 then -- Chỉ bring khi còn xa
+						root.CFrame = CFrame.new(PosMon)
+					end
+					
+					-- Gộp các thiết lập lại với nhau
 					root.Velocity = Vector3.zero
 					root.RotVelocity = Vector3.zero
 					root.CanCollide = false
-
-					hum.WalkSpeed = 0
-					hum.JumpPower = 0
-					hum:ChangeState(11)
-
-					local animator = hum:FindFirstChildOfClass("Animator")
-					if animator then
-						animator:Destroy()
+					
+					-- Chỉ set các thuộc tính khi cần
+					if hum.WalkSpeed ~= 0 then
+						hum.WalkSpeed = 0
 					end
+					if hum.JumpPower ~= 0 then
+						hum.JumpPower = 0
+					end
+					
+					-- Destroy Animator chỉ một lần
+					if not Enemy:GetAttribute("AnimatorRemoved") then
+						local animator = hum:FindFirstChildOfClass("Animator")
+						if animator then
+							animator:Destroy()
+							Enemy:SetAttribute("AnimatorRemoved", true)
+						end
+					end
+					
+					hum:ChangeState(11)
 				end
 			end
 		end
 	end
-
-	plr.SimulationRadius = math.huge
 end
 
 O.Kill = function(e, A)

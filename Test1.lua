@@ -2626,6 +2626,8 @@ spawn(function()
     end
 end)
 
+-- ================== CONFIG ==================
+
 local PhaBinhPoints = {
     CFrame.new(-16332.526, 158.072, 1440.325),
     CFrame.new(-16288.609, 158.167, 1470.368),
@@ -2644,6 +2646,8 @@ local MobNeedEyes = {
     ["Sun-kissed Warrior"] = true
 }
 
+-- ================== UTILS ==================
+
 local function IsAlive(char)
     local hum = char and char:FindFirstChildOfClass("Humanoid")
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -2661,6 +2665,19 @@ local function FindTyrant(enemies)
     end
 end
 
+-- ================== BREAK JAR ==================
+
+local function BreakJar()
+    Useskills("Melee", "Z"); task.wait(0.5)
+    Useskills("Melee", "X"); task.wait(0.5)
+    Useskills("Melee", "C"); task.wait(0.5)
+    Useskills("Blox Fruit", "Z"); task.wait(0.5)
+    Useskills("Blox Fruit", "X"); task.wait(0.5)
+    Useskills("Blox Fruit", "C")
+end
+
+-- ================== MAIN LOOP ==================
+
 task.spawn(function()
     while task.wait(Sec) do
         if not _G.FarmTyrant then
@@ -2672,6 +2689,7 @@ task.spawn(function()
             local char = plr.Character
             if not IsAlive(char) then return end
 
+            local hrp = char.HumanoidRootPart
             local enemies = workspace:FindFirstChild("Enemies")
             if not enemies then return end
 
@@ -2682,7 +2700,7 @@ task.spawn(function()
             if Tyrant then
                 BringEnemy(Tyrant)
                 O.Kill2(Tyrant, true)
-                return -- đánh xong -> vòng lặp quay lại farm quái
+                return
             end
 
             -- ================== CASE 2: CHƯA CÓ TYRANT ==================
@@ -2706,45 +2724,39 @@ task.spawn(function()
             end
 
             -- ✅ ĐỦ EYES & CHƯA CÓ TYRANT → PHÁ BÌNH
-            if Eyes >= 4 then
-                for _, point in ipairs(PhaBinhPoints) do
-                    if not _G.FarmTyrant then break end
+            for _, point in ipairs(PhaBinhPoints) do
+                if not _G.FarmTyrant then return end
 
-                    -- Nếu Tyrant spawn giữa chừng → đánh ngay
-                    local TyrantNow = FindTyrant(enemies)
-                    if TyrantNow then
-                        BringEnemy(TyrantNow)
-                        O.Kill2(TyrantNow, true)
+                -- Tyrant spawn giữa chừng
+                local TyrantNow = FindTyrant(enemies)
+                if TyrantNow then
+                    BringEnemy(TyrantNow)
+                    O.Kill2(TyrantNow, true)
+                    return
+                end
+
+                if _tp then
+                    _tp(point)
+
+                    -- chờ tới vị trí phá bình
+                    repeat task.wait()
+                    until (hrp.Position - point.Position).Magnitude < 6
+                end
+
+                -- CHỈ spam skill khi tới điểm phá bình
+                BreakJar()
+
+                -- chờ Tyrant spawn
+                local start = tick()
+                while tick() - start < 10 and _G.FarmTyrant do
+                    local TyrantMid = FindTyrant(enemies)
+                    if TyrantMid then
+                        BringEnemy(TyrantMid)
+                        O.Kill2(TyrantMid, true)
                         return
                     end
-
-                    if _tp then
-                        _tp(point)
-                    end
-
-                    local start = tick()
-                    while tick() - start < 10 and _G.FarmTyrant do
-                        local TyrantMid = FindTyrant(enemies)
-                        if TyrantMid then
-                            BringEnemy(TyrantMid)
-                            O.Kill2(TyrantMid, true)
-                            return
-                        end
-                        task.wait(0.2)
-                    end
-					Useskills("Melee", "Z");
-					wait(.5);
-					Useskills("Melee", "X");
-					wait(.5);
-					Useskills("Melee", "C");
-					wait(.5);
-					Useskills("Blox Fruit", "Z");
-					wait(.5);
-					Useskills("Blox Fruit", "X");
-					wait(.5);
-					Useskills("Blox Fruit", "C"); 
+                    task.wait(0.2)
                 end
-                return
             end
         end)
     end

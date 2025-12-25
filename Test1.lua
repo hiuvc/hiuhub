@@ -2732,19 +2732,17 @@ task.spawn(function()
                         end
                         task.wait(0.2)
                     end
-
-                    -- phá bình
-                    Useskills("Melee","Z"); 
-                    task.wait(.3)
-                    Useskills("Melee","X"); 
-                    task.wait(.3)
-                    Useskills("Melee","C"); 
-                    task.wait(.3)
-                    Useskills("Blox Fruit","Z"); 
-                    task.wait(.3)
-                    Useskills("Blox Fruit","X"); 
-                    task.wait(.3)
-                    Useskills("Blox Fruit","C"); 
+					Useskills("Melee", "Z");
+					wait(.5);
+					Useskills("Melee", "X");
+					wait(.5);
+					Useskills("Melee", "C");
+					wait(.5);
+					Useskills("Blox Fruit", "Z");
+					wait(.5);
+					Useskills("Blox Fruit", "X");
+					wait(.5);
+					Useskills("Blox Fruit", "C"); 
                 end
                 return
             end

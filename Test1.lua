@@ -2648,8 +2648,8 @@ local MobNeedEyes = {
 local CONFIG = {
     TyrantCheckInterval = 0.2,
     PointWaitTime = 5,
-    SkillDelay = 1,
-    PointReachedDistance = 3,
+    SkillDelay = 0.5,
+    PointReachedDistance = 6,
     FallbackPoint = CFrame.new(-16268.287, 152.616, 1390.773)
 }
 
@@ -2692,9 +2692,7 @@ end
 local function UseAllSkills()
     local skills = {
         {"Melee", "Z"}, {"Melee", "X"}, {"Melee", "C"},
-        {"Blox Fruit", "Z"}, {"Blox Fruit", "X"}, {"Blox Fruit", "C"},{"Blox Fruit", "V"},
-        {"Sword", "Z"}, {"Sword", "X"},
-        {"Gun", "Z"}, {"Gun", "X"}
+        {"Blox Fruit", "Z"}, {"Blox Fruit", "X"}, {"Blox Fruit", "C"},{"Blox Fruit", "V"}
     }
     
     for _, skill in ipairs(skills) do
@@ -2763,7 +2761,7 @@ local function BreakVases(enemies, hrp)
             end
             
             -- Dùng skill khi đang chờ tại vị trí
-            UseAllSkills(	1F V)
+            UseAllSkills()
             task.wait(CONFIG.TyrantCheckInterval)
         end
     end

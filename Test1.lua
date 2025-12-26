@@ -2648,8 +2648,8 @@ local MobNeedEyes = {
 local CONFIG = {
     TyrantCheckInterval = 0.2,
     PointWaitTime = 5,
-    SkillDelay = 0.5,
-    PointReachedDistance = 6,
+    SkillDelay = 1,
+    PointReachedDistance = 3,
     FallbackPoint = CFrame.new(-16268.287, 152.616, 1390.773)
 }
 
@@ -2763,7 +2763,7 @@ local function BreakVases(enemies, hrp)
             end
             
             -- Dùng skill khi đang chờ tại vị trí
-            UseAllSkills()
+            UseAllSkills(	1F V)
             task.wait(CONFIG.TyrantCheckInterval)
         end
     end

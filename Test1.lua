@@ -532,48 +532,57 @@ statsSetings = function(e, A)
 			end;
 		end;
 	end;
-local SkillDelay = {
-    Z = 0.2,
-    X = 0.3,
-    C = 0.4,
-    V = 0.5,
-    Y = 0.2
-}
-local SkillMap = {
-    ["Melee"] = {"Z", "X", "C"},
-    ["Sword"] = {"Z", "X"},
-    ["Blox Fruit"] = {"Z", "X", "C", "V"},
-    ["Gun"] = {"Z", "X"}
-}
-local DefaultCombo = {"Z", "X", "C"}
-
-local function pressKey(key)
-    vim1:SendKeyEvent(true, key, false, game)
-    task.wait(0.05)
-    vim1:SendKeyEvent(false, key, false, game)
-end
-local function UseSkill(weaponType, key)
-    if weaponType == "nil" and key == "Y" then
-        pressKey("Y")
-        task.wait(SkillDelay.Y or 0.2)
-        return
+Useskills = function(weapon, skill)
+  if weapon == "Melee" then
+    weaponSc("Melee")
+    if skill == "Z" then
+      vim1:SendKeyEvent(true, "Z", false, game);
+      vim1:SendKeyEvent(false, "Z", false, game);
+    elseif skill == "X" then
+      vim1:SendKeyEvent(true, "X", false, game);
+      vim1:SendKeyEvent(false, "X", false, game);
+    elseif skill == "C" then
+      vim1:SendKeyEvent(true, "C", false, game);
+      vim1:SendKeyEvent(false, "C", false, game);
     end
-
-    local skills = SkillMap[weaponType]
-    if not skills then return end
-
-    if not table.find(skills, key) then return end
-
-    weaponSc(weaponType)
-    pressKey(key)
-    task.wait(SkillDelay[key] or 0.2)
-end
-UseCombo = function(weaponType, combo)
-    combo = combo or DefaultCombo
-
-    for _, key in ipairs(combo) do
-        UseSkill(weaponType, key)
+  elseif weapon == "Sword" then
+    weaponSc("Sword")
+    if skill == "Z" then
+      vim1:SendKeyEvent(true, "Z", false, game);
+      vim1:SendKeyEvent(false, "Z", false, game);
+    elseif skill == "X" then
+      vim1:SendKeyEvent(true, "X", false, game);
+      vim1:SendKeyEvent(false, "X", false, game);
     end
+  elseif weapon == "Blox Fruit" then
+    weaponSc("Blox Fruit")
+    if skill == "Z" then
+      vim1:SendKeyEvent(true, "Z", false, game);
+      vim1:SendKeyEvent(false, "Z", false, game);
+    elseif skill == "X" then
+      vim1:SendKeyEvent(true, "X", false, game);
+      vim1:SendKeyEvent(false, "X", false, game);
+    elseif skill == "C" then
+      vim1:SendKeyEvent(true, "C", false, game);
+      vim1:SendKeyEvent(false, "C", false, game);        
+    elseif skill == "V" then
+      vim1:SendKeyEvent(true, "V", false, game);
+      vim1:SendKeyEvent(false, "V", false, game);
+    end
+  elseif weapon == "Gun" then
+    weaponSc("Gun")
+    if skill == "Z" then
+      vim1:SendKeyEvent(true, "Z", false, game);
+      vim1:SendKeyEvent(false, "Z", false, game);
+    elseif skill == "X" then
+      vim1:SendKeyEvent(true, "X", false, game);
+      vim1:SendKeyEvent(false, "X", false, game);
+    end
+  end
+  if weapon == "nil" and skill == "Y" then
+    vim1:SendKeyEvent(true, "Y", false, game);
+    vim1:SendKeyEvent(false, "Y", false, game);
+  end
 end
 
 local H = getrawmetatable(game);
@@ -2636,15 +2645,25 @@ local MobNeedEyes = {
     ["Sun-kissed Warrior"] = true
 }
 
--- ================== UTILS ==================
+local CONFIG = {
+    TyrantCheckInterval = 0.2,
+    PointWaitTime = 5,
+    SkillDelay = 0.5,
+    PointReachedDistance = 6,
+    FallbackPoint = CFrame.new(-16268.287, 152.616, 1390.773)
+}
 
+-- ================== UTILS ==================
 local function IsAlive(char)
-    local hum = char and char:FindFirstChildOfClass("Humanoid")
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not char then return false end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local hrp = char:FindFirstChild("HumanoidRootPart")
     return hum and hrp and hum.Health > 0
 end
 
 local function FindTyrant(enemies)
+    if not enemies then return nil end
+    
     for _, enemy in ipairs(enemies:GetChildren()) do
         if enemy.Name == "Tyrant of the Skies" then
             local hum = enemy:FindFirstChildOfClass("Humanoid")
@@ -2653,97 +2672,127 @@ local function FindTyrant(enemies)
             end
         end
     end
+    return nil
 end
 
--- ================== BREAK JAR ==================
-
-local function BreakJar()
-	UseCombo("Melee")
-	wait(1)
-	UseCombo("Blox Fruit", {"Z", "X", "C", "V"})
-	wait(1)
-	UseCombo("Sword", {"Z", "X"})
+local function FindFarmableEnemy(enemies)
+    if not enemies then return nil end
+    
+    for _, enemy in ipairs(enemies:GetChildren()) do
+        if MobNeedEyes[enemy.Name] then
+            local hum = enemy:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health > 0 then
+                return enemy
+            end
+        end
+    end
+    return nil
 end
 
--- ================== MAIN LOOP ==================
+local function UseAllSkills()
+    local skills = {
+        {"Melee", "Z"}, {"Melee", "X"}, {"Melee", "C"},
+        {"Blox Fruit", "Z"}, {"Blox Fruit", "X"}, {"Blox Fruit", "C"},{"Blox Fruit", "V"}
+    }
+    
+    for _, skill in ipairs(skills) do
+        if not _G.FarmTyrant then break end
+        Useskills(skill[1], skill[2])
+        task.wait(CONFIG.SkillDelay)
+    end
+end
+
+local function TeleportToPoint(hrp, point)
+    if not _tp then return false end
+    
+    _tp(point)
+    
+    -- Sử dụng skill trong khi di chuyển
+    local startTime = tick()
+    while (hrp.Position - point.Position).Magnitude >= CONFIG.PointReachedDistance do
+        if not _G.FarmTyrant or tick() - startTime > 30 then break end
+        UseAllSkills()
+    end
+    
+    return true
+end
+
+local function HandleTyrant(Tyrant)
+    if not Tyrant then return false end
+    BringEnemy(Tyrant)
+    O.Kill2(Tyrant, true)
+    return true
+end
+
+local function FarmForEyes(enemies)
+    local enemy = FindFarmableEnemy(enemies)
+    if enemy then
+        BringEnemy(enemy)
+        O.Kill(enemy, true)
+        return true
+    end
+    
+    -- Không tìm thấy quái → đứng chờ
+    if _tp then
+        _tp(CONFIG.FallbackPoint)
+    end
+    return false
+end
+
+local function BreakVases(enemies, hrp)
+    for _, point in ipairs(PhaBinhPoints) do
+        if not _G.FarmTyrant then return end
+        
+        -- Kiểm tra Tyrant trước khi teleport
+        local Tyrant = FindTyrant(enemies)
+        if Tyrant then
+            return HandleTyrant(Tyrant)
+        end
+        
+        TeleportToPoint(hrp, point)
+        
+        local waitStart = tick()
+        while tick() - waitStart < CONFIG.PointWaitTime and _G.FarmTyrant do
+            local TyrantCheck = FindTyrant(enemies)
+            if TyrantCheck then
+                return HandleTyrant(TyrantCheck)
+            end
+            task.wait(CONFIG.TyrantCheckInterval)
+        end
+    end
+end
 
 task.spawn(function()
     while task.wait(Sec) do
-        if not _G.FarmTyrant then
-            continue
-        end
-
+        if not _G.FarmTyrant then continue end
+        
         pcall(function()
             local plr = game.Players.LocalPlayer
             local char = plr.Character
+            
             if not IsAlive(char) then return end
-
+            
             local hrp = char.HumanoidRootPart
             local enemies = workspace:FindFirstChild("Enemies")
+            
             if not enemies then return end
-
+            
             local Eyes = CheckEyes()
             local Tyrant = FindTyrant(enemies)
-
+            
             -- ================== CASE 1: CÓ TYRANT ==================
             if Tyrant then
-                BringEnemy(Tyrant)
-                O.Kill2(Tyrant, true)
+                HandleTyrant(Tyrant)
                 return
             end
-
+            
             -- ================== CASE 2: CHƯA CÓ TYRANT ==================
-
-            -- ❌ CHƯA ĐỦ EYES → FARM QUÁI
             if Eyes < 4 then
-                for _, enemy in ipairs(enemies:GetChildren()) do
-                    local hum = enemy:FindFirstChildOfClass("Humanoid")
-                    if hum and hum.Health > 0 and MobNeedEyes[enemy.Name] then
-                        BringEnemy(enemy)
-                        O.Kill(enemy, true)
-                        return
-                    end
-                end
-
-                -- fallback đứng chờ
-                if _tp then
-                    _tp(CFrame.new(-16268.287, 152.616, 1390.773))
-                end
-                return
-            end
-
-            -- ✅ ĐỦ EYES & CHƯA CÓ TYRANT → PHÁ BÌNH
-            for _, point in ipairs(PhaBinhPoints) do
-                if not _G.FarmTyrant then return end
-
-                -- Tyrant spawn giữa chừng
-                local TyrantNow = FindTyrant(enemies)
-                if TyrantNow then
-                    BringEnemy(TyrantNow)
-                    O.Kill2(TyrantNow, true)
-                    return
-                end
-
-                if _tp and not Tyrant then
-                    _tp(point)
-
-                    repeat task.wait()
-                    until (hrp.Position - point.Position).Magnitude < 6
-                end
-
-                BreakJar()
-
-                -- chờ Tyrant spawn
-                local start = tick()
-                while tick() - start < 10 and _G.FarmTyrant do
-                    local TyrantMid = FindTyrant(enemies)
-                    if TyrantMid then
-                        BringEnemy(TyrantMid)
-                        O.Kill2(TyrantMid, true)
-                        return
-                    end
-                    task.wait(0.2)
-                end
+                -- Chưa đủ Eyes → Farm quái
+                FarmForEyes(enemies)
+            else
+                -- Đủ Eyes → Phá bình
+                BreakVases(enemies, hrp)
             end
         end)
     end

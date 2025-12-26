@@ -2707,11 +2707,11 @@ local function TeleportToPoint(hrp, point)
     
     _tp(point)
     
-    -- Sử dụng skill trong khi di chuyển
+    -- Chờ đến khi đến nơi (KHÔNG dùng skill trong lúc di chuyển)
     local startTime = tick()
     while (hrp.Position - point.Position).Magnitude >= CONFIG.PointReachedDistance do
         if not _G.FarmTyrant or tick() - startTime > 30 then break end
-        UseAllSkills()
+        task.wait(0.1)
     end
     
     return true
@@ -2749,14 +2749,19 @@ local function BreakVases(enemies, hrp)
             return HandleTyrant(Tyrant)
         end
         
+        -- Teleport đến vị trí (không dùng skill)
         TeleportToPoint(hrp, point)
         
+        -- ĐÃ ĐẾN NƠI → BẮT ĐẦU DÙNG SKILL
         local waitStart = tick()
         while tick() - waitStart < CONFIG.PointWaitTime and _G.FarmTyrant do
             local TyrantCheck = FindTyrant(enemies)
             if TyrantCheck then
                 return HandleTyrant(TyrantCheck)
             end
+            
+            -- Dùng skill khi đang chờ tại vị trí
+            UseAllSkills()
             task.wait(CONFIG.TyrantCheckInterval)
         end
     end

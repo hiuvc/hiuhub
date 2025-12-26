@@ -2692,7 +2692,9 @@ end
 local function UseAllSkills()
     local skills = {
         {"Melee", "Z"}, {"Melee", "X"}, {"Melee", "C"},
-        {"Blox Fruit", "Z"}, {"Blox Fruit", "X"}, {"Blox Fruit", "C"},{"Blox Fruit", "V"}
+        {"Blox Fruit", "Z"}, {"Blox Fruit", "X"}, {"Blox Fruit", "C"},{"Blox Fruit", "V"},
+        {"Sword", "Z"}, {"Sword", "X"}
+
     }
     
     for _, skill in ipairs(skills) do

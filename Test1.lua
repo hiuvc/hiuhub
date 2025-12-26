@@ -2647,9 +2647,9 @@ local MobNeedEyes = {
 
 local CONFIG = {
     TyrantCheckInterval = 1,
-    PointWaitTime = 5,
+    PointWaitTime = 3,
     SkillDelay = 1,
-    PointReachedDistance = 4,
+    PointReachedDistance = 3,
     FallbackPoint = CFrame.new(-16268.287, 152.616, 1390.773)
 }
 

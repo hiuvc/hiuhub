@@ -2722,7 +2722,7 @@ end
 local function HandleTyrant(Tyrant)
     if not Tyrant then return false end
     BringEnemy(Tyrant)
-    O.Kill2(Tyrant, true)
+    O.Kill(Tyrant, true)
     return true
 end
 

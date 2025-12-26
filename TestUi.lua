@@ -5094,46 +5094,46 @@ local aa = {
         )
     end)
 
-return {
-    Name               = "ZillHub",
-    Accent             = Color3.fromRGB(0, 122, 204),      -- VS Code blue
-    TitleBarLine       = Color3.fromRGB(0, 122, 204),
-    AcrylicBorder      = Color3.fromRGB(60, 60, 60),
-    Text               = Color3.fromRGB(212, 212, 212),    -- VS Code text
-    AcrylicMain        = Color3.fromRGB(30, 30, 30),       -- VS Code background
-    AcrylicGradient    = ColorSequence.new(
-        Color3.fromRGB(30, 30, 30),
-        Color3.fromRGB(37, 37, 38)                         -- Subtle gradient
-    ),
-    AcrylicNoise       = 0.3,
-    Tab                = Color3.fromRGB(37, 37, 38),       -- Tab background
-    Element            = Color3.fromRGB(45, 45, 45),       -- Input/element bg
-    ElementBorder      = Color3.fromRGB(60, 60, 60),
-    InElementBorder    = Color3.fromRGB(55, 55, 55),
-    ElementTransparency= 0.85,
-    ToggleSlider       = Color3.fromRGB(60, 60, 60),
-    ToggleToggled      = Color3.fromRGB(0, 122, 204),      -- Blue when active
-    SliderRail         = Color3.fromRGB(60, 60, 60),
-    DropdownFrame      = Color3.fromRGB(37, 37, 38),
-    DropdownHolder     = Color3.fromRGB(45, 45, 45),
-    DropdownBorder     = Color3.fromRGB(60, 60, 60),
-    DropdownOption     = Color3.fromRGB(0, 122, 204),
-    Keybind            = Color3.fromRGB(86, 156, 214),     -- Light blue
-    Input              = Color3.fromRGB(60, 60, 60),
-    InputFocused       = Color3.fromRGB(30, 30, 30),
-    InputIndicator     = Color3.fromRGB(0, 122, 204),
-    Dialog             = Color3.fromRGB(37, 37, 38),
-    DialogHolder       = Color3.fromRGB(45, 45, 45),
-    DialogHolderLine   = Color3.fromRGB(60, 60, 60),
-    DialogButton       = Color3.fromRGB(0, 122, 204),
-    DialogButtonBorder = Color3.fromRGB(0, 100, 180),
-    DialogBorder       = Color3.fromRGB(60, 60, 60),
-    DialogInput        = Color3.fromRGB(60, 60, 60),
-    DialogInputLine    = Color3.fromRGB(0, 122, 204),
-    SubText            = Color3.fromRGB(140, 140, 140),    -- Muted text
-    Hover              = Color3.fromRGB(50, 50, 50),
-    HoverChange        = 0.10,
-}
+    return {
+        Name               = "ZillHub",
+        Accent             = Color3.fromRGB(255, 64, 129),     -- Hot Pink signature
+        TitleBarLine       = Color3.fromRGB(255, 64, 129),
+        AcrylicBorder      = Color3.fromRGB(60, 60, 70),
+        Text               = Color3.fromRGB(240, 240, 245),    -- Bright white text
+        AcrylicMain        = Color3.fromRGB(28, 28, 35),       -- Deep dark background
+        AcrylicGradient    = ColorSequence.new(
+            Color3.fromRGB(28, 28, 35),
+            Color3.fromRGB(35, 35, 45)                         -- Subtle purple tint
+        ),
+        AcrylicNoise       = 0.5,
+        Tab                = Color3.fromRGB(35, 35, 45),       
+        Element            = Color3.fromRGB(40, 40, 50),       
+        ElementBorder      = Color3.fromRGB(70, 70, 80),
+        InElementBorder    = Color3.fromRGB(60, 60, 70),
+        ElementTransparency= 0.88,
+        ToggleSlider       = Color3.fromRGB(60, 60, 70),
+        ToggleToggled      = Color3.fromRGB(255, 64, 129),     -- Hot pink active
+        SliderRail         = Color3.fromRGB(50, 50, 60),
+        DropdownFrame      = Color3.fromRGB(35, 35, 45),
+        DropdownHolder     = Color3.fromRGB(40, 40, 50),
+        DropdownBorder     = Color3.fromRGB(70, 70, 80),
+        DropdownOption     = Color3.fromRGB(255, 100, 150),
+        Keybind            = Color3.fromRGB(138, 180, 248),    -- Light blue accent
+        Input              = Color3.fromRGB(45, 45, 55),
+        InputFocused       = Color3.fromRGB(50, 50, 60),
+        InputIndicator     = Color3.fromRGB(255, 64, 129),
+        Dialog             = Color3.fromRGB(32, 32, 40),
+        DialogHolder       = Color3.fromRGB(40, 40, 50),
+        DialogHolderLine   = Color3.fromRGB(70, 70, 80),
+        DialogButton       = Color3.fromRGB(255, 64, 129),
+        DialogButtonBorder = Color3.fromRGB(235, 44, 109),
+        DialogBorder       = Color3.fromRGB(70, 70, 80),
+        DialogInput        = Color3.fromRGB(45, 45, 55),
+        DialogInputLine    = Color3.fromRGB(255, 64, 129),
+        SubText            = Color3.fromRGB(150, 150, 160),    
+        Hover              = Color3.fromRGB(50, 50, 60),
+        HoverChange        = 0.15,
+    }
 end
 }
 do

@@ -2294,7 +2294,7 @@ if World3 then
 		    end
 		end)
 
-		local function CheckEyes()
+		function CheckEyes()
 		    local count = 0
 		    for eye in pairs(Eyes) do
 		        if eye.Material == Enum.Material.Neon and eye.Transparency == 0 then

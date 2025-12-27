@@ -5,23 +5,22 @@ local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 
---// Theme Settings (Modern White/Gray)
+--// Theme Settings (Modern Dark Gray)
 local Theme = {
-    Main = Color3.fromRGB(255, 255, 255), -- Pure White Background
-    Secondary = Color3.fromRGB(246, 246, 246), -- Very Light Gray/Off-White for containers
-    Stroke = Color3.fromRGB(225, 225, 225), -- Subtle Gray Borders
-    Divider = Color3.fromRGB(235, 235, 235), -- Dividers
-    
-    Text = Color3.fromRGB(40, 40, 40), -- Dark Gray for primary text (High Contrast)
-    TextDark = Color3.fromRGB(150, 150, 150), -- Lighter Gray for secondary text
-    
-    Accent = Color3.fromRGB(80, 80, 80), -- Dark Gray Accent
-    AccentH = Color3.fromRGB(60, 60, 60), -- Darker Accent for Hover
-    
-    Shadow = Color3.fromRGB(0, 0, 0), -- Shadow Color
-    
-    Font = Enum.Font.GothamMedium,
-    FontBold = Enum.Font.GothamBold,
+    Main        = Color3.fromRGB(22, 22, 22),   -- Nền chính (near-black, không quá gắt)
+    Secondary   = Color3.fromRGB(30, 30, 30),   -- Nền khối / container
+    Stroke      = Color3.fromRGB(55, 55, 55),   -- Viền xám đậm
+    Divider     = Color3.fromRGB(45, 45, 45),   -- Đường chia nhẹ
+
+    Text        = Color3.fromRGB(235, 235, 235),-- Chữ chính (trắng xám)
+    TextDark    = Color3.fromRGB(160, 160, 160),-- Chữ phụ
+
+    Accent      = Color3.fromRGB(180, 180, 180),-- Accent xám sáng
+    AccentH     = Color3.fromRGB(210, 210, 210),-- Accent hover
+
+    Shadow      = Color3.fromRGB(0, 0, 0),      -- Bóng đổ
+    Font        = Enum.Font.GothamMedium,
+    FontBold    = Enum.Font.GothamBold,
 }
 
 --// Utils

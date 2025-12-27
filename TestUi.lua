@@ -88,7 +88,7 @@ function Library:NewWindow(ConfigWindow)
     MainFrame.Position = UDim2.new(0.5, -300, 0.5, -175)
     MainFrame.Size = UDim2.new(0, 600, 0, 350)
     MainFrame.BorderSizePixel = 0
-    MainFrame.ClipsDescendants = true -- Important for smooth corners
+    MainFrame.ClipsDescendants = true
 
     local MainCorner = Instance.new("UICorner")
     MainCorner.CornerRadius = UDim.new(0, 10)
@@ -107,11 +107,11 @@ function Library:NewWindow(ConfigWindow)
     Sidebar.Size = UDim2.new(0, 160, 1, 0)
     Sidebar.BorderSizePixel = 0
 
-    local SidebarCorner = Instance.new("UICorner") -- Round only left side visually via masking
+    local SidebarCorner = Instance.new("UICorner")
     SidebarCorner.CornerRadius = UDim.new(0, 10)
     SidebarCorner.Parent = Sidebar
     
-    local SidebarFix = Instance.new("Frame") -- Fix right corners of sidebar
+    local SidebarFix = Instance.new("Frame")
     SidebarFix.Parent = Sidebar
     SidebarFix.BackgroundColor3 = Theme.Secondary
     SidebarFix.BorderSizePixel = 0
@@ -124,7 +124,7 @@ function Library:NewWindow(ConfigWindow)
     AppIcon.Size = UDim2.new(0, 30, 0, 30)
     AppIcon.Position = UDim2.new(0, 15, 0, 15)
     AppIcon.BackgroundTransparency = 1
-    AppIcon.Image = "rbxassetid://133979080007875" -- Original Icon
+    AppIcon.Image = "rbxassetid://133979080007875"
 
     local AppTitle = Instance.new("TextLabel")
     AppTitle.Parent = Sidebar
@@ -194,7 +194,6 @@ function Library:NewWindow(ConfigWindow)
     CloseCorner.CornerRadius = UDim.new(0, 6)
     CloseCorner.Parent = CloseBtn
 
-    -- Confirmation Logic (Preserved from original)
     CloseBtn.MouseButton1Click:Connect(function()
         local ConfirmFrame = Instance.new("Frame")
         ConfirmFrame.Parent = MainFrame
@@ -260,7 +259,7 @@ function Library:NewWindow(ConfigWindow)
     Library:MakeDraggable(Sidebar, MainFrame)
     Library:MakeDraggable(TopBar, MainFrame)
 
-    --// Floating Toggle Button (Preserved)
+    --// Floating Toggle Button
     local FloatingToggle = Instance.new("ImageButton")
     FloatingToggle.Parent = TeddyUI
     FloatingToggle.Name = "FloatingToggle"
@@ -307,7 +306,7 @@ function Library:NewWindow(ConfigWindow)
         TabIndicator.Size = UDim2.new(0, 4, 0, 16)
         TabIndicator.Position = UDim2.new(0, 0, 0.5, -8)
         TabIndicator.BackgroundColor3 = Theme.Accent
-        TabIndicator.BackgroundTransparency = 1 -- Hidden by default
+        TabIndicator.BackgroundTransparency = 1
         Instance.new("UICorner", TabIndicator).CornerRadius = UDim.new(0, 2)
 
         local TabCorner = Instance.new("UICorner")
@@ -344,18 +343,24 @@ function Library:NewWindow(ConfigWindow)
             
             -- Reset all tabs
             for _, btn in pairs(TabContainer:GetChildren()) do
-                if btn:IsA("TextButton") then
-                    Library:Tween(btn.TextLabel, {TextColor3 = Theme.TextDark}, 0.2)
+                if btn:IsA("TextButton") and btn ~= TabBtn then
+                    local label = btn:FindFirstChildOfClass("TextLabel")
+                    local indicator = btn:FindFirstChildOfClass("Frame")
+                    
+                    if label then
+                        Library:Tween(label, {TextColor3 = Theme.TextDark}, 0.2)
+                    end
                     Library:Tween(btn, {BackgroundTransparency = 1}, 0.2)
-                    if btn:FindFirstChild("Frame") then
-                        Library:Tween(btn.Frame, {BackgroundTransparency = 1}, 0.2)
+                    Library:Tween(btn, {BackgroundColor3 = Theme.Main}, 0.2)
+                    if indicator then
+                        Library:Tween(indicator, {BackgroundTransparency = 1}, 0.2)
                     end
                 end
             end
             
             -- Active this tab
             Library:Tween(TabLabel, {TextColor3 = Theme.Text}, 0.3)
-            Library:Tween(TabBtn, {BackgroundTransparency = 0.8}, 0.3) -- Slight background
+            Library:Tween(TabBtn, {BackgroundTransparency = 0.8}, 0.3)
             Library:Tween(TabBtn, {BackgroundColor3 = Theme.Accent}, 0.3)
             Library:Tween(TabIndicator, {BackgroundTransparency = 0}, 0.3)
         end
@@ -370,7 +375,6 @@ function Library:NewWindow(ConfigWindow)
         --// Sections
         local Sections = {}
         function Sections:AddSection(SectionName)
-            -- Just a Header now for cleaner look
             local SectionLabel = Instance.new("TextLabel")
             SectionLabel.Parent = PageScroll
             SectionLabel.Text = SectionName
@@ -384,7 +388,7 @@ function Library:NewWindow(ConfigWindow)
             local Container = Instance.new("Frame")
             Container.Parent = PageScroll
             Container.BackgroundColor3 = Theme.Secondary
-            Container.Size = UDim2.new(1, 0, 0, 0) -- Auto resize
+            Container.Size = UDim2.new(1, 0, 0, 0)
             Container.BorderSizePixel = 0
             
             local ContainerCorner = Instance.new("UICorner")
@@ -441,7 +445,6 @@ function Library:NewWindow(ConfigWindow)
                 PContent.TextXAlignment = Enum.TextXAlignment.Left
                 PContent.TextWrapped = true
                 
-                -- Auto resize based on text
                 PContent.AutomaticSize = Enum.AutomaticSize.Y
                 PContent:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
                     ParaFrame.Size = UDim2.new(1, 0, 0, PContent.AbsoluteSize.Y + 30)
@@ -480,7 +483,7 @@ function Library:NewWindow(ConfigWindow)
                 Icon.Size = UDim2.new(0, 16, 0, 16)
                 Icon.Position = UDim2.new(1, -26, 0.5, -8)
                 Icon.BackgroundTransparency = 1
-                Icon.Image = "rbxassetid://6031094678" -- Generic Click Icon
+                Icon.Image = "rbxassetid://6031094678"
                 Icon.ImageColor3 = Theme.TextDark
 
                 BtnFrame.MouseEnter:Connect(function()
@@ -588,7 +591,7 @@ function Library:NewWindow(ConfigWindow)
                 ValueLabel.TextSize = 12
                 ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
 
-                local Track = Instance.new("TextButton") -- using button for clickable track
+                local Track = Instance.new("TextButton")
                 Track.Parent = SliderFrame
                 Track.Size = UDim2.new(1, -20, 0, 4)
                 Track.Position = UDim2.new(0, 10, 0, 35)
@@ -646,7 +649,6 @@ function Library:NewWindow(ConfigWindow)
                     end
                 end)
 
-                -- Init
                 local p = (Config.Default - Config.Min) / (Config.Max - Config.Min)
                 Fill.Size = UDim2.new(p, 0, 1, 0)
                 
@@ -711,7 +713,7 @@ function Library:NewWindow(ConfigWindow)
                 local DropFrame = Instance.new("Frame")
                 DropFrame.Parent = Container
                 DropFrame.BackgroundColor3 = Theme.Main
-                DropFrame.Size = UDim2.new(1, 0, 0, 40) -- Collapsed size
+                DropFrame.Size = UDim2.new(1, 0, 0, 40)
                 DropFrame.ClipsDescendants = true
                 Instance.new("UICorner", DropFrame).CornerRadius = UDim.new(0, 4)
 
@@ -731,7 +733,7 @@ function Library:NewWindow(ConfigWindow)
                 OpenBtn.Size = UDim2.new(0, 20, 0, 20)
                 OpenBtn.Position = UDim2.new(1, -30, 0, 10)
                 OpenBtn.BackgroundTransparency = 1
-                OpenBtn.Image = "rbxassetid://6031090990" -- Arrow Down
+                OpenBtn.Image = "rbxassetid://6031090990"
                 OpenBtn.ImageColor3 = Theme.TextDark
 
                 local ItemContainer = Instance.new("ScrollingFrame")
@@ -756,7 +758,7 @@ function Library:NewWindow(ConfigWindow)
                 SearchBox.TextColor3 = Theme.Text
                 SearchBox.Font = Theme.Font
                 SearchBox.TextSize = 12
-                SearchBox.Visible = false -- Hidden by default
+                SearchBox.Visible = false
                 Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0,4)
 
                 local Opened = false
@@ -781,7 +783,6 @@ function Library:NewWindow(ConfigWindow)
                             Item.TextXAlignment = Enum.TextXAlignment.Left
                             Instance.new("UICorner", Item).CornerRadius = UDim.new(0, 4)
 
-                            -- Highlight if selected
                             if (Config.Multi and table.find(Selection, val)) or (not Config.Multi and Selection[1] == val) then
                                 Item.TextColor3 = Theme.Accent
                             end
@@ -800,13 +801,12 @@ function Library:NewWindow(ConfigWindow)
                                     Selection = {val}
                                     Config.Callback(val)
                                     DropTitle.Text = Config.Title .. ": " .. val
-                                    -- Close on single select
                                     Opened = false
                                     Library:Tween(DropFrame, {Size = UDim2.new(1, 0, 0, 40)}, 0.3)
                                     Library:Tween(OpenBtn, {Rotation = 0}, 0.3)
                                     SearchBox.Visible = false
                                     ItemContainer.Visible = false
-                                    RefreshList() -- Reset colors
+                                    RefreshList()
                                 end
                             end)
                         end
@@ -836,7 +836,6 @@ function Library:NewWindow(ConfigWindow)
                 
                 SearchBox:GetPropertyChangedSignal("Text"):Connect(RefreshList)
                 
-                -- Init text
                 if not Config.Multi and Config.Default ~= "" then
                      DropTitle.Text = Config.Title .. ": " .. Config.Default
                 end
@@ -847,7 +846,6 @@ function Library:NewWindow(ConfigWindow)
                     RefreshList()
                 end
                 function Funcs:Set(val)
-                     -- Basic set for single, expand for multi if needed
                      Selection = type(val) == "table" and val or {val}
                      if not Config.Multi then
                          DropTitle.Text = Config.Title .. ": " .. tostring(val)
@@ -875,7 +873,7 @@ function Library:NewWindow(ConfigWindow)
                     Lab.Parent = Sep
                     Lab.Text = Text
                     Lab.TextColor3 = Theme.TextDark
-                    Lab.BackgroundColor3 = Theme.Secondary -- Cover line
+                    Lab.BackgroundColor3 = Theme.Secondary
                     Lab.BorderSizePixel = 0
                     Lab.Size = UDim2.new(0, 0, 1, 0)
                     Lab.AutomaticSize = Enum.AutomaticSize.X

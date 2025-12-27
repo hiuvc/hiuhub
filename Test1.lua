@@ -2274,18 +2274,35 @@ if World3 then
             end)
         end
     end)
-	function CheckEyes()
-	    local count = 0
-	    for _, obj in ipairs(workspace:GetDescendants()) do
-	        if obj:IsA("BasePart")
-	        and obj.Name:match("^Eye%d+$")
-	        and obj.Material == Enum.Material.Neon
-	        and obj.Transparency == 0 then
-	            count += 1
-	        end
-	    end
-	    return count
-	end
+		local Eyes = {}
+
+		for _, obj in ipairs(workspace:GetDescendants()) do
+		    if obj:IsA("BasePart") and obj.Name:match("^Eye%d+$") then
+		        Eyes[obj] = true
+		    end
+		end
+
+		workspace.DescendantAdded:Connect(function(obj)
+		    if obj:IsA("BasePart") and obj.Name:match("^Eye%d+$") then
+		        Eyes[obj] = true
+		    end
+		end)
+
+		workspace.DescendantRemoving:Connect(function(obj)
+		    if Eyes[obj] then
+		        Eyes[obj] = nil
+		    end
+		end)
+
+		local function CheckEyes()
+		    local count = 0
+		    for eye in pairs(Eyes) do
+		        if eye.Material == Enum.Material.Neon and eye.Transparency == 0 then
+		            count += 1
+		        end
+		    end
+		    return count
+		end
 
 	local TyrantStatus = SV:AddParagraph({
 	    Title = "Tyrant Of The Skies",

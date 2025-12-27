@@ -253,8 +253,10 @@ function Library:NewWindow(ConfigWindow)
     UIPageLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIPageLayout.EasingStyle = Enum.EasingStyle.Quart
     UIPageLayout.EasingDirection = Enum.EasingDirection.Out
-    UIPageLayout.TweenTime = 0.4
+    UIPageLayout.TweenTime = 0.3
     UIPageLayout.ScrollWheelInputEnabled = false
+    UIPageLayout.TouchInputEnabled = false
+    UIPageLayout.GamepadInputEnabled = false
 
     Library:MakeDraggable(Sidebar, MainFrame)
     Library:MakeDraggable(TopBar, MainFrame)
@@ -303,10 +305,13 @@ function Library:NewWindow(ConfigWindow)
 
         local TabIndicator = Instance.new("Frame")
         TabIndicator.Parent = TabBtn
-        TabIndicator.Size = UDim2.new(0, 4, 0, 16)
+        TabIndicator.Name = "Indicator"
+        TabIndicator.Size = UDim2.new(0, 3, 0, 16)
         TabIndicator.Position = UDim2.new(0, 0, 0.5, -8)
         TabIndicator.BackgroundColor3 = Theme.Accent
         TabIndicator.BackgroundTransparency = 1
+        TabIndicator.BorderSizePixel = 0
+        TabIndicator.ZIndex = 5
         Instance.new("UICorner", TabIndicator).CornerRadius = UDim.new(0, 2)
 
         local TabCorner = Instance.new("UICorner")
@@ -345,7 +350,7 @@ function Library:NewWindow(ConfigWindow)
             for _, btn in pairs(TabContainer:GetChildren()) do
                 if btn:IsA("TextButton") and btn ~= TabBtn then
                     local label = btn:FindFirstChildOfClass("TextLabel")
-                    local indicator = btn:FindFirstChildOfClass("Frame")
+                    local indicator = btn:FindFirstChild("Indicator")
                     
                     if label then
                         Library:Tween(label, {TextColor3 = Theme.TextDark}, 0.2)

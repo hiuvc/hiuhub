@@ -30,12 +30,17 @@ do
   ClickState = 0
   Num_self = 25
 end
-
+if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
+  World1 = true;
+elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
+  World2 = true;
+elseif game.PlaceId == 7449423635 or game.PlaceId == 100117331123089 then
+  World3 = true;
+end;
 repeat local start = plr.PlayerGui:WaitForChild("Main"):WaitForChild("Loading") and game:IsLoaded() wait() until start
 World1 = game.PlaceId == 2753915549
 World2 = game.PlaceId == 4442272183
 World3 = game.PlaceId == 7449423635
-Sea = World1 or World2 or World3 or plr:Kick("❌ Error : A[12]Blox Fruits ❌")
 Marines = function() replicated.Remotes.CommF_:InvokeServer("SetTeam","Marines") end
 Pirates = function() replicated.Remotes.CommF_:InvokeServer("SetTeam","Pirates") end
 if World1 then Boss = {"The Gorilla King","Bobby","The Saw","Yeti","Mob Leader","Vice Admiral","Saber Expert","Warden","Chief Warden","Swan","Magma Admiral","Fishman Lord","Wysper","Thunder God","Cyborg","Ice Admiral","Greybeard"}

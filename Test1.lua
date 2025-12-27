@@ -2163,15 +2163,15 @@ QuestNeta = function()
     }
 end
 
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/hiuvc-patch-1/TestUi.lua"))()
 local Window = Fluent:CreateWindow({
-    Title = "Minhieu Hub",
-    SubTitle = " By Minhieu_.",
-    TabWidth = 155,
-    Size = UDim2.fromOffset(485, 370),
-    Acrylic = false,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.End
+    Title="HiuHub",
+    SubTitle="  by minhieu_.", 
+    TabWidth=160, 
+    Theme="ZillHub",
+    Acrylic=false,
+    Size=UDim2.fromOffset(530, 350), 
+    MinimizeKey=Enum.KeyCode.End
 })
 local Tabs = {
     Server = Window:AddTab({

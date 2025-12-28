@@ -300,23 +300,6 @@ BringEnemy = function(Target, Distance)
 					root.RotVelocity = Vector3.zero
 					root.CanCollide = false
 					
-					-- Chỉ set các thuộc tính khi cần
-					if hum.WalkSpeed ~= 0 then
-						hum.WalkSpeed = 0
-					end
-					if hum.JumpPower ~= 0 then
-						hum.JumpPower = 0
-					end
-					
-					-- Destroy Animator chỉ một lần
-					if not Enemy:GetAttribute("AnimatorRemoved") then
-						local animator = hum:FindFirstChildOfClass("Animator")
-						if animator then
-							animator:Destroy()
-							Enemy:SetAttribute("AnimatorRemoved", true)
-						end
-					end
-					
 					hum:ChangeState(11)
 				end
 			end

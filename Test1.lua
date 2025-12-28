@@ -10706,7 +10706,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.2
+local FastAttackDelay = 0.1
 local LastFastAttack = 0
 
 --// Check alive
@@ -10865,7 +10865,6 @@ Actived = function()
 	end
 end
 
---// MAIN LOOP (FastAttack limited to 0.5s)
 task.spawn(function()
 	RunService.Heartbeat:Connect(function()
 		pcall(function()

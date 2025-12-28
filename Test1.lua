@@ -240,20 +240,6 @@ local q = workspace:FindFirstChild("Rocks");
 if q then
 	q:Destroy();
 end;
-gay = (function()
-		local e = game:GetService("Lighting");
-		local A = e:FindFirstChild("LightingLayers");
-		if A and (game:GetService("Lighting") and game:GetService("Lighting")) then
-			local e = A:FindFirstChild("DarkFog");
-			if e then
-				e:Destroy();
-			end;
-		end;
-		local u = workspace._WorldOrigin["Foam;"];
-		if u and workspace._WorldOrigin["Foam;"] then
-			u:Destroy();
-		end;
-	end)();
 local O = {};
 O.__index = O;
 O.Alive = function(e)
@@ -338,7 +324,7 @@ BringEnemy = function(Target, Distance)
 	end
 end
 
-lO.Kill = function(e, A)
+O.Kill = function(e, A)
     if not e or not A then return end
     
     local humanoidRootPart = e.HumanoidRootPart

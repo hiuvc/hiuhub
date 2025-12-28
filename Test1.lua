@@ -776,6 +776,42 @@ local Tabs = {
   Shop = Window:AddTab({Title = "Tab Shop", Icon = ""}),
   Misc = Window:AddTab({Title = "Tab Misc", Icon = ""})
 }
+local Status_Se = Tabs.Server:AddSection("Server - Status")
+local MoonStatus = Tabs.Server:AddParagraph({Title = "Moon",Content = ""})
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            local lighting = game:GetService("Lighting")
+            local moonTextureId = nil
+
+            for _, obj in pairs(lighting:GetChildren()) do
+                if obj:IsA("Sky") then
+                    moonTextureId = obj.MoonTextureId
+                    break
+                end
+            end
+
+            if not moonTextureId then
+              MoonStatus:SetDesc("Status: Unknown")
+                return
+            end
+
+            if moonTextureId == "http://www.roblox.com/asset/?id=9709149431" then
+                MoonStatus:SetDesc("Status: 🌕 Full Moon")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149052" then
+                MoonStatus:SetDesc("Status: 🌖 75%")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709143733" then
+                MoonStatus:SetDesc("Status: 🌓 50%")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709150401" then
+                MoonStatus:SetDesc("Status: 🌘 25%")
+            elseif moonTextureId == "http://www.roblox.com/asset/?id=9709149680" then
+                MoonStatus:SetDesc("Status: 🌑 15%")
+            else
+                MoonStatus:SetDesc("Status: 🌚 0%")
+            end
+        end)
+    end
+end)
 
 
 local FarmLevel = Tabs.Main:AddToggle("FarmLevel", {Title = "Auto Farm Level", Description = "Update Cày Level 2650-2750 New", Default = false})

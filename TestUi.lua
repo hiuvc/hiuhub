@@ -153,7 +153,7 @@ function Library:NewWindow(ConfigWindow)
   Main.BorderColor3 = Color3.fromRGB(0, 0, 0)
   Main.BorderSizePixel = 0
   Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-  Main.Size = UDim2.new(0, 600, 0, 380)
+  Main.Size = UDim2.new(0, 550, 0, 400)
 
   UICorner.CornerRadius = UDim.new(0, 12)
   UICorner.Parent = Main

@@ -2652,7 +2652,7 @@ local MobNeedEyes = {
 
 local CONFIG = {
     TyrantCheckInterval = 1,
-    PointWaitTime = 3,
+    PointWaitTime = 2,
     SkillDelay = 1,
     PointReachedDistance = 3,
     FallbackPoint = CFrame.new(-16268.287, 152.616, 1390.773)
@@ -10706,7 +10706,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.5
+local FastAttackDelay = 0.2
 local LastFastAttack = 0
 
 --// Check alive

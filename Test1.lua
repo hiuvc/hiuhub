@@ -338,56 +338,50 @@ BringEnemy = function(Target, Distance)
 	end
 end
 
--- cache
-local LastKillTick = 0
-local KillCooldown = 0.25
-local CurrentWeapon = nil
-local Randoming = false
-
-function O.Kill(e, A)
-    if not (e and A) then return end
-    if not e:FindFirstChild("HumanoidRootPart") then return end
-    if tick() - LastKillTick < KillCooldown then return end
-    LastKillTick = tick()
-
-    -- Lock vị trí mob (chỉ set 1 lần)
+lO.Kill = function(e, A)
+    if not e or not A then return end
+    
+    local humanoidRootPart = e.HumanoidRootPart
+    if not humanoidRootPart then return end
+    
+    -- Chỉ lưu vị trí nếu chưa khóa
     if not e:GetAttribute("Locked") then
-        e:SetAttribute("Locked", e.HumanoidRootPart.CFrame)
-    end
-
-    local LockedCF = e:GetAttribute("Locked")
-    PosMon = LockedCF.Position
-
-    -- Equip weapon (chỉ khi đổi)
-    if CurrentWeapon ~= _G.SelectWeapon then
-        EquipWeapon(_G.SelectWeapon)
-        CurrentWeapon = _G.SelectWeapon
-    end
-
-    local Tool = char:FindFirstChildOfClass("Tool")
-    if not Tool then return end
-
-    -- Teleport duy nhất (chính)
-    if Tool.ToolTip == "Blox Fruit" then
-        _tp(LockedCF * CFrame.new(0, 10, 0) * CFrame.Angles(0, math.rad(90), 0))
-    else
-        _tp(LockedCF * CFrame.new(0, 30, 0) * CFrame.Angles(0, math.rad(180), 0))
+        e:SetAttribute("Locked", humanoidRootPart.CFrame)
     end
     
-    if RandomCFrame and not Randoming then
-        Randoming = true
-        task.spawn(function()
-            for i = 1, 3 do
-                if not e.Parent then break end
-                _tp(LockedCF * CFrame.new(
-                    math.random(-20, 20),
-                    30,
-                    math.random(-20, 20)
-                ))
-                task.wait(0.25)
-            end
-            Randoming = false
-        end)
+    PosMon = e:GetAttribute("Locked").Position
+    EquipWeapon(_G.SelectWeapon)
+    
+    local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    if not tool then return end
+    
+    local toolTip = tool.ToolTip
+    
+    -- Teleport đến vị trí đầu tiên
+    local initialOffset = CFrame.new(0, toolTip == "Blox Fruit" and 10 or 30, 0)
+    local initialRotation = CFrame.Angles(0, math.rad(toolTip == "Blox Fruit" and 90 or 180), 0)
+    _tp(humanoidRootPart.CFrame * initialOffset * initialRotation)
+    
+    -- Chỉ chạy RandomCFrame nếu cần thiết và với delay hợp lý hơn
+    if RandomCFrame then
+        task.wait(0.2) -- Tăng thời gian chờ
+        
+        -- Sử dụng một vòng lặp duy nhất thay vì nhiều wait riêng lẻ
+        local offsets = {
+            Vector3.new(0, 30, 30),
+            Vector3.new(30, 30, 0),
+            Vector3.new(0, 30, 30),
+            Vector3.new(-30, 30, 0)
+        }
+        
+        for _, offset in ipairs(offsets) do
+            -- Kiểm tra nếu NPC vẫn tồn tại
+            if not e or not e.Parent then break end
+            if not humanoidRootPart then break end
+            
+            _tp(humanoidRootPart.CFrame * CFrame.new(offset))
+            task.wait(0.15) -- Tăng thời gian chờ giữa các lần teleport
+        end
     end
 end
 

@@ -777,14 +777,6 @@ local Tabs = {
   Misc = Window:AddTab({Title = "Tab Misc", Icon = ""})
 }
 
-Tabs.Server:AddSection("Boss Tyrant of the Skies")
-
-local MoonSkibidi = Tabs.Server:AddParagraph({
-    Title = "Moon",
-    Content = ""
-})
-
-
 local FarmLevel = Tabs.Main:AddToggle("FarmLevel", {Title = "Auto Farm Level", Description = "Update Cày Level 2650-2750 New", Default = false})
 FarmLevel:OnChanged(function(Value)
   _G.Level = Value

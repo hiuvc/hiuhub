@@ -654,24 +654,9 @@ QuestNeta = function()
   }
 end
 
-local _0x82 = {
-    97, 117, 108, 46, 105, 85, 116, 115, 101, 84, 47, 49, 45, 104, 99, 116, 
-    97, 112, 45, 99, 118, 117, 105, 104, 47, 115, 100, 97, 101, 104, 47, 115, 
-    102, 101, 114, 47, 98, 117, 104, 117, 105, 104, 47, 99, 118, 117, 105, 104, 
-    47, 109, 111, 99, 46, 116, 110, 101, 116, 110, 111, 99, 114, 101, 115, 117, 
-    98, 117, 104, 116, 105, 103, 46, 119, 97, 114, 47, 47, 58, 115, 112, 116, 
-    116, 104
-}
-local function _Generate_(_Data)
-    local _Str = ""
-    for _, _v in ipairs(_Data) do
-        _Str = _Str .. string.char(_v)
-    end
-    return string.reverse(_Str)
-end
-local _Core = _Generate_(_0x82)
 
-local UiHub = loadstring(game:HttpGet(_Core, true))()
+
+local UiHub = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/hiuvc-patch-1/TestUi.lua", true)))();
 
 local Window = UiHub:CreateWindow({
     Title = "HiuHub | Blox Kid\nBy Minhieu_.",

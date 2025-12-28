@@ -6,11 +6,12 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
         task.wait(3)
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
-
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 do
 	ply = game.Players;
 	plr = ply.LocalPlayer;
-	Root = plr.Character.HumanoidRootPart;
+	char = plr.Character or plr.CharacterAdded:Wait()
+	Root = char.HumanoidRootPart;
 	replicated = game:GetService("ReplicatedStorage");
 	CommF = game:GetService("ReplicatedStorage").Remotes.CommF_
 	Lv = game.Players.LocalPlayer.Data.Level.Value;
@@ -23,7 +24,7 @@ do
 	TeamSelf = plr.Team;
 	RunSer = game:GetService("RunService");
 	Stats = game:GetService("Stats");
-	Energy = plr.Character.Energy.Value;
+	Energy = char.Energy.Value;
 	Boss = {};
 	BringConnections = {};
 	MaterialList = {};
@@ -337,34 +338,59 @@ BringEnemy = function(Target, Distance)
 	end
 end
 
-O.Kill = function(e, A)
-		if e and A then
-			if not e:GetAttribute("Locked") then
-				e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
-			end;
-			PosMon = (e:GetAttribute("Locked")).Position;
-			EquipWeapon(_G.SelectWeapon);
-			local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
-			local u = A.ToolTip;
-			if u == "Blox Fruit" then
-				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) * CFrame.Angles(0, math.rad(90), 0));
-			else
-				_tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0)) * CFrame.Angles(0, math.rad(180), 0));
-			end;
-			if RandomCFrame then
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
-				wait(.5);
-				_tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
-			end;
-		end;
-	end;
+-- cache
+local LastKillTick = 0
+local KillCooldown = 0.25
+local CurrentWeapon = nil
+local Randoming = false
+
+function O.Kill(e, A)
+    if not (e and A) then return end
+    if not e:FindFirstChild("HumanoidRootPart") then return end
+    if tick() - LastKillTick < KillCooldown then return end
+    LastKillTick = tick()
+
+    -- Lock vị trí mob (chỉ set 1 lần)
+    if not e:GetAttribute("Locked") then
+        e:SetAttribute("Locked", e.HumanoidRootPart.CFrame)
+    end
+
+    local LockedCF = e:GetAttribute("Locked")
+    PosMon = LockedCF.Position
+
+    -- Equip weapon (chỉ khi đổi)
+    if CurrentWeapon ~= _G.SelectWeapon then
+        EquipWeapon(_G.SelectWeapon)
+        CurrentWeapon = _G.SelectWeapon
+    end
+
+    local Tool = char:FindFirstChildOfClass("Tool")
+    if not Tool then return end
+
+    -- Teleport duy nhất (chính)
+    if Tool.ToolTip == "Blox Fruit" then
+        _tp(LockedCF * CFrame.new(0, 10, 0) * CFrame.Angles(0, math.rad(90), 0))
+    else
+        _tp(LockedCF * CFrame.new(0, 30, 0) * CFrame.Angles(0, math.rad(180), 0))
+    end
+    
+    if RandomCFrame and not Randoming then
+        Randoming = true
+        task.spawn(function()
+            for i = 1, 3 do
+                if not e.Parent then break end
+                _tp(LockedCF * CFrame.new(
+                    math.random(-20, 20),
+                    30,
+                    math.random(-20, 20)
+                ))
+                task.wait(0.25)
+            end
+            Randoming = false
+        end)
+    end
+end
+
 
 O.KillRaid = function(e, A)
 	if e and A then
@@ -2043,7 +2069,6 @@ local function GetEnemyByName(name)
 	end
 end
 local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/TestUi.lua")))();
-local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 ---Tab----------------
 local x = e:NewWindow();
 local sv = x:T("Tab Server");
@@ -2821,204 +2846,6 @@ task.spawn(function()
         end)
     end
 end)
-
-
--- Accept Quest Toggle
-B:AddToggle({
-    Title = "Accept Quests [Bone/CakePrince]",
-    Description = "",
-    Default = false,
-    Callback = function(e)
-        _G.AcceptQuestC = e
-    end,
-})
-
-B:AddToggle({
-	Title = "Auto Travel Dressrosa",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.TravelDres = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		pcall(function()
-			if _G.TravelDres then
-				if plr.Data.Level.Value >= 700 then
-					if workspace.Map.Ice.Door.CanCollide == true and workspace.Map.Ice.Door.Transparency == 0 then
-						replicated.Remotes.CommF_:InvokeServer("DressrosaQuestProgress", "Detective");
-						EquipWeapon("Key");
-						repeat
-							wait();
-							_tp(CFrame.new(1347.7124, 37.3751602, -1325.6488));
-						until not _G.TravelDres or Root.Position == (CFrame.new(1347.7124, 37.3751602, -1325.6488)).Position;
-					elseif workspace.Map.Ice.Door.CanCollide == false and workspace.Map.Ice.Door.Transparency == 1 then
-						if Enemies:FindFirstChild("Ice Admiral") then
-							for e, A in pairs(Enemies:GetChildren()) do
-								if A.Name == "Ice Admiral" and O.Alive(A) then
-									repeat
-										task.wait();
-										O.Kill(A, _G.TravelDres);
-									until _G.TravelDres == false or A.Humanoid.Health <= 0;
-									replicated.Remotes.CommF_:InvokeServer("TravelDressrosa");
-								end;
-							end;
-						else
-							_tp(CFrame.new(1347.7124, 37.3751602, -1325.6488));
-						end;
-					else
-						replicated.Remotes.CommF_:InvokeServer("TravelDressrosa");
-					end;
-				end;
-			end;
-		end);
-	end;
-end);
-B:AddToggle({
-	Title = "Auto Zou Quest",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.Zou = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		pcall(function()
-			if _G.AutoZou then
-				if plr.Data.Level.Value >= 1500 then
-					if replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 3 then
-						if (replicated.Remotes.CommF_:InvokeServer("GetUnlockables")).FlamingoAccess ~= nil then
-							replicated.Remotes.CommF_:InvokeServer("F_", "TravelZou");
-							if replicated.Remotes.CommF_:InvokeServer("ZQuestProgress", "Check") == 0 then
-								local e = GetConnectionEnemies("rip_indra");
-								if e then
-									repeat
-										wait();
-										O.Kill(e, _G.AutoZou);
-									until not _G.AutoZou or not e.Parent or e.Humanoid.Health <= 0;
-									Check = 2;
-									repeat
-										wait();
-										replicated.Remotes.CommF_:InvokeServer("F_", "TravelZou");
-									until Check == 1;
-								else
-									replicated.Remotes.CommF_:InvokeServer("F_", "ZQuestProgress", "Check");
-									wait(.1);
-									replicated.Remotes.CommF_:InvokeServer("F_", "ZQuestProgress", "Begin");
-								end;
-							elseif replicated.Remotes.CommF_:InvokeServer("ZQuestProgress", "Check") == 1 then
-								replicated.Remotes.CommF_:InvokeServer("F_", "TravelZou");
-							else
-								local e = GetConnectionEnemies("Don Swan");
-								if e then
-									repeat
-										wait();
-										O.Kill(e, _G.AutoZou);
-									until not _G.AutoZou or not e.Parent or e.Humanoid.Health <= 0;
-								else
-									repeat
-										wait();
-										_tp(CFrame.new(2288.802, 15.1870775, 863.034607));
-									until not _G.AutoZou or Root.Position == (CFrame.new(2288.802, 15.1870775, 863.034607)).Position;
-									if Root.CFrame == CFrame.new(2288.802, 15.1870775, 863.034607) then
-										notween(CFrame.new(2288.802, 15.1870775, 863.034607));
-									end;
-								end;
-							end;
-						else
-							if (replicated.Remotes.CommF_:InvokeServer("GetUnlockables")).FlamingoAccess == nil then
-								TabelDevilFruitStore = {};
-								TabelDevilFruitOpen = {};
-								for e, A in pairs(replicated.Remotes.CommF_:InvokeServer("getInventoryFruits")) do
-									for e, A in pairs(A) do
-										if e == "Name" then
-											table.insert(TabelDevilFruitStore, A);
-										end;
-									end;
-								end;
-								for e, A in next, (game.ReplicatedStorage:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do
-									if A.Price >= 1000000 then
-										table.insert(TabelDevilFruitOpen, A.Name);
-									end;
-								end;
-								for e, A in pairs(TabelDevilFruitOpen) do
-									for e, u in pairs(TabelDevilFruitStore) do
-										if A == u and (replicated.Remotes.CommF_:InvokeServer("GetUnlockables")).FlamingoAccess == nil then
-											if not plr.Backpack:FindFirstChild(u) then
-												replicated.Remotes.CommF_:InvokeServer("F_", "LoadFruit", u);
-											else
-												replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "1");
-												replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "2");
-												replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "3");
-											end;
-										end;
-									end;
-								end;
-								replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "1");
-								replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "2");
-								replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "3");
-							end;
-						end;
-					else
-						if replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 0 then
-							if string.find(plr.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Swan Pirates") and (string.find(plr.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "50") and plr.PlayerGui.Main.Quest.Visible == true) then
-								local e = GetConnectionEnemies("Swan Pirate");
-								if e then
-									pcall(function()
-										repeat
-											wait();
-											O.Kill(e, _G.AutoZou);
-										until not e.Parent or e.Humanoid.Health <= 0 or _G.AutoZou == false or plr.PlayerGui.Main.Quest.Visible == false;
-									end);
-								else
-									_tp(CFrame.new(1057.92761, 137.614319, 1242.08069));
-								end;
-							else
-								_tp(CFrame.new(-456.28952, 73.0200958, 299.895966));
-							end;
-						elseif replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 1 then
-							local e = GetConnectionEnemies("Jeremy");
-							if e then
-								repeat
-									wait();
-									O.Kill(e, _G.AutoZou);
-								until not e.Parent or e.Humanoid.Health <= 0 or _G.AutoZou == false;
-							else
-								_tp(CFrame.new(2099.88159, 448.931, 648.997375));
-							end;
-						elseif replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 2 then
-							repeat
-								wait();
-								_tp(CFrame.new(-1836, 11, 1714));
-							until not _G.AutoZou or Root.Position == (CFrame.new(-1836, 11, 1714)).Position;
-							if Root.CFrame == CFrame.new(-1836, 11, 1714) then
-								notween(CFrame.new(-1836, 11, 1714));
-							end;
-							notween(CFrame.new(-1850.49329, 13.1789551, 1750.89685));
-							wait(.1);
-							notween(CFrame.new(-1858.87305, 19.3777466, 1712.01807));
-							wait(.1);
-							notween(CFrame.new(-1803.94324, 16.5789185, 1750.89685));
-							wait(.1);
-							notween(CFrame.new(-1858.55835, 16.8604317, 1724.79541));
-							wait(.1);
-							notween(CFrame.new(-1869.54224, 15.987854, 1681.00659));
-							wait(.1);
-							notween(CFrame.new(-1800.0979, 16.4978027, 1684.52368));
-							wait(.1);
-							notween(CFrame.new(-1819.26343, 14.795166, 1717.90625));
-							wait(.1);
-							notween(CFrame.new(-1813.51843, 14.8604736, 1724.79541));
-						end;
-					end;
-				end;
-			end;
-		end);
-	end;
-end);
-
 spawn(function()
 	while wait() do
 		pcall(function()
@@ -3038,97 +2865,304 @@ spawn(function()
 		end);
 	end;
 end);
-B:AddSeperator("Miscellanea / Quest");
 
+-- Accept Quest Toggle
 B:AddToggle({
-	Title = "Auto Factory Raid",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.FactoryRaids = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		pcall(function()
-			if _G.AutoFactory then
-				local e = GetConnectionEnemies("Core");
-				if e then
-					repeat
-						wait();
-						EquipWeapon(_G.SelectWeapon);
-						_tp(CFrame.new(448.46756, 199.356781, -441.389252));
-					until e.Humanoid.Health <= 0 or _G.AutoFactory == false;
-				else
-					_tp(CFrame.new(448.46756, 199.356781, -441.389252));
-				end;
-			end;
-		end);
-	end;
-end);
-B:AddToggle({
-	Title = "Auto Pirate Raid",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.AutoRaidCastle = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		if _G.AutoRaidCastle then
+    Title = "Accept Quests [Bone/CakePrince]",
+    Description = "",
+    Default = false,
+    Callback = function(e)
+        _G.AcceptQuestC = e
+    end,
+})
+if World1 or World2 then
+	B:AddSeperator("World Quest")
+end
+if World1 then
+	B:AddToggle({
+		Title = "Auto Travel Dressrosa",
+		Description = "",
+		Default = false,
+		Callback = function(e)
+			_G.TravelDres = e;
+		end,
+	});
+	spawn(function()
+		while wait(Sec) do
 			pcall(function()
-				local e = CFrame.new(-5496.17432, 313.768921, -2841.53027, .924894512, 7.37058015e-09, .380223751, 3.5881019e-08, 1, -1.06665446e-07, -0.380223751, 1.12297109e-07, .924894512);
-				if ((CFrame.new(-5539.3115234375, 313.80053710938, -2972.3723144531)).Position - Root.Position).Magnitude <= 500 then
-					for e, A in pairs(workspace.Enemies:GetChildren()) do
-						if A:FindFirstChild("HumanoidRootPart") and (A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0) then
-							if A.Name then
-								if (A.HumanoidRootPart.Position - Root.Position).Magnitude <= 2000 then
-									repeat
-										wait();
-										O.Kill(A, _G.AutoRaidCastle);
-									until not _G.AutoRaidCastle or not A.Parent or A.Humanoid.Health <= 0 or not workspace.Enemies:FindFirstChild(A.Name);
+				if _G.TravelDres then
+					if plr.Data.Level.Value >= 700 then
+						if workspace.Map.Ice.Door.CanCollide == true and workspace.Map.Ice.Door.Transparency == 0 then
+							replicated.Remotes.CommF_:InvokeServer("DressrosaQuestProgress", "Detective");
+							EquipWeapon("Key");
+							repeat
+								wait();
+								_tp(CFrame.new(1347.7124, 37.3751602, -1325.6488));
+							until not _G.TravelDres or Root.Position == (CFrame.new(1347.7124, 37.3751602, -1325.6488)).Position;
+						elseif workspace.Map.Ice.Door.CanCollide == false and workspace.Map.Ice.Door.Transparency == 1 then
+							if Enemies:FindFirstChild("Ice Admiral") then
+								for e, A in pairs(Enemies:GetChildren()) do
+									if A.Name == "Ice Admiral" and O.Alive(A) then
+										repeat
+											task.wait();
+											O.Kill(A, _G.TravelDres);
+										until _G.TravelDres == false or A.Humanoid.Health <= 0;
+										replicated.Remotes.CommF_:InvokeServer("TravelDressrosa");
+									end;
 								end;
+							else
+								_tp(CFrame.new(1347.7124, 37.3751602, -1325.6488));
 							end;
+						else
+							replicated.Remotes.CommF_:InvokeServer("TravelDressrosa");
 						end;
 					end;
-				else
-					local A = {
-							"Galley Pirate",
-							"Galley Captain",
-							"Raider",
-							"Mercenary",
-							"Vampire",
-							"Zombie",
-							"Snow Trooper",
-							"Winter Warrior",
-							"Lab Subordinate",
-							"Horned Warrior",
-							"Magma Ninja",
-							"Lava Pirate",
-							"Ship Deckhand",
-							"Ship Engineer",
-							"Ship Steward",
-							"Ship Officer",
-							"Arctic Warrior",
-							"Snow Lurker",
-							"Sea Soldier",
-							"Water Fighter",
-						};
-					for u = 1, #A, 1 do
-						if replicated:FindFirstChild(A[u]) then
-							for u, Z in pairs(replicated:GetChildren()) do
-								if table.find(A, Z.Name) then
-									_tp(e);
+				end;
+			end);
+		end;
+	end);
+end
+if World3 then
+	B:AddToggle({
+		Title = "Auto Zou Quest",
+		Description = "",
+		Default = false,
+		Callback = function(e)
+			_G.Zou = e;
+		end,
+	});
+	spawn(function()
+		while wait(Sec) do
+			pcall(function()
+				if _G.AutoZou then
+					if plr.Data.Level.Value >= 1500 then
+						if replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 3 then
+							if (replicated.Remotes.CommF_:InvokeServer("GetUnlockables")).FlamingoAccess ~= nil then
+								replicated.Remotes.CommF_:InvokeServer("F_", "TravelZou");
+								if replicated.Remotes.CommF_:InvokeServer("ZQuestProgress", "Check") == 0 then
+									local e = GetConnectionEnemies("rip_indra");
+									if e then
+										repeat
+											wait();
+											O.Kill(e, _G.AutoZou);
+										until not _G.AutoZou or not e.Parent or e.Humanoid.Health <= 0;
+										Check = 2;
+										repeat
+											wait();
+											replicated.Remotes.CommF_:InvokeServer("F_", "TravelZou");
+										until Check == 1;
+									else
+										replicated.Remotes.CommF_:InvokeServer("F_", "ZQuestProgress", "Check");
+										wait(.1);
+										replicated.Remotes.CommF_:InvokeServer("F_", "ZQuestProgress", "Begin");
+									end;
+								elseif replicated.Remotes.CommF_:InvokeServer("ZQuestProgress", "Check") == 1 then
+									replicated.Remotes.CommF_:InvokeServer("F_", "TravelZou");
+								else
+									local e = GetConnectionEnemies("Don Swan");
+									if e then
+										repeat
+											wait();
+											O.Kill(e, _G.AutoZou);
+										until not _G.AutoZou or not e.Parent or e.Humanoid.Health <= 0;
+									else
+										repeat
+											wait();
+											_tp(CFrame.new(2288.802, 15.1870775, 863.034607));
+										until not _G.AutoZou or Root.Position == (CFrame.new(2288.802, 15.1870775, 863.034607)).Position;
+										if Root.CFrame == CFrame.new(2288.802, 15.1870775, 863.034607) then
+											notween(CFrame.new(2288.802, 15.1870775, 863.034607));
+										end;
+									end;
 								end;
+							else
+								if (replicated.Remotes.CommF_:InvokeServer("GetUnlockables")).FlamingoAccess == nil then
+									TabelDevilFruitStore = {};
+									TabelDevilFruitOpen = {};
+									for e, A in pairs(replicated.Remotes.CommF_:InvokeServer("getInventoryFruits")) do
+										for e, A in pairs(A) do
+											if e == "Name" then
+												table.insert(TabelDevilFruitStore, A);
+											end;
+										end;
+									end;
+									for e, A in next, (game.ReplicatedStorage:WaitForChild("Remotes")).CommF_:InvokeServer("GetFruits") do
+										if A.Price >= 1000000 then
+											table.insert(TabelDevilFruitOpen, A.Name);
+										end;
+									end;
+									for e, A in pairs(TabelDevilFruitOpen) do
+										for e, u in pairs(TabelDevilFruitStore) do
+											if A == u and (replicated.Remotes.CommF_:InvokeServer("GetUnlockables")).FlamingoAccess == nil then
+												if not plr.Backpack:FindFirstChild(u) then
+													replicated.Remotes.CommF_:InvokeServer("F_", "LoadFruit", u);
+												else
+													replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "1");
+													replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "2");
+													replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "3");
+												end;
+											end;
+										end;
+									end;
+									replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "1");
+									replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "2");
+									replicated.Remotes.CommF_:InvokeServer("F_", "TalkTrevor", "3");
+								end;
+							end;
+						else
+							if replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 0 then
+								if string.find(plr.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Swan Pirates") and (string.find(plr.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "50") and plr.PlayerGui.Main.Quest.Visible == true) then
+									local e = GetConnectionEnemies("Swan Pirate");
+									if e then
+										pcall(function()
+											repeat
+												wait();
+												O.Kill(e, _G.AutoZou);
+											until not e.Parent or e.Humanoid.Health <= 0 or _G.AutoZou == false or plr.PlayerGui.Main.Quest.Visible == false;
+										end);
+									else
+										_tp(CFrame.new(1057.92761, 137.614319, 1242.08069));
+									end;
+								else
+									_tp(CFrame.new(-456.28952, 73.0200958, 299.895966));
+								end;
+							elseif replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 1 then
+								local e = GetConnectionEnemies("Jeremy");
+								if e then
+									repeat
+										wait();
+										O.Kill(e, _G.AutoZou);
+									until not e.Parent or e.Humanoid.Health <= 0 or _G.AutoZou == false;
+								else
+									_tp(CFrame.new(2099.88159, 448.931, 648.997375));
+								end;
+							elseif replicated.Remotes.CommF_:InvokeServer("BartiloQuestProgress", "Bartilo") == 2 then
+								repeat
+									wait();
+									_tp(CFrame.new(-1836, 11, 1714));
+								until not _G.AutoZou or Root.Position == (CFrame.new(-1836, 11, 1714)).Position;
+								if Root.CFrame == CFrame.new(-1836, 11, 1714) then
+									notween(CFrame.new(-1836, 11, 1714));
+								end;
+								notween(CFrame.new(-1850.49329, 13.1789551, 1750.89685));
+								wait(.1);
+								notween(CFrame.new(-1858.87305, 19.3777466, 1712.01807));
+								wait(.1);
+								notween(CFrame.new(-1803.94324, 16.5789185, 1750.89685));
+								wait(.1);
+								notween(CFrame.new(-1858.55835, 16.8604317, 1724.79541));
+								wait(.1);
+								notween(CFrame.new(-1869.54224, 15.987854, 1681.00659));
+								wait(.1);
+								notween(CFrame.new(-1800.0979, 16.4978027, 1684.52368));
+								wait(.1);
+								notween(CFrame.new(-1819.26343, 14.795166, 1717.90625));
+								wait(.1);
+								notween(CFrame.new(-1813.51843, 14.8604736, 1724.79541));
 							end;
 						end;
 					end;
 				end;
 			end);
 		end;
-	end;
-end);
+	end);
+end
+if World2 then
+	B:AddSeperator("Factory Raid")
+	B:AddToggle({
+		Title = "Auto Factory Raid",
+		Description = "",
+		Default = false,
+		Callback = function(e)
+			_G.FactoryRaids = e;
+		end,
+	});
+	spawn(function()
+		while wait(Sec) do
+			pcall(function()
+				if _G.AutoFactory then
+					local e = GetConnectionEnemies("Core");
+					if e then
+						repeat
+							wait();
+							EquipWeapon(_G.SelectWeapon);
+							_tp(CFrame.new(448.46756, 199.356781, -441.389252));
+						until e.Humanoid.Health <= 0 or _G.AutoFactory == false;
+					else
+						_tp(CFrame.new(448.46756, 199.356781, -441.389252));
+					end;
+				end;
+			end);
+		end;
+	end);
+end
+
+if World3 then
+		B:AddToggle({
+		Title = "Auto Pirate Raid",
+		Description = "",
+		Default = false,
+		Callback = function(e)
+			_G.AutoRaidCastle = e;
+		end,
+	});
+	spawn(function()
+		while wait(Sec) do
+			if _G.AutoRaidCastle then
+				pcall(function()
+					local e = CFrame.new(-5496.17432, 313.768921, -2841.53027, .924894512, 7.37058015e-09, .380223751, 3.5881019e-08, 1, -1.06665446e-07, -0.380223751, 1.12297109e-07, .924894512);
+					if ((CFrame.new(-5539.3115234375, 313.80053710938, -2972.3723144531)).Position - Root.Position).Magnitude <= 500 then
+						for e, A in pairs(workspace.Enemies:GetChildren()) do
+							if A:FindFirstChild("HumanoidRootPart") and (A:FindFirstChild("Humanoid") and A.Humanoid.Health > 0) then
+								if A.Name then
+									if (A.HumanoidRootPart.Position - Root.Position).Magnitude <= 2000 then
+										repeat
+											wait();
+											O.Kill(A, _G.AutoRaidCastle);
+										until not _G.AutoRaidCastle or not A.Parent or A.Humanoid.Health <= 0 or not workspace.Enemies:FindFirstChild(A.Name);
+									end;
+								end;
+							end;
+						end;
+					else
+						local A = {
+								"Galley Pirate",
+								"Galley Captain",
+								"Raider",
+								"Mercenary",
+								"Vampire",
+								"Zombie",
+								"Snow Trooper",
+								"Winter Warrior",
+								"Lab Subordinate",
+								"Horned Warrior",
+								"Magma Ninja",
+								"Lava Pirate",
+								"Ship Deckhand",
+								"Ship Engineer",
+								"Ship Steward",
+								"Ship Officer",
+								"Arctic Warrior",
+								"Snow Lurker",
+								"Sea Soldier",
+								"Water Fighter",
+							};
+						for u = 1, #A, 1 do
+							if replicated:FindFirstChild(A[u]) then
+								for u, Z in pairs(replicated:GetChildren()) do
+									if table.find(A, Z.Name) then
+										_tp(e);
+									end;
+								end;
+							end;
+						end;
+					end;
+				end);
+			end;
+		end;
+	end);
+end
+
 B:AddDropdown({
 	Title = "Choose Material",
 	Description = "",
@@ -3354,6 +3388,7 @@ spawn(function()
 		end;
 	end;
 end);
+B:AddSeperator("Berry")
 B:AddToggle({
 	Title = "Auto Collect Berry",
 	Description = "",
@@ -3390,6 +3425,7 @@ spawn(function()
 		end;
 	end;
 end);
+B:AddSeperator("Chest")
 B:AddToggle({
 	Title = "Auto Collect Chest",
 	Description = "",
@@ -3429,7 +3465,7 @@ spawn(function()
 		end;
 	end;
 end);
-B:AddSeperator("Miscellanea / Mastery");
+B:AddSeperator("Fram Mastery");
 local m = { "Cake", "Bone" };
 B:AddDropdown({
 	Title = "Choose Island",
@@ -3673,16 +3709,6 @@ spawn(function()
 	end;
 end);
 B:AddSeperator("Generals Quests / Items");
-local j = B:AddParagraph({ Title = " Bones :", Content = "" });
-
-spawn(function()
-	while wait(.2) do
-		pcall(function()
-			j:SetDesc(" Bones : " .. GetM("Bones"));
-		end);
-	end;
-end);
-
 B:AddToggle({
 	Title = "Auto Farm Mirror",
 	Description = "",

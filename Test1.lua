@@ -854,7 +854,7 @@ getInfinity_Ability = function(e, A)
 		end;
 	end;
 Hop = function()
-		HopServerModule:Teleport(game.PlaceId)
+		HopServerModule:Teleport()
 	end;
 local plr = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")

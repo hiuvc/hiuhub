@@ -776,7 +776,7 @@ local Tabs = {
   Shop = Window:AddTab({Title = "Tab Shop", Icon = ""}),
   Misc = Window:AddTab({Title = "Tab Misc", Icon = ""})
 }
-local Status_Se = Tabs.Server:AddSection("Server - Status")
+Tabs.Server:AddSection("Server - Status")
 local MoonStatus = Tabs.Server:AddParagraph({Title = "Moon",Content = ""})
 task.spawn(function()
     while task.wait(1) do

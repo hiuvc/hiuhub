@@ -659,7 +659,7 @@ QuestNeta = function()
 end
 
 local Fluent = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/hiuvc-patch-1/TestUi.lua", true)))();
-local Window = HinishiLibDemo:CreateWindow({
+local Window = Fluent:CreateWindow({
     Title = "HiuHub | Blox Kid\nBy Minhieu_.",
     TitleIcon = "",
     Image = "",

@@ -5524,7 +5524,7 @@ Components.TitleBar = (function()
 		TitleBar.CloseButton = BarButton(Components.Assets.Close, UDim2.new(1, -4, 0, 4), TitleBar.Frame, function()
 			Library.Window:Dialog({
 				Title = "Close",
-				Content = "Are you sure you want to close HNC Hub?",
+				Content = "Are you sure you want to close Hub?",
 				Buttons = {
 					{
 						Title = "Sure",
@@ -6449,13 +6449,13 @@ Components.Window = (function()
 				MinimizeNotif = true
 				local Key = Library.MinimizeKeybind and Library.MinimizeKeybind.Value or Library.MinimizeKey.Name
 				if not Mobile then Library:Notify({
-					Title = "HNC Hub",
+					Title = "HiuHub Notification",
 					Content = "Press " .. Key .. " to toggle the interface.",
 					Duration = 6
 					})
 				else 
 					Library:Notify({
-						Title = "HNC Hub",
+						Title = "HiuHub Notification",
 						Content = "Tap to the button to toggle the interface.",
 						Duration = 6
 					})

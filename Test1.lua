@@ -6583,7 +6583,49 @@ spawn(function()
 	end;
 end);
 i:AddSeperator("Mystic Island / Full Moon");
-
+FullMOOn = i:AddParagraph({ Title = " FullMoon Status ", Content = "" });
+Ismirage = i:AddParagraph({ Title = " Mirage Island Status ", Content = "" });
+spawn(function()
+	while wait(.2) do
+		if workspace.Map:FindFirstChild("MysticIsland") or workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island") then
+			Ismirage:SetDesc(" Mirage Island : True");
+		else
+			Ismirage:SetDesc(" Mirage Island : False");
+		end;
+	end;
+end);
+spawn(function()
+	while wait(.2) do
+		pcall(function()
+			moon8 = "http://www.roblox.com/asset/?id=9709150401";
+			moon7 = "http://www.roblox.com/asset/?id=9709150086";
+			moon6 = "http://www.roblox.com/asset/?id=9709149680";
+			moon5 = "http://www.roblox.com/asset/?id=9709149431";
+			moon4 = "http://www.roblox.com/asset/?id=9709149052";
+			moon3 = "http://www.roblox.com/asset/?id=9709143733";
+			moon2 = "http://www.roblox.com/asset/?id=9709139597";
+			moon1 = "http://www.roblox.com/asset/?id=9709135895";
+			moon = Getmoon();
+			if moon == moon1 then
+				FullMOOn:SetDesc("Moon : 0 / 8");
+			elseif moon == moon2 then
+				FullMOOn:SetDesc("Moon : 1 / 8");
+			elseif moon == moon3 then
+				FullMOOn:SetDesc("Moon : 2 / 8");
+			elseif moon == moon4 then
+				FullMOOn:SetDesc("Moon : 3 / 8 [ Next Night ]");
+			elseif moon == moon5 then
+				FullMOOn:SetDesc("Moon : 4 / 8 [ Full Moon ]");
+			elseif moon == moon6 then
+				FullMOOn:SetDesc("Moon : 5 / 8 [ Last Night ]");
+			elseif moon == moon7 then
+				FullMOOn:SetDesc("Moon : 6 / 8");
+			elseif moon == moon8 then
+				FullMOOn:SetDesc("Moon : 7 / 8");
+			end;
+		end);
+	end;
+end);
 i:AddToggle({
 	Title = "Auto Find Mirage Island",
 	Description = "turn on for finding & tween mirage island",
@@ -7862,130 +7904,150 @@ spawn(function()
 	end;
 end);
 P:AddSeperator("Prehistoric Island");
-
-P:AddToggle({
-	Title = "Auto Prehistoric Island (FULLY)",
-	Description = "Auto find island + start event + patch lava + kill lava golem + clear volcano",
-	Default = false,
-	Callback = function(v)
-		_G.AutoPrehistoric = v
-	end,
-})
+local Zw = P:AddParagraph({ Title = " Prehistoric Island Status ", Content = "" });
 spawn(function()
-	while task.wait() do
-		if _G.AutoPrehistoric then
+	while wait(.2) do
+		if workspace.Map:FindFirstChild("PrehistoricIsland") or workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island") then
+			Zw:SetDesc(" Prehistoric Island : True");
+		else
+			Zw:SetDesc(" Prehistoric Island : False");
+		end;
+	end;
+end);
+P:AddToggle({
+	Title = "Auto Find Prehistoric Island",
+	Description = "turn on for finding & tween & start prehistoric island",
+	Default = false,
+	Callback = function(e)
+		_G.Prehis_Find = e;
+	end,
+});
+local Xw = nil;
+spawn(function()
+	while wait() do
+		if _G.Prehis_Find then
 			pcall(function()
 				if not workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island", true) then
-					local boat = CheckBoat()
-					if not boat then
-						local cf = CFrame.new(-16927.451, 9.086, 433.864)
-						TeleportToTarget(cf)
-
-						if (cf.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then
-							replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat)
-						end
+					local e = CheckBoat();
+					if not e then
+						local e = CFrame.new(-16927.451, 9.086, 433.864);
+						TeleportToTarget(e);
+						if (e.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 then
+							replicated.Remotes.CommF_:InvokeServer("BuyBoat", _G.SelectedBoat);
+						end;
 					else
-						if not plr.Character.Humanoid.Sit then
-							_tp(boat.VehicleSeat.CFrame * CFrame.new(0,1,0))
+						if plr.Character.Humanoid.Sit == false then
+							local A = e.VehicleSeat.CFrame * CFrame.new(0, 1, 0);
+							_tp(A);
 						else
 							repeat
-								task.wait()
+								wait();
+								local e = CFrame.new(-10000000, 31, 37016.25);
 								if CheckEnemiesBoat() or CheckTerrorShark() or CheckPirateGrandBrigade() then
-									_tp(CFrame.new(-10000000,150,37016))
+									_tp(CFrame.new(-10000000, 150, 37016.25));
 								else
-									_tp(CFrame.new(-10000000,31,37016))
-								end
-							until not _G.AutoPrehistoric
-								or workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island")
-								or not plr.Character.Humanoid.Sit
-							plr.Character.Humanoid.Sit = false
-						end
-					end
+									_tp(CFrame.new(-10000000, 31, 37016.25));
+								end;
+							until not _G.Prehis_Find or (e.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 10 or workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island") or plr.Character.Humanoid.Sit == false;
+							plr.Character.Humanoid.Sit = false;
+						end;
+					end;
 				else
-					local island = workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island")
-					if island and (island.Position - plr.Character.HumanoidRootPart.Position).Magnitude >= 2000 then
-						_tp(island.CFrame)
-					end
+					if ((workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island")).CFrame.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude >= 2000 then
+						_tp((workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island")).CFrame);
+					end;
+					if workspace.Map:FindFirstChild("PrehistoricIsland", true) or workspace._WorldOrigin.Locations:FindFirstChild("Prehistoric Island", true) then
+						if workspace.Map.PrehistoricIsland.Core.ActivationPrompt:FindFirstChild("ProximityPrompt", true) then
+							if plr:DistanceFromCharacter(workspace.Map.PrehistoricIsland.Core.ActivationPrompt.CFrame.Position) <= 150 then
+								fireproximityprompt(workspace.Map.PrehistoricIsland.Core.ActivationPrompt.ProximityPrompt, math.huge);
+								vim1:SendKeyEvent(true, "E", false, game);
+								wait(1.5);
+								vim1:SendKeyEvent(false, "E", false, game);
+								_G.Prehis_Skills = true
+							end;
+							_tp(workspace.Map.PrehistoricIsland.Core.ActivationPrompt.CFrame);
+						end;
+					end;
+				end;
+			end);
+		end;
+	end;
+end);
 
-					if workspace.Map:FindFirstChild("PrehistoricIsland", true) then
-						local prompt = workspace.Map.PrehistoricIsland.Core.ActivationPrompt:FindFirstChild("ProximityPrompt", true)
-						if prompt then
-							_tp(workspace.Map.PrehistoricIsland.Core.ActivationPrompt.CFrame)
-							if plr:DistanceFromCharacter(prompt.Parent.Position) <= 150 then
-								fireproximityprompt(prompt, math.huge)
-							end
-						end
-					end
-				end
-			end)
-		end
-	end
-end)
 spawn(function()
-	while task.wait() do
-		if _G.AutoPrehistoric then
-			local island = workspace.Map:FindFirstChild("PrehistoricIsland")
-			if island then
-				for _,v in pairs(island:GetDescendants()) do
-					if (v:IsA("Part") or v:IsA("MeshPart")) and v.Name:lower():find("lava") then
-						v:Destroy()
-					end
-				end
-
-				local core = island.Core:FindFirstChild("InteriorLava")
-				if core then core:Destroy() end
-
-				local teleport = island:FindFirstChild("TrialTeleport")
-				for _,v in pairs(island:GetDescendants()) do
-					if v.Name == "TouchInterest" and not (teleport and v:IsDescendantOf(teleport)) then
-						v.Parent:Destroy()
-					end
-				end
-			end
-		end
-	end
-end)
+	while wait() do
+		if _G.Prehis_Skills then
+			local e = game.Workspace.Map:FindFirstChild("PrehistoricIsland");
+			if e then
+				for e, A in pairs(e:GetDescendants()) do
+					if A:IsA("Part") and (A.Name:lower()):find("lava") then
+						A:Destroy();
+					end;
+					if A:IsA("MeshPart") and (A.Name:lower()):find("lava") then
+						A:Destroy();
+					end;
+				end;
+				local A = game.Workspace.Map.PrehistoricIsland.Core:FindFirstChild("InteriorLava");
+				if A and A:IsA("Model") then
+					A:Destroy();
+				end;
+				local u = workspace.Map:FindFirstChild("PrehistoricIsland");
+				if u then
+					local e = workspace.Map.PrehistoricIsland:FindFirstChild("TrialTeleport");
+					for A, u in pairs(u:GetDescendants()) do
+						if u.Name == "TouchInterest" then
+							if not (e and u:IsDescendantOf(e)) then
+								u.Parent:Destroy();
+							end;
+						end;
+					end;
+				end;
+			end;
+		end;
+	end;
+end);
 spawn(function()
-	while task.wait() do
+	while wait() do
 		pcall(function()
-			if _G.AutoPrehistoric then
-				-- Kill Lava Golem
-				local golem = workspace.Enemies:FindFirstChild("Lava Golem")
-				if golem then
-					local mob = GetConnectionEnemies("Lava Golem")
-					if mob then
+			if _G.Prehis_Skills then
+				if workspace.Enemies:FindFirstChild("Lava Golem") then
+					local e = GetConnectionEnemies("Lava Golem");
+					if e then
 						repeat
-							task.wait()
-							O.Kill(mob, true)
-							mob.Humanoid:ChangeState(15)
-						until not _G.AutoPrehistoric or mob.Humanoid.Health <= 0
-					end
-				end
-
-				-- Break Volcano Rocks
-				for _,rock in pairs(workspace.Map.PrehistoricIsland.Core.VolcanoRocks:GetChildren()) do
-					local vfx = rock:FindFirstChild("VFXLayer")
-					if vfx and vfx.At0.Glow.Enabled then
-						repeat
-							task.wait()
-							_tp(vfx.CFrame)
-							if plr:DistanceFromCharacter(vfx.Position) <= 150 then
-								MousePos = vfx.Position
-								Useskills("Melee","Z")
-								Useskills("Melee","X")
-								Useskills("Melee","C")
-								Useskills("Blox Fruit","Z")
-								Useskills("Blox Fruit","X")
-								Useskills("Blox Fruit","C")
-							end
-						until not _G.AutoPrehistoric or not vfx.At0.Glow.Enabled
-					end
-				end
-			end
-		end)
-	end
-end)
-
+							wait();
+							O.Kill(e, _G.Prehis_Skills);
+							e.Humanoid:ChangeState(15);
+						until not _G.Prehis_Skills or not e.Parent or e.Humanoid.Health <= 0;
+					end;
+				end;
+				for e, A in pairs(game.Workspace.Map.PrehistoricIsland.Core.VolcanoRocks:GetChildren()) do
+					if A:FindFirstChild("VFXLayer") then
+						if (A:FindFirstChild("VFXLayer")).At0.Glow.Enabled == true or A.VFXLayer.At0.Glow.Enabled == true then
+							repeat
+								wait();
+								_tp(A.VFXLayer.CFrame);
+								if A.VFXLayer.At0.Glow.Enabled == true and plr:DistanceFromCharacter(A.VFXLayer.CFrame.Position) <= 150 then
+									MousePos = A.VFXLayer.CFrame.Position;
+									Useskills("Melee", "Z");
+									wait(.5);
+									Useskills("Melee", "X");
+									wait(.5);
+									Useskills("Melee", "C");
+									wait(.5);
+									Useskills("Blox Fruit", "Z");
+									wait(.5);
+									Useskills("Blox Fruit", "X");
+									wait(.5);
+									Useskills("Blox Fruit", "C");
+								end;
+							until not _G.Prehis_Skills or (A:FindFirstChild("VFXLayer")).At0.Glow.Enabled == false or A.VFXLayer.At0.Glow.Enabled == false;
+						end;
+					end;
+				end;
+			end;
+		end);
+	end;
+end);
 P:AddToggle({
 	Title = "Auto Collect Dino Bones",
 	Description = "",
@@ -10153,7 +10215,8 @@ Q:AddToggle({
 	end,
 });
 spawn(function()
-	while wait(0.5) do
+	while wait(Sec) do
+		if _G.TwFruits then
 			pcall(function()
 				for e, A in pairs(workspace:GetChildren()) do
 					if string.find(A.Name, "Fruit") then
@@ -10161,6 +10224,7 @@ spawn(function()
 					end;
 				end;
 			end);
+		end;
 	end;
 end);
 Q:AddToggle({
@@ -10636,7 +10700,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.1
+local FastAttackDelay = 0.15
 local LastFastAttack = 0
 
 --// Check alive

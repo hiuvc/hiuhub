@@ -2044,8 +2044,6 @@ local M = x:T("Tab Teleport");
 local F = x:T("Tab Fruits");
 local t = x:T("Tab Shop");
 local n = x:T("Tab Misc");
-local SV = sv:AddSection("Tab Server");
-local B = W:AddSection("Tab Farming");
 local z = p:AddSection("Tab Settings Fram");
 local T = U:AddSection("Tab Fighting Style");
 local b = S:AddSection("Tab Items Farm");
@@ -2060,7 +2058,7 @@ local Q = F:AddSection("Tab Fruits");
 local Y = t:AddSection("Tab Shop");
 local y = n:AddSection("Tab Misc");
 ---Tab Server----------------------
-SV:AddSeperator("Server - Status")
+local SV = sv:AddSection("Server Status");
 local MoonStatus = SV:AddParagraph({ Title = "Moon", Content = "" })
 task.spawn(function()
     while task.wait(1) do
@@ -2334,13 +2332,13 @@ task.spawn(function()
         end)
     end
 end)
-SV:AddSeperator("Server - Function")
-local ServerJobId = SV:AddParagraph({ Title = "JobId:", Content = "" })
+local SVF = sv:AddSection("Server Function");
+local ServerJobId = SVF:AddParagraph({ Title = "JobId:", Content = "" })
 ServerJobId:SetDesc(game.JobId)
-SV:AddButton({ Title = "Copy JobId", Description = "", Callback = function()
+SVF:AddButton({ Title = "Copy JobId", Description = "", Callback = function()
 	setclipboard(tostring(game.JobId))
 end })
-SV:AddInput({
+SVF:AddInput({
 	Title = "Enter JobId Here:",
 	Description = "",
 	PlaceHolder = "",
@@ -2366,24 +2364,24 @@ spawn(function()
 		end
 	end
 end)
-SV:AddButton({ Title = "Join Server With JobId", Description = "", Callback = function()
+SVF:AddButton({ Title = "Join Server With JobId", Description = "", Callback = function()
 	replicated.__ServerBrowser:InvokeServer("teleport", _G.JobId)
 end})
-SV:AddButton({ Title = "Hop Server", Description = "", Callback = function()
+SVF:AddButton({ Title = "Hop Server", Description = "", Callback = function()
 	pcall(function()
 		Hop()
 	end)
 end})
-SV:AddButton({ Title = "Hop to Lowest Players", Description = "", Callback = function()
+SVF:AddButton({ Title = "Hop to Lowest Players", Description = "", Callback = function()
 	pcall(function()
 		loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-FREE-PRIVATE-SERVER-V2-59627"))()
 	end)
 end })
-SV:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
+SVF:AddButton({ Title = "Rejoin Server", Description = "", Callback = function()
 	(game:GetService("TeleportService")):Teleport(game.PlaceId, game.Players.LocalPlayer);
 end });
 
-
+local FramF = W:AddSection("Setting Farm");
 local FrameMode = {"Fram Level", "Fram Cake Prince", "Fram Bone", "Fram Tyrant of The Skies", "Fram Nearest"}
 
 -- Update farm mode function
@@ -2397,8 +2395,8 @@ local function UpdateFramMode()
 end
 
 -- UI Components
-B:AddDropdown({
-    Title = "Select Fram:",
+FramF:AddDropdown({
+    Title = "Select Method Fram:",
     Values = FrameMode,
     Default = "Fram Level",
     Multi = false,
@@ -2408,7 +2406,7 @@ B:AddDropdown({
     end,
 })
 
-B:AddToggle({
+FramF:AddToggle({
     Title = "Start Fram",
     Default = false,
     Callback = function(e)
@@ -2825,7 +2823,7 @@ spawn(function()
 end);
 
 -- Accept Quest Toggle
-B:AddToggle({
+FramF:AddToggle({
     Title = "Accept Quests [Bone/CakePrince]",
     Description = "",
     Default = false,
@@ -2833,6 +2831,254 @@ B:AddToggle({
         _G.AcceptQuestC = e
     end,
 })
+
+local Mas = W:AddSection("Mastery Fram")
+
+local m = { "Cake", "Bone" };
+Mas:AddDropdown({
+	Title = "Choose Island",
+	Description = "",
+	Values = m,
+	Default = "Cake",
+	Callback = function(e)
+		SelectIsland = e;
+	end,
+})
+Mas:AddToggle({
+	Title = "Auto Mastery Fruits",
+	Description = "",
+	Default = false,
+	Callback = function(e)
+		_G.FarmMastery_Dev = e;
+	end,
+})
+spawn(function()
+	RunSer.RenderStepped:Connect(function()
+		pcall(function()
+			if _G.FarmMastery_Dev or _G.FarmMastery_G or _G.FarmMastery_S then
+				for e, A in pairs(plr.PlayerGui.Notifications:GetChildren()) do
+					if A.Name == "NotificationTemplate" then
+						if string.find(A.Text, "Skill locked!") then
+							A:Destroy();
+						end;
+					end;
+				end;
+			end;
+		end);
+	end);
+end);
+spawn(function()
+	while wait(Sec) do
+		if _G.FarmMastery_Dev then
+			pcall(function()
+				if SelectIsland == "Cake" then
+					local e = GetConnectionEnemies(l);
+					if e then
+						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
+						repeat
+							wait();
+							MousePos = e.HumanoidRootPart.Position;
+							O.Mas(e, _G.FarmMastery_Dev);
+							BringEnemy(e)
+						until _G.FarmMastery_Dev == false or e.Humanoid.Health <= 0 or not e.Parent;
+					else
+						_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
+					end;
+				elseif SelectIsland == "Bone" then
+					local e = GetConnectionEnemies(G);
+					if e then
+						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
+						repeat
+							wait();
+							MousePos = e.HumanoidRootPart.Position;
+							O.Mas(e, _G.FarmMastery_Dev);
+							BringEnemy(e)
+						until _G.FarmMastery_Dev == false or e.Humanoid.Health <= 0 or not e.Parent;
+					else
+						_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
+					end;
+				end;
+			end);
+		end;
+	end;
+end);
+Mas:AddToggle({
+	Title = "Auto Mastery Gun",
+	Description = "",
+	Default = false,
+	Callback = function(e)
+		_G.FarmMastery_G = e;
+	end,
+});
+spawn(function()
+	while wait(Sec) do
+		if _G.FarmMastery_G then
+			pcall(function()
+				if SelectIsland == "Cake" then
+					local e = GetConnectionEnemies(l);
+					if e then
+						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
+						repeat
+							wait();
+							MousePos = e.HumanoidRootPart.Position;
+							O.Masgun(e, _G.FarmMastery_G);
+							BringEnemy(e)
+							local A = replicated:FindFirstChild("Modules");
+							local u = A:FindFirstChild("Net");
+							local Z = u:FindFirstChild("RE/ShootGunEvent");
+							if (plr.Character:FindFirstChildOfClass("Tool")).ToolTip ~= "Gun" then
+								return;
+							end;
+							if plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name == "Skull Guitar" then
+								SoulGuitar = true;
+								(plr.Character:FindFirstChildOfClass("Tool")).RemoteEvent:FireServer("TAP", MousePos);
+								if _G.FarmMastery_G then
+									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
+									wait(.05);
+									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
+									wait(.05);
+								end;
+							elseif plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name ~= "Skull Guitar" then
+								SoulGuitar = false;
+								Z:FireServer(MousePos, { e.HumanoidRootPart });
+								if _G.FarmMastery_G then
+									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
+									wait(.05);
+									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
+									wait(.05);
+								end;
+							end;
+						until _G.FarmMastery_G == false or e.Humanoid.Health <= 0 or not e.Parent;
+						SoulGuitar = false;
+					else
+						_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
+					end;
+				elseif SelectIsland == "Bone" then
+					local e = GetConnectionEnemies(G);
+					if e then
+						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
+						repeat
+							wait();
+							MousePos = e.HumanoidRootPart.Position;
+							O.Masgun(e, _G.FarmMastery_G);
+							BringEnemy(e)
+							local A = replicated:FindFirstChild("Modules");
+							local u = A:FindFirstChild("Net");
+							local Z = u:FindFirstChild("RE/ShootGunEvent");
+							if (plr.Character:FindFirstChildOfClass("Tool")).ToolTip ~= "Gun" then
+								return;
+							end;
+							if plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name == "Skull Guitar" then
+								SoulGuitar = true;
+								(plr.Character:FindFirstChildOfClass("Tool")).RemoteEvent:FireServer("TAP", MousePos);
+								if _G.FarmMastery_G then
+									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
+									wait(.05);
+									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
+									wait(.05);
+								end;
+							elseif plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name ~= "Skull Guitar" then
+								SoulGuitar = false;
+								Z:FireServer(MousePos, { e.HumanoidRootPart });
+								if _G.FarmMastery_G then
+									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
+									wait(.05);
+									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
+									wait(.05);
+								end;
+							end;
+						until _G.FarmMastery_G == false or e.Humanoid.Health <= 0 or not e.Parent;
+						SoulGuitar = false;
+					else
+						_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
+					end;
+				end;
+			end);
+		end;
+	end;
+end);
+Mas:AddToggle({
+	Title = "Auto Mastery All Sword",
+	Description = "",
+	Default = false,
+	Callback = function(e)
+		_G.FarmMastery_S = e;
+	end,
+});
+spawn(function()
+	while wait(Sec) do
+		pcall(function()
+			if _G.FarmMastery_S then
+				if SelectIsland == "Cake" then
+					for e, A in next, replicated.Remotes.CommF_:InvokeServer("getInventory") do
+						if type(A) == "table" then
+							if A.Type == "Sword" then
+								SwordName = A.Name;
+								if tonumber(A.Mastery) >= 1 or tonumber(A.Mastery) <= 599 then
+									local e = GetConnectionEnemies(l);
+									if GetBP(SwordName) then
+										if e then
+											repeat
+												wait();
+												O.Sword(e, _G.FarmMastery_S);
+												BringEnemy(e)
+											until _G.FarmMastery_S == false or not e.Parent or e.Humanoid.Healh <= 0;
+										else
+											_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
+										end;
+									else
+										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
+									end;
+								elseif tonumber(A.Mastery) >= 600 then
+									if GetBP(SwordName) then
+										return nil;
+									else
+										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
+									end;
+								end;
+								break;
+							end;
+						end;
+					end;
+				elseif SelectIsland == "Bone" then
+					for e, A in next, replicated.Remotes.CommF_:InvokeServer("getInventory") do
+						if type(A) == "table" then
+							if A.Type == "Sword" then
+								SwordName = A.Name;
+								if tonumber(A.Mastery) >= 1 or tonumber(A.Mastery) <= 599 then
+									local e = GetConnectionEnemies(G);
+									if GetBP(SwordName) then
+										if e then
+											repeat
+												wait();
+												O.Sword(e, _G.FarmMastery_S);
+												BringEnemy(e)
+											until _G.FarmMastery_S == false or not e.Parent or e.Humanoid.Healh <= 0;
+										else
+											_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
+										end;
+									else
+										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
+									end;
+								elseif tonumber(A.Mastery) >= 600 then
+									if GetBP(SwordName) then
+										return nil;
+									else
+										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
+									end;
+								end;
+								break;
+							end;
+						end;
+					end;
+				end;
+			end;
+		end);
+	end;
+end);
+
+--[[
+
 if World1 or World2 then
 	B:AddSeperator("World Quest")
 end
@@ -2880,7 +3126,7 @@ if World1 then
 		end;
 	end);
 end
-if World3 then
+if World2 then
 	B:AddToggle({
 		Title = "Auto Zou Quest",
 		Description = "",
@@ -3423,249 +3669,8 @@ spawn(function()
 		end;
 	end;
 end);
-B:AddSeperator("Fram Mastery");
-local m = { "Cake", "Bone" };
-B:AddDropdown({
-	Title = "Choose Island",
-	Description = "",
-	Values = m,
-	Default = "Cake",
-	Callback = function(e)
-		SelectIsland = e;
-	end,
-});
-B:AddToggle({
-	Title = "Auto Mastery Fruits",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.FarmMastery_Dev = e;
-	end,
-});
-spawn(function()
-	RunSer.RenderStepped:Connect(function()
-		pcall(function()
-			if _G.FarmMastery_Dev or _G.FarmMastery_G or _G.FarmMastery_S then
-				for e, A in pairs(plr.PlayerGui.Notifications:GetChildren()) do
-					if A.Name == "NotificationTemplate" then
-						if string.find(A.Text, "Skill locked!") then
-							A:Destroy();
-						end;
-					end;
-				end;
-			end;
-		end);
-	end);
-end);
-spawn(function()
-	while wait(Sec) do
-		if _G.FarmMastery_Dev then
-			pcall(function()
-				if SelectIsland == "Cake" then
-					local e = GetConnectionEnemies(l);
-					if e then
-						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
-						repeat
-							wait();
-							MousePos = e.HumanoidRootPart.Position;
-							O.Mas(e, _G.FarmMastery_Dev);
-							BringEnemy(e)
-						until _G.FarmMastery_Dev == false or e.Humanoid.Health <= 0 or not e.Parent;
-					else
-						_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
-					end;
-				elseif SelectIsland == "Bone" then
-					local e = GetConnectionEnemies(G);
-					if e then
-						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
-						repeat
-							wait();
-							MousePos = e.HumanoidRootPart.Position;
-							O.Mas(e, _G.FarmMastery_Dev);
-							BringEnemy(e)
-						until _G.FarmMastery_Dev == false or e.Humanoid.Health <= 0 or not e.Parent;
-					else
-						_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
-					end;
-				end;
-			end);
-		end;
-	end;
-end);
-B:AddToggle({
-	Title = "Auto Mastery Gun",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.FarmMastery_G = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		if _G.FarmMastery_G then
-			pcall(function()
-				if SelectIsland == "Cake" then
-					local e = GetConnectionEnemies(l);
-					if e then
-						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
-						repeat
-							wait();
-							MousePos = e.HumanoidRootPart.Position;
-							O.Masgun(e, _G.FarmMastery_G);
-							BringEnemy(e)
-							local A = replicated:FindFirstChild("Modules");
-							local u = A:FindFirstChild("Net");
-							local Z = u:FindFirstChild("RE/ShootGunEvent");
-							if (plr.Character:FindFirstChildOfClass("Tool")).ToolTip ~= "Gun" then
-								return;
-							end;
-							if plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name == "Skull Guitar" then
-								SoulGuitar = true;
-								(plr.Character:FindFirstChildOfClass("Tool")).RemoteEvent:FireServer("TAP", MousePos);
-								if _G.FarmMastery_G then
-									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
-									wait(.05);
-									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
-									wait(.05);
-								end;
-							elseif plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name ~= "Skull Guitar" then
-								SoulGuitar = false;
-								Z:FireServer(MousePos, { e.HumanoidRootPart });
-								if _G.FarmMastery_G then
-									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
-									wait(.05);
-									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
-									wait(.05);
-								end;
-							end;
-						until _G.FarmMastery_G == false or e.Humanoid.Health <= 0 or not e.Parent;
-						SoulGuitar = false;
-					else
-						_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
-					end;
-				elseif SelectIsland == "Bone" then
-					local e = GetConnectionEnemies(G);
-					if e then
-						HealthM = (e.Humanoid.MaxHealth * 70) / 100;
-						repeat
-							wait();
-							MousePos = e.HumanoidRootPart.Position;
-							O.Masgun(e, _G.FarmMastery_G);
-							BringEnemy(e)
-							local A = replicated:FindFirstChild("Modules");
-							local u = A:FindFirstChild("Net");
-							local Z = u:FindFirstChild("RE/ShootGunEvent");
-							if (plr.Character:FindFirstChildOfClass("Tool")).ToolTip ~= "Gun" then
-								return;
-							end;
-							if plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name == "Skull Guitar" then
-								SoulGuitar = true;
-								(plr.Character:FindFirstChildOfClass("Tool")).RemoteEvent:FireServer("TAP", MousePos);
-								if _G.FarmMastery_G then
-									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
-									wait(.05);
-									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
-									wait(.05);
-								end;
-							elseif plr.Character:FindFirstChildOfClass("Tool") and (plr.Character:FindFirstChildOfClass("Tool")).Name ~= "Skull Guitar" then
-								SoulGuitar = false;
-								Z:FireServer(MousePos, { e.HumanoidRootPart });
-								if _G.FarmMastery_G then
-									vim1:SendMouseButtonEvent(0, 0, 0, true, game, 1);
-									wait(.05);
-									vim1:SendMouseButtonEvent(0, 0, 0, false, game, 1);
-									wait(.05);
-								end;
-							end;
-						until _G.FarmMastery_G == false or e.Humanoid.Health <= 0 or not e.Parent;
-						SoulGuitar = false;
-					else
-						_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
-					end;
-				end;
-			end);
-		end;
-	end;
-end);
-B:AddToggle({
-	Title = "Auto Mastery All Sword",
-	Description = "",
-	Default = false,
-	Callback = function(e)
-		_G.FarmMastery_S = e;
-	end,
-});
-spawn(function()
-	while wait(Sec) do
-		pcall(function()
-			if _G.FarmMastery_S then
-				if SelectIsland == "Cake" then
-					for e, A in next, replicated.Remotes.CommF_:InvokeServer("getInventory") do
-						if type(A) == "table" then
-							if A.Type == "Sword" then
-								SwordName = A.Name;
-								if tonumber(A.Mastery) >= 1 or tonumber(A.Mastery) <= 599 then
-									local e = GetConnectionEnemies(l);
-									if GetBP(SwordName) then
-										if e then
-											repeat
-												wait();
-												O.Sword(e, _G.FarmMastery_S);
-												BringEnemy(e)
-											until _G.FarmMastery_S == false or not e.Parent or e.Humanoid.Healh <= 0;
-										else
-											_tp(CFrame.new(-1943.6765136719, 251.50956726074, -12337.880859375));
-										end;
-									else
-										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
-									end;
-								elseif tonumber(A.Mastery) >= 600 then
-									if GetBP(SwordName) then
-										return nil;
-									else
-										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
-									end;
-								end;
-								break;
-							end;
-						end;
-					end;
-				elseif SelectIsland == "Bone" then
-					for e, A in next, replicated.Remotes.CommF_:InvokeServer("getInventory") do
-						if type(A) == "table" then
-							if A.Type == "Sword" then
-								SwordName = A.Name;
-								if tonumber(A.Mastery) >= 1 or tonumber(A.Mastery) <= 599 then
-									local e = GetConnectionEnemies(G);
-									if GetBP(SwordName) then
-										if e then
-											repeat
-												wait();
-												O.Sword(e, _G.FarmMastery_S);
-												BringEnemy(e)
-											until _G.FarmMastery_S == false or not e.Parent or e.Humanoid.Healh <= 0;
-										else
-											_tp(CFrame.new(-9495.6806640625, 453.58624267578, 5977.3486328125));
-										end;
-									else
-										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
-									end;
-								elseif tonumber(A.Mastery) >= 600 then
-									if GetBP(SwordName) then
-										return nil;
-									else
-										replicated.Remotes.CommF_:InvokeServer("LoadItem", SwordName);
-									end;
-								end;
-								break;
-							end;
-						end;
-					end;
-				end;
-			end;
-		end);
-	end;
-end);
+
+
 B:AddSeperator("Generals Quests / Items");
 B:AddToggle({
 	Title = "Auto Farm Mirror",
@@ -4478,6 +4483,7 @@ spawn(function()
 		end;
 	end;
 end);
+]]
 z:AddSeperator("Settings / Configure");
 z:AddDropdown({
 	Title = "Select Weapon",
@@ -7959,7 +7965,14 @@ spawn(function()
 								wait(1.5);
 								vim1:SendKeyEvent(false, "E", false, game);
 								wait(0.5)
-								_G.Prehis_Skills = true
+								if plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == true then 
+										_G.Prehis_Skills = true
+										_G.Prehis_Find = false
+								elseif plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then 
+										_G.Prehis_Skills = false
+								else
+										_G.Prehis_Find = true
+								end
 							end;
 							_tp(workspace.Map.PrehistoricIsland.Core.ActivationPrompt.CFrame);
 						end;

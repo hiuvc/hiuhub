@@ -7970,8 +7970,6 @@ spawn(function()
 										_G.Prehis_Find = false
 								elseif plr.PlayerGui.Main.TopHUDList.RaidTimer.Visible == false then 
 										_G.Prehis_Skills = false
-								else
-										_G.Prehis_Find = true
 								end
 							end;
 							_tp(workspace.Map.PrehistoricIsland.Core.ActivationPrompt.CFrame);

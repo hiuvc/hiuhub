@@ -1008,11 +1008,6 @@ _tp = function(target)
     local tweenInfo = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(c, tweenInfo, { CFrame = targetCF })
 
-    -- Xử lý ngồi ghế (nếu có)
-    if char.Humanoid.Sit then
-        char.Humanoid.Sit = false
-    end
-
     tween:Play()
 
     -- Sử dụng Heartbeat thay vì Loop để mượt hơn và tránh treo script
@@ -7963,6 +7958,7 @@ spawn(function()
 								vim1:SendKeyEvent(true, "E", false, game);
 								wait(1.5);
 								vim1:SendKeyEvent(false, "E", false, game);
+								wait(0.5)
 								_G.Prehis_Skills = true
 							end;
 							_tp(workspace.Map.PrehistoricIsland.Core.ActivationPrompt.CFrame);

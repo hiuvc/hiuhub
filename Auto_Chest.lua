@@ -1,430 +1,277 @@
--- // 1. CẤU HÌNH (SETTINGS) & KHỞI TẠO BAN ĐẦU // --
-local ServerHop = loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/main/HopServerModule.lua"))()
-getgenv().Settings = {
-    AutoCollectChest = true,
-    AutoDarkBeard = true,
-    ChestLimit = 40,
-    AutoRejoin = true,
-    Speed = 350,
-    Webhook = "https://discord.com/api/webhooks/1327458507355586631/QQQOWjQcERv1HbHgBqtfihYWh6XpJZbLa2Uq0ISXs4i_sLIin0ECTD2TzjRlIP6_rRXg",
-    AutoExecute = true,
-    Team = "Marines",
-}
-
--- Sử dụng biến cục bộ để truy cập dễ dàng hơn
-local Settings = getgenv().Settings
-
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhDzaiScript/Setting/refs/heads/main/FastMax.lua"))()
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
         local l_Remotes_0 = game.ReplicatedStorage:WaitForChild("Remotes")
-        -- SỬ DỤNG Settings.Team
-        l_Remotes_0.CommF_:InvokeServer("SetTeam", Settings.Team or "Marines")
-        task.wait(5)
+        l_Remotes_0.CommF_:InvokeServer("SetTeam", getgenv().team or "Marines")
+        wait(3)
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.Players.LocalPlayer
 
--- // DỊCH VỤ & BIẾN // --
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-local RunService = game:GetService("RunService")
+if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
+    World1 = true;
+elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
+    World2 = true;
+elseif game.PlaceId == 7449423635 or game.PlaceId == 100117331123089 then
+    World3 = true;
+end;
+
+getgenv().config = {
+    ["Mode"] = "DarkBeard",
+    ["Random Fruit"] = true,
+    ["Collect Fruit"] = true,
+    ["Stop when got item"] = true,
+    ["Attacking"] = {
+        ["Weapon"] = "Melee",
+    }
+}
+
+local player = game.Players.LocalPlayer
+local plr = player -- FIX: Thêm biến plr
 local TweenService = game:GetService("TweenService")
-local VirtualUser = game:GetService("VirtualUser")
+local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
-local CoreGui = game:GetService("CoreGui")
-local GuiService = game:GetService("GuiService")
-local CollectionService = game:GetService("CollectionService")
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 
-local Player = Players.LocalPlayer
-local queue_on_teleport = queue_on_teleport or syn.queue_on_teleport
+-- ========== CONFIG ==========
+local TweenSpeed = 350
+local UpdateInterval = 1
+local ChestCheckInterval = 0.3
+_G.FramChest = false
+_G.DarkBeard = false
+_G.ChooseWP = getgenv().config["Attacking"]["Weapon"] or "Melee"
 
--- SỬ DỤNG Settings.AutoExecute
-if Settings.AutoExecute then
-    if queue_on_teleport then
-        queue_on_teleport([[
-            repeat task.wait() until game:IsLoaded()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Auto_Chest.lua"))()
-        ]])
+-- ========== GUI SETUP ==========
+local function createGUI()
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "DoughOverlay"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.Parent = player:WaitForChild("PlayerGui")
+
+    local background = Instance.new("Frame")
+    background.Size = UDim2.new(1, 0, 1, 0)
+    background.BackgroundColor3 = Color3.new(0, 0, 0)
+    background.BackgroundTransparency = 0.4
+    background.Parent = gui
+
+    local topText = Instance.new("TextLabel")
+    topText.Size = UDim2.new(1, 0, 0.1, 0)
+    topText.Position = UDim2.new(0.5, 0, 0.3, 0)
+    topText.AnchorPoint = Vector2.new(0.5, 0)
+    topText.BackgroundTransparency = 1
+    topText.Text = "Tobii HUB"
+    topText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    topText.TextScaled = true
+    topText.Font = Enum.Font.FredokaOne
+    topText.Parent = background
+
+    local statusText = Instance.new("TextLabel")
+    statusText.Size = UDim2.new(1, 0, 0.10, 0)
+    statusText.Position = UDim2.new(0.5, 0, 0.45, 0)
+    statusText.AnchorPoint = Vector2.new(0.5, 0)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "Status: Loading..."
+    statusText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statusText.TextScaled = true
+    statusText.Font = Enum.Font.FredokaOne
+    statusText.Parent = background
+
+    local timeLabel = Instance.new("TextLabel")
+    timeLabel.Size = UDim2.new(1, 0, 0.05, 0)
+    timeLabel.Position = UDim2.new(0, 0, 0.9, 0)
+    timeLabel.BackgroundTransparency = 1
+    timeLabel.Text = "Time: 0h 0m 0s"
+    timeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    timeLabel.TextScaled = true
+    timeLabel.Font = Enum.Font.FredokaOne
+    timeLabel.Parent = background
+
+    local infoLabel = Instance.new("TextLabel")
+    infoLabel.Size = UDim2.new(0.95, 0, 0.05, 0)
+    infoLabel.Position = UDim2.new(0.025, 0, 0.94, 0)
+    infoLabel.BackgroundTransparency = 1
+    infoLabel.TextColor3 = Color3.new(1, 1, 1)
+    infoLabel.TextScaled = true
+    infoLabel.Font = Enum.Font.FredokaOne
+    infoLabel.Text = "Loading..."
+    infoLabel.Parent = background
+
+    return gui, statusText, timeLabel, infoLabel
+end
+
+local gui, statusText, timeLabel, infoLabel = createGUI()
+
+local function SetStatus(text, color)
+    if not statusText then return end
+    statusText.Text = "Status: " .. tostring(text)
+    if color then
+        statusText.TextColor3 = color
     end
 end
 
-
----
--- // 2. AUTO REJOIN (CHỐNG DISCONNECT/KICK) // --
--- SỬ DỤNG Settings.AutoRejoin
-if Settings.AutoRejoin then
-    local function Rejoin()
-        if #Players:GetPlayers() <= 1 then
-            Player:Kick("\nKai Script: Server vắng, đang Rejoin...")
-            task.wait()
-            TeleportService:Teleport(game.PlaceId, Player)
-        else
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Player)
-        end
-    end
-
-    -- Bắt sự kiện khi bị kick hoặc mất kết nối
-    GuiService.ErrorMessageChanged:Connect(function()
-        print("Kai Script: Detected Kick/Disconnect! Rejoining...")
-        task.wait(0.5)
-        Rejoin()
-    end)
-    
-    -- Bắt sự kiện bảng thông báo lỗi hiện lên
-    task.spawn(function()
-        while task.wait(1) do
-            local prompt = CoreGui:FindFirstChild("RobloxPromptGui")
-            if prompt then
-                local overlay = prompt:FindFirstChild("promptOverlay")
-                if overlay and overlay:FindFirstChild("ErrorPrompt") then
-                    Rejoin()
-                end
-            end
-        end
-    end)
-end
-
----
--- // 3. GIAO DIỆN (UI) // --
-local CoreGui = game:GetService("CoreGui")
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local Title = Instance.new("TextLabel")
-local Status = Instance.new("TextLabel")
-local Info = Instance.new("TextLabel")
-local UICorner = Instance.new("UICorner")
-local UIStroke = Instance.new("UIStroke")
-
-ScreenGui.Name = "KaiAutoChest"
-ScreenGui.Parent = CoreGui
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-
--- 🟩 Căn giữa màn hình
-Frame.Position = UDim2.new(0.5, -130, 0.5, -70)
-Frame.Size = UDim2.new(0, 260, 0, 140)
-
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = Frame
-
-UIStroke.Parent = Frame
-UIStroke.Color = Color3.fromRGB(0, 255, 150)
-UIStroke.Thickness = 1.5
-
-Title.Parent = Frame
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 0, 0.05, 0)
-Title.Size = UDim2.new(1, 0, 0, 25)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "AUTO CHEST & REJOIN"
-Title.TextColor3 = Color3.fromRGB(0, 255, 150)
-Title.TextSize = 18
-
-Status.Parent = Frame
-Status.BackgroundTransparency = 1
-Status.Position = UDim2.new(0, 10, 0.35, 0)
-Status.Size = UDim2.new(1, -20, 0, 40)
-Status.Font = Enum.Font.Gotham
-Status.Text = "Status: Loading..."
-Status.TextColor3 = Color3.fromRGB(200, 200, 200)
-Status.TextSize = 14
-Status.TextWrapped = true
-Status.TextXAlignment = Enum.TextXAlignment.Center
-
-Info.Parent = Frame
-Info.BackgroundTransparency = 1
-Info.Position = UDim2.new(0, 10, 0.7, 0)
-Info.Size = UDim2.new(1, -20, 0, 25)
-Info.Font = Enum.Font.Gotham
-Info.Text = "Chest: 0 | Beli: 0"
-Info.TextColor3 = Color3.fromRGB(255, 255, 100)
-Info.TextSize = 14
-Info.TextXAlignment = Enum.TextXAlignment.Center
-
-
--- // GLOBAL VARS // --
-getgenv().CollectedCount = 0
-getgenv().StopScript = false
-getgenv().AttackCooldown = 0.1 -- Đặt ở đây hoặc trong Settings, giữ nguyên để không làm thay đổi logic Attack
-
-local Players = game:GetService("Players")
-local Player = Players.LocalPlayer
-
-local function UpdateStatus(text)
-    Status.Text = "Status: " .. text
-end
-
-local function UpdateInfo()
-    if Player:FindFirstChild("Data") and Player.Data:FindFirstChild("Beli") then
-        Info.Text = "Chest: " .. getgenv().CollectedCount .. " | Beli: " .. math.floor(Player.Data.Beli.Value)
-    end
-end
-
-
--- // DRAG UI (PC + MOBILE) // --
-local UIS = game:GetService("UserInputService")
-local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    Frame.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
-end
-
-Frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 
-    or input.UserInputType == Enum.UserInputType.Touch then
+-- ========== INFO UPDATE ==========
+local seconds = 0
+task.spawn(function()
+    while task.wait(UpdateInterval) do
+        seconds += UpdateInterval
+        local hrs = math.floor(seconds / 3600)
+        local mins = math.floor((seconds % 3600) / 60)
+        local secs = math.floor(seconds % 60)
+        timeLabel.Text = string.format("Time: %dh %dm %ds", hrs, mins, secs)
         
-        dragging = true
-        dragStart = input.Position
-        startPos = Frame.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+        pcall(function()
+            local data = player.Data
+            infoLabel.Text = string.format("Player: %s | Level: %d | Beli: %d | Fragments: %d",
+                player.DisplayName,
+                data.Level.Value,
+                data.Beli.Value,
+                data.Fragments.Value
+            )
         end)
     end
 end)
 
-Frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement 
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
+local function ShowBlackScreen()
+    local hopGui = Instance.new("ScreenGui")
+    hopGui.Name = "HopUI"
+    hopGui.ResetOnSpawn = false
+    hopGui.IgnoreGuiInset = true
+    hopGui.Parent = game:GetService("CoreGui")
 
-UIS.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        update(input)
-    end
-end)
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = Color3.new(0, 0, 0)
+    bg.Parent = hopGui
 
-
----
--- // HÀM HỖ TRỢ (FUNCTIONS) // --
-
--- Webhook
-local function SendWebhook(title, desc)
-    -- SỬ DỤNG Settings.Webhook
-    if Settings.Webhook == "" then return end
-    local embed = {
-        ["title"] = title,
-        ["description"] = desc,
-        ["color"] = 65280,
-        ["footer"] = {["text"] = "Kai Auto • " .. os.date("%H:%M:%S")}
-    }
-    pcall(function()
-        (syn and syn.request or http_request or request)({
-            Url = Settings.Webhook,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = HttpService:JSONEncode({["embeds"] = {embed}})
-        })
-    end)
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 0.3, 0)
+    text.Position = UDim2.new(0, 0, 0.35, 0)
+    text.BackgroundTransparency = 1
+    text.Text = "Auto Collect Chest | by Minhieu_.\nHopping Server..."
+    text.TextColor3 = Color3.fromRGB(255, 170, 0)
+    text.Font = Enum.Font.SourceSansBold
+    text.TextScaled = true
+    text.Parent = bg
 end
 
--- Anti AFK
-Player.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    VirtualUser:Button2Up(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
-end)
+-- ========== CHARACTER UTILS ==========
+local function getCharacter()
+    local char = player.Character
+    if not char then
+        char = player.CharacterAdded:Wait()
+    end
+    return char
+end
 
--- Noclip (Optimized)
+local function getHRP()
+    local char = getCharacter()
+    return char:WaitForChild("HumanoidRootPart", 3)
+end
+
+-- ========== CHEST CACHE ==========
+local ChestCache = {}
+local LastChestUpdate = 0
+local ChestUpdateCooldown = 0.15 -- giảm để tránh cache rỗng
+
+local function isValidChest(part)
+    return part
+        and part:IsA("BasePart")
+        and part.Parent
+        and part:IsDescendantOf(Workspace)
+        and part:FindFirstChild("TouchInterest")
+end
+
+local function updateChestCache(force)
+    local now = tick()
+
+    if not force and (now - LastChestUpdate) < ChestUpdateCooldown and #ChestCache > 0 then
+        return ChestCache
+    end
+
+    LastChestUpdate = now
+    table.clear(ChestCache)
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj.Name:find("Chest") then
+            if isValidChest(obj) then
+                table.insert(ChestCache, obj)
+            else
+                local part = obj:FindFirstChildWhichIsA("BasePart")
+                if isValidChest(part) then
+                    table.insert(ChestCache, part)
+                end
+            end
+        end
+    end
+
+    return ChestCache
+end
+
+-- ========== GET CLOSEST CHEST ==========
+local function getClosestChest()
+    local hrp = getHRP()
+    if not hrp then return nil end
+
+    local chests = updateChestCache()
+    if not chests or #chests == 0 then
+        chests = updateChestCache(true) -- ép scan lại
+        if #chests == 0 then return nil end
+    end
+
+    local rootPos = hrp.Position
+    local closest, minDist = nil, math.huge
+
+    for _, chest in ipairs(chests) do
+        if isValidChest(chest) then
+            local dist = (rootPos - chest.Position).Magnitude
+            if dist < minDist then
+                minDist = dist
+                closest = chest
+            end
+        end
+    end
+
+    return closest
+end
+
+
+-- ========== NOCLIP ==========
+local BodyClip = nil
 task.spawn(function()
     while task.wait(0.5) do
-        pcall(function()
-            if Player.Character then
-                for _, v in pairs(Player.Character:GetChildren()) do
-                    if v:IsA("BasePart") then v.CanCollide = false end
+        if _G.FramChest or _G.DarkBeard then
+            pcall(function()
+                local char = player.Character
+                if not char then return end
+                
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if hrp and not hrp:FindFirstChild("BodyClip") then
+                    BodyClip = Instance.new("BodyVelocity")
+                    BodyClip.Name = "BodyClip"
+                    BodyClip.Parent = hrp
+                    BodyClip.MaxForce = Vector3.new(100000, 100000, 100000)
+                    BodyClip.Velocity = Vector3.zero
                 end
-            end
-        end)
+            end)
+        end
     end
 end)
 
--- Global cooldown
-getgenv().Seriality = getgenv().Seriality or false
-local lastAttackTime = 0
-
--- Services (Đã khai báo ở trên, chỉ giữ lại phần cần thiết cho logic Attack)
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-
--- CameraShaker
-local CameraShakerR = require(ReplicatedStorage.Util.CameraShaker)
-CameraShakerR:Stop()
-
---Check if entity alive
-local function IsEntityAlive(entity)
-    local humanoid = entity:FindFirstChildOfClass("Humanoid")
-    return humanoid and humanoid.Health > 0
-end
-
--- Get enemies and players in range
-local function GetEnemiesInRange(character, range)
-    local enemies = Workspace.Enemies:GetChildren()
-    local players = Players:GetPlayers()
-    local targets = {}
-    local playerPos = character:GetPivot().Position
-
-    for _, enemy in ipairs(enemies) do
-        local rootPart = enemy:FindFirstChild("HumanoidRootPart")
-        if rootPart and IsEntityAlive(enemy) then
-            if (rootPart.Position - playerPos).Magnitude <= range then
-                table.insert(targets, enemy)
-            end
-        end
-    end
-
-    for _, otherPlayer in ipairs(players) do
-        if otherPlayer ~= player and otherPlayer.Character then
-            local rootPart = otherPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if rootPart and IsEntityAlive(otherPlayer.Character) then
-                if (rootPart.Position - playerPos).Magnitude <= range then
-                    table.insert(targets, otherPlayer.Character)
-                end
-            end
-        end
-    end
-
-    return targets
-end
-
--- Attack function with global cooldown
-local function Attack()
-    local currentTime = tick()
-    if currentTime - lastAttackTime < getgenv().AttackCooldown then return end
-
-    local character = player.Character
-    if not character then return end
-
-    local equippedWeapon = character:FindFirstChildOfClass("Tool")
-    if not equippedWeapon then return end
-
-    local enemiesInRange = GetEnemiesInRange(character, 60)
-    if #enemiesInRange == 0 then return end
-
-    local modules = ReplicatedStorage:FindFirstChild("Modules")
-    if not modules then return end
-
-    local attackEvent = modules:WaitForChild("Net"):WaitForChild("RE/RegisterAttack")
-    local hitEvent = modules:WaitForChild("Net"):WaitForChild("RE/RegisterHit")
-    if not attackEvent or not hitEvent then return end
-
-    local targets, mainTarget = {}, nil
-    for _, enemy in ipairs(enemiesInRange) do
-        if not enemy:GetAttribute("IsBoat") then
-            local HitboxLimbs = {"RightLowerArm","RightUpperArm","LeftLowerArm","LeftUpperArm","RightHand","LeftHand"}
-            local hitPart = enemy:FindFirstChild(HitboxLimbs[math.random(#HitboxLimbs)]) or enemy.PrimaryPart
-            if hitPart then
-                table.insert(targets, {enemy, hitPart})
-                mainTarget = hitPart
-            end
-        end
-    end
-    if not mainTarget then return end
-
-    attackEvent:FireServer(0)
-
-    local playerScripts = player:FindFirstChild("PlayerScripts")
-    if playerScripts then
-        local localScript = playerScripts:FindFirstChildOfClass("LocalScript")
-        while not localScript do
-            playerScripts.ChildAdded:Wait()
-            localScript = playerScripts:FindFirstChildOfClass("LocalScript")
-        end
-
-        local hitFunction
-        if getsenv then
-            local success, scriptEnv = pcall(getsenv, localScript)
-            if success and scriptEnv then
-                hitFunction = scriptEnv._G.SendHitsToServer
-            end
-        end
-
-        local successFlags, combatRemoteThread = pcall(function()
-            return require(modules.Flags).COMBAT_REMOTE_THREAD or false
-        end)
-
-        if successFlags and combatRemoteThread and hitFunction then
-            hitFunction(mainTarget, targets)
-        elseif successFlags and not combatRemoteThread then
-            hitEvent:FireServer(mainTarget, targets)
-        end
-    end
-
-    lastAttackTime = tick()
-end
-
--- Get monster near player
-local function get_Monster()
-    for _, enemy in pairs(Workspace.Enemies:GetChildren()) do
-        local c = enemy:FindFirstChild("UpperTorso") or enemy:FindFirstChild("Head")
-        if enemy:FindFirstChild("HumanoidRootPart", true) and c then
-            if (c.Position - player.Character.HumanoidRootPart.Position).Magnitude <= 50 then
-                return true, c.Position
-            end
-        end
-    end
-    for _, beast in pairs(Workspace.SeaBeasts:GetChildren()) do
-        if beast:FindFirstChild("HumanoidRootPart") and beast:FindFirstChild("Health") and beast.Health.Value > 0 then
-            return true, beast.HumanoidRootPart.Position
-        end
-    end
-    for _, vehicle in pairs(Workspace.Enemies:GetChildren()) do
-        if vehicle:FindFirstChild("Health") and vehicle.Health.Value > 0 and vehicle:FindFirstChild("VehicleSeat") then
-            return true, vehicle.Engine.Position
-        end
-    end
-    return false, nil
-end
-
--- Activate tool function
-local function Actived()
-    local tool = player.Character:FindFirstChildOfClass("Tool")
-    if tool then
-        for _, c in next, getconnections(tool.Activated) do
-            if typeof(c.Function) == 'function' then
-                getupvalues(c.Function)
-            end
-        end
-    end
-end
-
--- Main Attack Loop
+local noclipConnection
 task.spawn(function()
-    RunService.Heartbeat:Connect(function()
-        pcall(function()
-            if not getgenv().Seriality then return end
-
-            -- Attack normal enemies
-            Attack()
-
-            -- MobAura/Blox Fruit attack
-            local tool = player.Character:FindFirstChildOfClass("Tool")
-            if tool then
-                local ToolTip = tool.ToolTip
-                local MobAura, Mon = get_Monster()
-                if ToolTip == "Blox Fruit" and MobAura then
-                    local currentTime = tick()
-                    if currentTime - lastAttackTime >= getgenv().AttackCooldown then
-                        local LeftClickRemote = tool:FindFirstChild('LeftClickRemote')
-                        if LeftClickRemote then
-                            Actived()
-                            LeftClickRemote:FireServer(Vector3.new(0.01, -500, 0.01), 1, true)
-                            LeftClickRemote:FireServer(false)
-                            lastAttackTime = tick()
-                        end
+    pcall(function()
+        noclipConnection = RunService.Stepped:Connect(function()
+            if _G.FramChest or _G.DarkBeard then
+                local char = player.Character
+                if not char then return end
+                
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
                     end
                 end
             end
@@ -432,414 +279,314 @@ task.spawn(function()
     end)
 end)
 
--- Equip Weapon
-local function EquipWeapon(name)
-    local Backpack = Player.Backpack
-    local Char = Player.Character
-    if Char and not Char:FindFirstChild(name) and Backpack:FindFirstChild(name) then
-        Char.Humanoid:EquipTool(Backpack[name])
-    end
-end
-
-
--- Cờ trạng thái
-local isTweening = false       
-local allowBypass = false        
-local bypassDistance = 3500
-local defaultTweenSpeed = 350
-
--- Đợi HumanoidRootPart
-function WaitHumanoidRootPart(player)
-    if not player then return end
-    -- Đã sửa: kiểm tra nếu Character tồn tại trước khi gọi WaitForChild
-    return player.Character and player.Character:WaitForChild("HumanoidRootPart", 9)
-end
-
--- Tìm tele gần nhất (Giữ nguyên)
-function CheckNearestTeleporter(targetCF)
-    local placeId = game.PlaceId
-    local targetPos = targetCF.Position
-    local teleList = {}
-
-    if placeId == 2753915549 then -- First Sea
-        teleList = {
-            Sky3 = Vector3.new(-7894, 5547, -380),
-            Sky3Exit = Vector3.new(-4607, 874, -1667),
-            UnderWater = Vector3.new(61163, 11, 1819),
-            UnderwaterExit = Vector3.new(4050, -1, -1814)
-        }
-    elseif placeId == 4442272183 then -- Second Sea
-        teleList = {
-            ["Swan Mansion"] = Vector3.new(-390, 332, 673),
-            ["Swan Room"] = Vector3.new(2285, 15, 905),
-            ["Cursed Ship"] = Vector3.new(923, 126, 32852),
-            ["Zombie Island"] = Vector3.new(-6509, 83, -133)
-        }
-    elseif placeId == 7449423635 then -- Third Sea
-        teleList = {
-            ["Floating Turtle"] = Vector3.new(-12462, 375, -7552),
-            ["Hydra Island"] = Vector3.new(5745, 610, -267),
-            Mansion = Vector3.new(-12462, 375, -7552),
-            Castle = Vector3.new(-5036, 315, -3179),
-            ["Beautiful Pirate"] = Vector3.new(5319, 23, -93),
-            ["Beautiful Room"] = Vector3.new(5314.58, 22.53, -125.94),
-            ["Temple of Time"] = Vector3.new(28286, 14897, 103)
-        }
-    end
-
-    local nearest, minDist = nil, math.huge
-    for _, pos in pairs(teleList) do
-        local dist = (pos - targetPos).Magnitude
-        if dist < minDist then
-            minDist = dist
-            nearest = pos
-        end
-    end
-
-    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not _G.Framing and hrp then
-        local distToTarget = (targetPos - hrp.Position).Magnitude
-        if minDist < 2000 and distToTarget > bypassDistance then
-            return nearest
-        end
-    end
-end
-
--- Gửi requestEntrance (Giữ nguyên)
-function RequestEntrance(pos)
-    local success = pcall(function()
-        game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", pos)
-    end)
-    if success then
-        local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
-        end
-        task.wait(0.5)
-    end
-end
-
--- Dừng tween (Giữ nguyên)
-function StopTween()
-    _G.StopTween = true
-    task.wait()
-
-    local player = game.Players.LocalPlayer
-    local character = player and player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-
-    if hrp then hrp.CFrame = hrp.CFrame end
-    if hrp and hrp:FindFirstChild("BodyClip") then hrp.BodyClip:Destroy() end
-    if character and character:FindFirstChild("Highlight") then character.Highlight:Destroy() end
-
-    _G.Clip = false
-    _G.StopTween = false
-    isTweening = false -- Cập nhật cờ trạng thái
-end
-
--- Tween đến vị trí target
-function topos(target)
-    local player = game.Players.LocalPlayer
-    local character = player and player.Character
-    local humanoid = character and character:FindFirstChild("Humanoid")
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-
-    if not (character and humanoid and humanoid.Health > 0 and hrp) then
-        warn("TweenToPosition: nhân vật không hợp lệ hoặc đã chết")
-        return
-    end
-
-    if not target or (typeof(target) ~= "CFrame" and typeof(target) ~= "Vector3") then
-        warn("TweenToPosition: target không hợp lệ")
-        return
-    end
-
-    local targetCFrame = typeof(target) == "Vector3" and CFrame.new(target) or target
-    local distance = (targetCFrame.Position - hrp.Position).Magnitude
-    
-    -- *** BẮT ĐẦU: Logic ngăn ngồi ***
-    local originalSit = humanoid.Sit
-    local originalSeated = humanoid.Seated
-    
-    -- Tắt hành vi ngồi mặc định
-    humanoid.PlatformStand = true
-    humanoid.Sit = false
-
-    local function blockSit()
-        -- Gán Seated=true sau đó trả về false để ngăn hành động ngồi mà không thực sự ngồi
-        return false
-    end
-
-    -- Kết nối hàm blockSit vào thuộc tính Seated và sự kiện Sit
-    local seatedConnection = humanoid:GetPropertyChangedSignal("Seated"):Connect(function()
-        if humanoid.Seated then
-            humanoid.Seated = false
+-- Anti-stun
+task.spawn(function()
+    player.CharacterAdded:Connect(function(char)
+        local stun = char:WaitForChild("Stun", 5)
+        if stun then
+            stun.Changed:Connect(function()
+                stun.Value = 0
+            end)
         end
     end)
+end)
 
-    local sitConnection = humanoid:GetPropertyChangedSignal("Sit"):Connect(function()
-        if humanoid.Sit then
-            humanoid.Sit = false
-        end
-    end)
-    
-    -- *** KẾT THÚC: Logic ngăn ngồi ***
-
-    -- Kiểm tra có nên teleport không
-    local nearestTele = CheckNearestTeleporter(targetCFrame)
-    if nearestTele then
-        RequestEntrance(nearestTele)
-        task.wait(0.5)
-    end
-
-    -- Tạo PartTele nếu chưa có (Giữ nguyên)
-    if not character:FindFirstChild("PartTele") then
-        local part = Instance.new("Part")
-        part.Size = Vector3.new(10, 1, 10)
-        part.Name = "PartTele"
-        part.Anchored = true
-        part.Transparency = 1
-        part.CanCollide = false
-        part.CFrame = hrp.CFrame
-        part.Parent = character
-
-        part:GetPropertyChangedSignal("CFrame"):Connect(function()
-            if not isTweening then return end
-            task.wait()
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                local cf = part.CFrame
-                hrp.CFrame = CFrame.new(cf.Position.X, targetCFrame.Position.Y, cf.Position.Z)
+-- ========== WEAPON SELECTION ==========
+spawn(function()
+    while wait(0.1) do
+        pcall(function()
+            if _G.ChooseWP == "Melee" then
+                for e, A in pairs(plr.Backpack:GetChildren()) do
+                    if A.ToolTip == "Melee" then
+                        if plr.Backpack:FindFirstChild(tostring(A.Name)) then
+                            _G.SelectWeapon = A.Name
+                        end
+                    end
+                end
+            elseif _G.ChooseWP == "Sword" then
+                for e, A in pairs(plr.Backpack:GetChildren()) do
+                    if A.ToolTip == "Sword" then
+                        if plr.Backpack:FindFirstChild(tostring(A.Name)) then
+                            _G.SelectWeapon = A.Name
+                        end
+                    end
+                end
+            elseif _G.ChooseWP == "Gun" then
+                for e, A in pairs(plr.Backpack:GetChildren()) do
+                    if A.ToolTip == "Gun" then
+                        if plr.Backpack:FindFirstChild(tostring(A.Name)) then
+                            _G.SelectWeapon = A.Name
+                        end
+                    end
+                end
+            elseif _G.ChooseWP == "Blox Fruit" then
+                for e, A in pairs(plr.Backpack:GetChildren()) do
+                    if A.ToolTip == "Blox Fruit" then
+                        if plr.Backpack:FindFirstChild(tostring(A.Name)) then
+                            _G.SelectWeapon = A.Name
+                        end
+                    end
+                end
             end
         end)
     end
+end)
+
+-- ========== TWEEN MOVEMENT ==========
+local currentTween = nil
+
+local function Tween(targetCFrame)
+    if currentTween then
+        currentTween:Cancel()
+    end
     
-    isTweening = true
-
-    if allowBypass and distance > bypassDistance then
-        if typeof(bypass) == "function" then
-            bypass(targetCFrame)
-        end
-    end
-
-    local speed = Settings.Speed or defaultTweenSpeed
-    if distance <= 250 then
-        speed = speed * 3
-    end
-
-    local tweenInfo = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
-    local tween = game:GetService("TweenService"):Create(character.PartTele, tweenInfo, {
-        CFrame = targetCFrame
-    })
-
-    tween:Play()
-
-    tween.Completed:Connect(function(state)
-        -- *** BẮT ĐẦU: Phục hồi trạng thái ***
-        seatedConnection:Disconnect()
-        sitConnection:Disconnect()
-        
-        -- Phục hồi lại trạng thái Humanoid
-        humanoid.PlatformStand = false 
-        humanoid.Sit = originalSit
-        humanoid.Seated = originalSeated
-        -- *** KẾT THÚC: Phục hồi trạng thái ***
-        
-        if state == Enum.PlaybackState.Completed then
-            if character:FindFirstChild("PartTele") then
-                character.PartTele:Destroy()
-            end
-            isTweening = false
-        else
-             -- Nếu tween bị hủy (ví dụ: StopTween được gọi), ta vẫn phải dọn dẹp
-            isTweening = false
-            if character:FindFirstChild("PartTele") then
-                character.PartTele:Destroy()
-            end
-        end
-    end)
+    local char = getCharacter()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local distance = (targetCFrame.Position - hrp.Position).Magnitude
+    local speed = distance >= 350 and TweenSpeed or TweenSpeed * 0.8
+    
+    local tweenInfo = TweenInfo.new(
+        distance / speed,
+        Enum.EasingStyle.Linear,
+        Enum.EasingDirection.Out
+    )
+    
+    currentTween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    currentTween:Play()
+    
+    return currentTween
 end
 
-function Tween(target)
-    topos(target)
+function AutoHaki()
+    if not game:GetService("Players").LocalPlayer.Character:FindFirstChild("HasBuso") then
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+    end
 end
 
+function EquipWeapon(e)
+    if not e then return end
+    if player.Backpack:FindFirstChild(e) then
+        player.Character.Humanoid:EquipTool(player.Backpack:FindFirstChild(e))
+    end
+end
 
-Hop = function()
-        pcall(function()
-            for e = math.random(1, math.random(40, 75)), 100, 1 do
-                local A = replicated.__ServerBrowser:InvokeServer(e);
-                for e, A in next, A do
-                    if tonumber(A.Count) < 12 then
-                        TeleportService:TeleportToPlaceInstance(game.PlaceId, e);
-                    end;
-                end;
-            end;
-        end);
-    end;
+local O = {}
+O.__index = O
 
--- // DARKBEARD LOGIC // --
-local function CheckRareItems()
-    local Char = Player.Character
-    local Backpack = Player.Backpack
-    if Char:FindFirstChild("God's Chalice") or Backpack:FindFirstChild("God's Chalice") then
-        return "God's Chalice"
-    elseif Char:FindFirstChild("Fist of Darkness") or Backpack:FindFirstChild("Fist of Darkness") then
-        return "Fist of Darkness"
+function O.Kill(e, A)
+    if not e or not A then return end
+    
+    local humanoidRootPart = e:FindFirstChild("HumanoidRootPart")
+    if not humanoidRootPart then return end
+    
+    if not e:GetAttribute("Locked") then
+        e:SetAttribute("Locked", humanoidRootPart.CFrame)
+    end
+    
+    PosMon = e:GetAttribute("Locked").Position
+    AutoHaki()
+    EquipWeapon(_G.SelectWeapon)
+    
+    local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    if not tool then return end
+    
+    local toolTip = tool.ToolTip
+    
+    local initialOffset = CFrame.new(0, toolTip == "Blox Fruit" and 10 or 30, 0)
+    local initialRotation = CFrame.Angles(0, math.rad(toolTip == "Blox Fruit" and 90 or 180), 0)
+    Tween(humanoidRootPart.CFrame * initialOffset * initialRotation)
+    
+    if RandomCFrame then
+        task.wait(0.2)
+        
+        local offsets = {
+            Vector3.new(0, 30, 30),
+            Vector3.new(30, 30, 0),
+            Vector3.new(0, 30, 30),
+            Vector3.new(-30, 30, 0)
+        }
+        
+        for _, offset in ipairs(offsets) do
+            if not e or not e.Parent then break end
+            if not humanoidRootPart then break end
+            
+            Tween(humanoidRootPart.CFrame * CFrame.new(offset))
+            task.wait(0.15)
+        end
+    end
+end
+
+local function FindFruit()
+    for _,obj in pairs(workspace:GetChildren()) do
+        if obj:IsA("Tool") and string.find(obj.Name, "Fruit") then
+            local handle = obj:FindFirstChild("Handle")
+            if handle then
+                return handle
+            end
+        end
     end
     return nil
 end
 
-local function SummonDarkbeard()
-    local AltarPos = CFrame.new(3777, 14, -3499)
-    UpdateStatus("Summoning Darkbeard...")
-    EquipWeapon("Fist of Darkness")
-    Tween(AltarPos)
-end
--- // AUTO HAKI // --
-task.spawn(function()
-    while task.wait(5) do
-        pcall(function()
-            if Player.Character and not Player.Character:FindFirstChild("HasBuso") then
-                ReplicatedStorage.Remotes.CommF_:InvokeServer("Buso")
-            end
-        end)
-    end
-end)
-local function FightDarkbeard(Boss)
-    UpdateStatus("Fighting Darkbeard...")
-    -- Tự động chọn vũ khí Melee hoặc Sword tốt nhất
-    local bestWeapon = nil
-    for _,v in pairs(Player.Backpack:GetChildren()) do
-        if v.ToolTip == "Melee" or v.ToolTip == "Sword" then bestWeapon = v.Name break end
-    end
-    if bestWeapon then EquipWeapon(bestWeapon) end
+function StoreFruit()
+    local backpack = game.Players.LocalPlayer.Backpack
+    local remoteFolder = game:GetService("ReplicatedStorage"):WaitForChild("Remotes")
+    local commF = remoteFolder:WaitForChild("CommF_")
     
-    local BossHRP = Boss:FindFirstChild("HumanoidRootPart")
-    if BossHRP then
-        local AttackPos = BossHRP.CFrame * CFrame.new(0, 15, 0)
-        getgenv().Seriality = true
-        Tween(AttackPos)
-    end
-end
-
----
--- // MAIN LOGIC // --
-task.spawn(function()
-    -- Lấy các biến cần thiết
-    local Player = game.Players.LocalPlayer
-    local CollectionService = game:GetService("CollectionService")
-
-    -- Hàm nhảy
-    local function Jump()
-        local character = Player.Character
-        local humanoid = character and character:FindFirstChild("Humanoid")
-        if humanoid then
-            -- Tắt PlatformStand nếu đang bật (từ chức năng ngăn ngồi) để cho phép nhảy
-            humanoid.PlatformStand = false
-            -- Kích hoạt trạng thái nhảy của Humanoid
-            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            -- Có thể chờ một chút và bật lại PlatformStand nếu cần (tùy thuộc vào logic script khác)
-            task.wait(0.1)
+    for _, item in pairs(backpack:GetChildren()) do
+        if item:FindFirstChild("EatRemote") then
+            local fruitName = item:GetAttribute("OriginalName") or item.Name
+            
+            local success, result = pcall(function()
+                return commF:InvokeServer("StoreFruit", fruitName, item)
+            end)
+            
+            if success then
+                print("Đã store fruit: " .. fruitName)
+            else
+                print("Lỗi khi store fruit: " .. fruitName .. " - " .. tostring(result))
+            end
         end
     end
-    
-    while task.wait() do
+end
+
+function GetBP(e)
+    return player.Backpack:FindFirstChild(e) or player.Character:FindFirstChild(e)
+end
+
+function GetConnectionEnemies(e)
+    for A, u in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
+        if u:IsA("Model") and ((typeof(e) == "table" and table.find(e, u.Name) or u.Name == e) and (u:FindFirstChild("Humanoid") and u.Humanoid.Health > 0)) then
+            return u
+        end
+    end
+    for A, u in next, game.Workspace.Enemies:GetChildren() do
+        if u:IsA("Model") and ((typeof(e) == "table" and table.find(e, u.Name) or u.Name == e) and (u:FindFirstChild("Humanoid") and u.Humanoid.Health > 0)) then
+            return u
+        end
+    end
+end
+
+-- ========== CHEST FARMING ==========
+local lastJumpedChest = nil
+local lastJumpTime = 0
+local jumpCooldown = 1
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.FramChest then
+            SetStatus("Fram Chest", Color3.fromRGB(255, 255, 255))
+            task.wait(ChestCheckInterval)
+
+            local chest = getClosestChest()
+            local fruit = FindFruit()
+            
+            if chest then
+                Tween(chest.CFrame)
+
+                local char = player.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+                if hrp and hum then
+                    local dist = (hrp.Position - chest.Position).Magnitude
+                    local now = tick()
+
+                    if dist < 8 and chest ~= lastJumpedChest and (now - lastJumpTime) > jumpCooldown then
+                        lastJumpedChest = chest
+                        lastJumpTime = now
+                        task.wait(0.5)
+                        hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                    end
+
+                    if dist > 15 and chest == lastJumpedChest then
+                        lastJumpedChest = nil
+                    end
+                end
+            end
+
+            if fruit and getgenv().config["Collect Fruit"] then
+                SetStatus("Collecting Fruit", Color3.fromRGB(255, 255, 255))
+                _G.FramChest = false
+                Tween(fruit.CFrame)
+                task.wait(1)
+                StoreFruit()
+                _G.FramChest = true
+            end
+
+            if getgenv().config["Stop when got item"] and getgenv().config["Mode"] == "Normal" then
+                if GetBP("Fist of Darkness") or GetBP("God's Chalice") then
+                    _G.FramChest = false
+                    if World2 then
+                        Tween(CFrame.new(-380.47927856445, 77.220390319824, 255.82550048828))
+                    elseif World3 then
+                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+                            "requestEntrance",
+                            Vector3.new(-12471.17, 374.94, -7551.68)
+                        )
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- ========== DARK BEARD MODE ==========
+task.spawn(function()
+    if getgenv().config["Mode"] == "DarkBeard" then
+        _G.DarkBeard = true
+        
+        while task.wait(0.1) do
+            if _G.DarkBeard then
+                if not workspace.Enemies:FindFirstChild("Darkbeard") and GetBP("Fist of Darkness") then
+                    SetStatus("Summon Dark Beard", Color3.fromRGB(255, 255, 255))
+                    _G.FramChest = false
+                    EquipWeapon("Fist of Darkness")
+                    Tween(CFrame.new(3776, 15, -3500))
+                    
+                elseif GetConnectionEnemies("Darkbeard") or workspace.Enemies:FindFirstChild("Darkbeard") then
+                    SetStatus("Attack Dark Beard", Color3.fromRGB(255, 255, 255))
+                    _G.FramChest = false
+                    local e = GetConnectionEnemies("Darkbeard")
+                    if e then
+                        repeat
+                            wait()
+                            O.Kill(e, _G.DarkBeard)
+                        until _G.DarkBeard == false or not e.Parent or e.Humanoid.Health <= 0
+                    end
+                    
+                elseif not GetBP("Fist of Darkness") and not GetConnectionEnemies("Darkbeard") then
+                    _G.FramChest = true
+                end
+            end
+        end
+    else
+        -- FIX: Bật farm chest cho mode Normal
+        _G.FramChest = true
+        print("Mode Normal - Auto Farm Chest Started!")
+    end
+end)
+
+-- ========== RANDOM FRUIT ==========
+spawn(function()
+    while wait(5) do
         pcall(function()
-            if getgenv().StopScript then return end
-            UpdateInfo()
-            
-            -- Check Rare Item (Giữ nguyên)
-            local RareItem = CheckRareItems()
-            if RareItem == "God's Chalice" then
-                getgenv().AutoCollectChest = false
-                UpdateStatus("GOT CHALICE! HIDING...")
-                SendWebhook("RARE ITEM", "Tìm thấy God's Chalice! Dừng farm để bảo toàn.")
-                if game.PlaceId == 7449423635 then Tween(CFrame.new(-12470, 375, -7550)) end
-                getgenv().StopScript = true
-                return
-            elseif RareItem == "Fist of Darkness" and Settings.AutoDarkBeard then
-                SummonDarkbeard()
-                return
-            end
-            
-            -- Check Darkbeard (Giữ nguyên)
-            local Darkbeard = Workspace.Enemies:FindFirstChild("Darkbeard")
-            if Darkbeard and Darkbeard:FindFirstChild("Humanoid") and Darkbeard.Humanoid.Health > 0 and Settings.AutoDarkBeard then
-                FightDarkbeard(Darkbeard)
-                return
-            end
-            
-            -- Auto Chest (Đã sửa đổi)
-            if Settings.AutoCollectChest then
-                if getgenv().CollectedCount >= Settings.ChestLimit then
-                    Hop()
-                    return
-                end
-
-                local Chests = CollectionService:GetTagged("_ChestTagged")
-                local NearestChest = nil
-                local MinDist = math.huge
-                
-                local hrp = Player.Character.HumanoidRootPart -- Lấy HumanoidRootPart một lần
-                
-                for _, Chest in pairs(Chests) do
-                    if Chest.Parent and Chest:FindFirstChild("TouchInterest") then
-                        local Dist = (hrp.Position - Chest.Position).Magnitude
-                        if Dist < MinDist then
-                            MinDist = Dist
-                            NearestChest = Chest
-                        end
-                    end
-                end
-                
-                if NearestChest then
-                    UpdateStatus("Collecting Chest...")
-                    
-                    local BeliData = Player:FindFirstChild("Data") and Player.Data:FindFirstChild("Beli")
-                    local initialBeli = BeliData and BeliData.Value or 0
-                    local beliChanged = false
-                    
-                    local BeliCheckConnection
-                    if BeliData then -- Đảm bảo BeliData tồn tại trước khi kết nối
-                        BeliCheckConnection = BeliData.Changed:Connect(function(newBeliValue)
-                            if newBeliValue > initialBeli then
-                                beliChanged = true
-                            end
-                        end)
-                    end
-                    
-                    -- Di chuyển đến rương
-                    Tween(NearestChest.CFrame)
-                    
-                    -- *** THÊM LỆNH NHẢY TẠI ĐÂY ***
-                    Jump() 
-                    -- Tùy chọn: task.wait(0.2) nếu cần thêm độ trễ sau khi nhảy
-                    
-                    -- Đợi ngắn để rương được nhặt
-                    local waitTime = 1 
-                    local startTime = tick()
-                    while tick() - startTime < waitTime do
-                        if beliChanged then break end
-                        task.wait()
-                    end
-                    
-                    -- Ngắt kết nối để tránh memory leak
-                    if BeliCheckConnection then
-                        BeliCheckConnection:Disconnect()
-                    end
-
-                    -- Kiểm tra xem Beli có thay đổi (rương đã được nhặt thành công) không
-                    if beliChanged then
-                        getgenv().CollectedCount = getgenv().CollectedCount + 1
-                    end
-                    
-                else
-                    -- Không tìm thấy rương nào
-                    UpdateStatus("No Chests found. Hopping...")
-                    Hop()
-                end
+            if getgenv().config["Random Fruit"] then
+                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Cousin", "Buy")
             end
         end)
     end
 end)
 
+-- ========== AUTO HOP SERVER ==========
+task.delay(240, function()
+    while task.wait(5) do
+        if _G.FramChest then
+            ShowBlackScreen()
+            task.wait(3)
+            HopServerModule:Teleport()
+        end
+    end
+end)

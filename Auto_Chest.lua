@@ -5,6 +5,7 @@ getgenv().config = {
     ["Stop when got item"] = true,
     ["Attacking"] = {
         ["Weapon"] = "Melee",
+        ["Factory"] = true,
     }
 }
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/FastAttack.lua"))()
@@ -40,6 +41,7 @@ local UpdateInterval = 1
 local ChestCheckInterval = 0.3
 _G.FramChest = false
 _G.DarkBeard = false
+_G.Factory = false
 _G.ChooseWP = getgenv().config["Attacking"]["Weapon"] or "Melee"
 
 -- ========== GUI SETUP ==========
@@ -174,7 +176,7 @@ end
 local BodyClip = nil
 task.spawn(function()
     while task.wait(0.5) do
-        if _G.FramChest or _G.DarkBeard then
+        if _G.FramChest or _G.DarkBeard or _G.Factory then
             pcall(function()
                 local char = player.Character
                 if not char then return end
@@ -480,6 +482,18 @@ task.spawn(function()
                     return
                 end
                 
+                -- Ưu tiên collect fruit trước nếu có
+                if fruit and getgenv().config["Collect Fruit"] then
+                    SetStatus("Collecting Fruit", Color3.fromRGB(255, 255, 255))
+                    _G.FramChest = false
+                    Tween(fruit.CFrame)
+                    task.wait(1)
+                    return -- Dừng lại, không chạy code collect chest bên dưới
+                end
+                
+                -- Nếu không có fruit hoặc không bật collect fruit, thì mới collect chest
+                _G.FramChest = true
+                
                 local X = (Z:GetPivot()).Position
                 local C = e:GetTagged("_ChestTagged")
                 local v, o = math.huge, nil
@@ -505,21 +519,8 @@ task.spawn(function()
                         wait(v / 100) 
                     end
                     Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                elseif o and not fruit then
-                    Tween(o:GetPivot())
                 end
             end)
-
-            if fruit and getgenv().config["Collect Fruit"] then
-                if fruit then
-                    SetStatus("Collecting Fruit", Color3.fromRGB(255, 255, 255))
-                    _G.FramChest = false
-                    Tween(fruit.CFrame)
-                    task.wait(1)
-                elseif not fruit then
-                    _G.FramChest = true
-                end
-            end
 
             if getgenv().config["Stop when got item"] and getgenv().config["Mode"] == "Normal" then
                 if GetBP("Fist of Darkness") or GetBP("God's Chalice") then
@@ -574,6 +575,28 @@ task.spawn(function()
     end
 end)
 
+task.spawn(function()
+    if getgenv().config["Attacking"]["Factory"] then
+        _G.Factory = true
+        while task.wait(.1) do
+            pcall(function()
+                if _G.Factory then
+                    local e = GetConnectionEnemies("Core");
+                    if e then
+                        _G.FramChest = false
+                        SetStatus("Attack Factory", Color3.fromRGB(255, 255, 255))
+                        repeat
+                            wait();
+                            Tween(CFrame.new(448.46756, 199.356781, -441.389252));
+                        until e.Humanoid.Health <= 0 or _G.Factory == false;
+                    else
+                        _G.FramChest = true
+                    end;
+                end;
+            end);     
+       end
+    end
+end)
 -- ========== RANDOM FRUIT ==========
 spawn(function()
     while wait(5) do

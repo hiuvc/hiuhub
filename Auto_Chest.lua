@@ -8,7 +8,19 @@ getgenv().config = {
         ["Factory"] = true,
     }
 }
+
+if queue_on_teleport then
+    queue_on_teleport([[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Auto_Chest.lua"))()
+    ]])
+elseif syn and syn.queue_on_teleport then
+    syn.queue_on_teleport([[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Auto_Chest.lua"))()
+    ]])
+end
+
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/FastAttack.lua"))()
+
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -17,17 +29,20 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
         wait(3)
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
+
 repeat task.wait() until game:IsLoaded()
 repeat task.wait() until game.Players.LocalPlayer
 
+-- ========== WORLD DETECTION ==========
 if game.PlaceId == 2753915549 or game.PlaceId == 85211729168715 then
-    World1 = true;
+    World1 = true
 elseif game.PlaceId == 4442272183 or game.PlaceId == 79091703265657 then
-    World2 = true;
+    World2 = true
 elseif game.PlaceId == 7449423635 or game.PlaceId == 100117331123089 then
-    World3 = true;
-end;
+    World3 = true
+end
 
+-- ========== SERVICES ==========
 local player = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -35,14 +50,37 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 
+-- ========== MODE SYSTEM (NO CONFLICT) ==========
+local Mode = {
+    IDLE = 0,
+    FRAM_CHEST = 1,
+    COLLECT_FRUIT = 2,
+    DARKBEARD_SUMMON = 3,
+    DARKBEARD_ATTACK = 4,
+    FACTORY = 5
+}
+
+_G.CurrentMode = Mode.IDLE
+_G.PriorityLock = false
+_G.ChooseWP = getgenv().config["Attacking"]["Weapon"] or "Melee"
+
+local function SetMode(newMode)
+    if _G.PriorityLock then return false end
+    _G.CurrentMode = newMode
+    return true
+end
+
+local function LockMode(duration)
+    _G.PriorityLock = true
+    task.delay(duration, function()
+        _G.PriorityLock = false
+    end)
+end
+
 -- ========== CONFIG ==========
 local TweenSpeed = 350
 local UpdateInterval = 1
-local ChestCheckInterval = 0.3
-_G.FramChest = false
-_G.DarkBeard = false
-_G.Factory = false
-_G.ChooseWP = getgenv().config["Attacking"]["Weapon"] or "Melee"
+local ChestCheckInterval = 0.5
 
 -- ========== GUI SETUP ==========
 local function createGUI()
@@ -172,11 +210,11 @@ local function getHRP()
     return char:WaitForChild("HumanoidRootPart", 3)
 end
 
--- ========== NOCLIP ==========
+-- ========== NOCLIP (FIXED) ==========
 local BodyClip = nil
 task.spawn(function()
     while task.wait(0.5) do
-        if _G.FramChest or _G.DarkBeard or _G.Factory then
+        if _G.CurrentMode ~= Mode.IDLE then
             pcall(function()
                 local char = player.Character
                 if not char then return end
@@ -198,7 +236,7 @@ local noclipConnection
 task.spawn(function()
     pcall(function()
         noclipConnection = RunService.Stepped:Connect(function()
-            if _G.FramChest or _G.DarkBeard then
+            if _G.CurrentMode ~= Mode.IDLE then
                 local char = player.Character
                 if not char then return end
                 
@@ -334,23 +372,21 @@ function O.Kill(e, A)
     local initialRotation = CFrame.Angles(0, math.rad(toolTip == "Blox Fruit" and 90 or 180), 0)
     Tween(humanoidRootPart.CFrame * initialOffset * initialRotation)
     
-    if RandomCFrame then
-        task.wait(0.2)
+    task.wait(0.2)
+    
+    local offsets = {
+        Vector3.new(0, 30, 30),
+        Vector3.new(30, 30, 0),
+        Vector3.new(0, 30, -30),
+        Vector3.new(-30, 30, 0)
+    }
+    
+    for _, offset in ipairs(offsets) do
+        if not e or not e.Parent then break end
+        if not humanoidRootPart then break end
         
-        local offsets = {
-            Vector3.new(0, 30, 30),
-            Vector3.new(30, 30, 0),
-            Vector3.new(0, 30, 30),
-            Vector3.new(-30, 30, 0)
-        }
-        
-        for _, offset in ipairs(offsets) do
-            if not e or not e.Parent then break end
-            if not humanoidRootPart then break end
-            
-            Tween(humanoidRootPart.CFrame * CFrame.new(offset))
-            task.wait(0.15)
-        end
+        Tween(humanoidRootPart.CFrame * CFrame.new(offset))
+        task.wait(0.15)
     end
 end
 
@@ -381,57 +417,50 @@ function StoreFruit()
             
             if success then
                 print("Đã store fruit: " .. fruitName)
-            else
-                print("Lỗi khi store fruit: " .. fruitName .. " - " .. tostring(result))
             end
         end
     end
 end
 
--- Chạy liên tục để tự động store fruit
+-- Auto store fruit
 spawn(function()
     while true do
-        wait(1) -- Kiểm tra mỗi 1 giây
+        wait(1)
         StoreFruit()
     end
 end)
 
--- Hoặc sử dụng sự kiện ChildAdded để store ngay khi có fruit mới
 game.Players.LocalPlayer.Backpack.ChildAdded:Connect(function(item)
-    wait(1) -- Đợi một chút để đảm bảo item đã load đầy đủ
+    wait(1)
     
     if item:FindFirstChild("EatRemote") then
         local remoteFolder = game:GetService("ReplicatedStorage"):WaitForChild("Remotes")
         local commF = remoteFolder:WaitForChild("CommF_")
         local fruitName = item:GetAttribute("OriginalName") or item.Name
         
-        local success, result = pcall(function()
-            return commF:InvokeServer("StoreFruit", fruitName, item)
+        pcall(function()
+            commF:InvokeServer("StoreFruit", fruitName, item)
         end)
-        
-        if success then
-            print("Đã store fruit ngay lập tức: " .. fruitName)
-        else
-            print("Lỗi khi store fruit: " .. fruitName .. " - " .. tostring(result))
-        end
     end
 end)
 
 function GetBP(e)
     return player.Backpack:FindFirstChild(e) or player.Character:FindFirstChild(e)
 end
+
 function GetM(e)
     for A, u in pairs(game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("getInventory")) do
         if type(u) == "table" then
             if u.Type == "Material" then
                 if u.Name == e then
-                    return u.Count;
-                end;
-            end;
-        end;
-    end;
-    return 0;
-end;
+                    return u.Count
+                end
+            end
+        end
+    end
+    return 0
+end
+
 function GetConnectionEnemies(e)
     for A, u in pairs(game:GetService("ReplicatedStorage"):GetChildren()) do
         if u:IsA("Model") and ((typeof(e) == "table" and table.find(e, u.Name) or u.Name == e) and (u:FindFirstChild("Humanoid") and u.Humanoid.Health > 0)) then
@@ -444,159 +473,127 @@ function GetConnectionEnemies(e)
         end
     end
 end
+
 local RemoveDamage = true
 spawn(function()
     while wait(.1) do
         pcall(function()
             if RemoveDamage then
-                game:GetService("ReplicatedStorage").Assets.GUI.DamageCounter.Enabled = false;
-                player.PlayerGui.Notifications.Enabled = false;
+                game:GetService("ReplicatedStorage").Assets.GUI.DamageCounter.Enabled = false
+                player.PlayerGui.Notifications.Enabled = false
             else
-                game:GetService("ReplicatedStorage").Assets.GUI.DamageCounter.Enabled = true;
-                player.PlayerGui.Notifications.Enabled = true;
-            end;
-        end);
-    end;
-end);
--- ========== CHEST FARMING ==========
+                game:GetService("ReplicatedStorage").Assets.GUI.DamageCounter.Enabled = true
+                player.PlayerGui.Notifications.Enabled = true
+            end
+        end)
+    end
+end)
 
+-- ========== MAIN CONTROLLER (NO CONFLICT) ==========
 task.spawn(function()
-    while task.wait(0.5) do
-        if _G.FramChest then
-            SetStatus("Fram Chest", Color3.fromRGB(255, 255, 255))
-            task.wait(ChestCheckInterval)
-
-            local fruit = FindFruit()
-            pcall(function()
-                local e = game:GetService("CollectionService")
-                local A = game:GetService("Players")
-                local u = A.LocalPlayer
-                local Z = u.Character or u.CharacterAdded:Wait()
+    while task.wait(ChestCheckInterval) do
+        local fruit = FindFruit()
+        local darkbeardEnemy = GetConnectionEnemies("Darkbeard")
+        local coreEnemy = GetConnectionEnemies("Core")
+        
+        -- PRIORITY 1: Collect Fruit (Highest)
+        if fruit and getgenv().config["Collect Fruit"] then
+            if SetMode(Mode.COLLECT_FRUIT) then
+                SetStatus("Collecting Fruit", Color3.fromRGB(255, 215, 0))
+                Tween(fruit.CFrame)
+                LockMode(2)
+            end
+            
+        -- PRIORITY 2: DarkBeard Attack
+        elseif getgenv().config["Mode"] == "DarkBeard" and darkbeardEnemy then
+            if SetMode(Mode.DARKBEARD_ATTACK) then
+                SetStatus("Attacking DarkBeard", Color3.fromRGB(255, 0, 0))
+                repeat
+                    O.Kill(darkbeardEnemy, true)
+                    wait(0.1)
+                    darkbeardEnemy = GetConnectionEnemies("Darkbeard")
+                until not darkbeardEnemy or darkbeardEnemy.Humanoid.Health <= 0
+                LockMode(1)
+            end
+            
+        -- PRIORITY 3: DarkBeard Summon
+        elseif getgenv().config["Mode"] == "DarkBeard" and GetBP("Fist of Darkness") and not darkbeardEnemy then
+            if SetMode(Mode.DARKBEARD_SUMMON) then
+                SetStatus("Summoning DarkBeard", Color3.fromRGB(255, 165, 0))
+                EquipWeapon("Fist of Darkness")
+                Tween(CFrame.new(3775.789551, 14.910309, -3499.971191))
+                wait(0.5)
+                Tween(CFrame.new(3776.124756, 14.910310, -3500.035645))
+                LockMode(3)
+            end
+            
+        -- PRIORITY 4: Factory
+        elseif getgenv().config["Attacking"]["Factory"] and coreEnemy then
+            if SetMode(Mode.FACTORY) then
+                SetStatus("Attacking Factory Core", Color3.fromRGB(0, 255, 255))
+                repeat
+                    Tween(CFrame.new(448.46756, 199.356781, -441.389252))
+                    wait(0.1)
+                    coreEnemy = GetConnectionEnemies("Core")
+                until not coreEnemy or coreEnemy.Humanoid.Health <= 0
+                LockMode(1)
+            end
+            
+        -- PRIORITY 5: Fram Chest (Default)
+        else
+            if SetMode(Mode.FRAM_CHEST) then
+                SetStatus("Farming Chests", Color3.fromRGB(255, 255, 255))
                 
-                if not Z then
-                    return
-                end
-                
-                local Humanoid = Z:FindFirstChildOfClass("Humanoid")
-                if not Humanoid then
-                    return
-                end
-                
-                -- Ưu tiên collect fruit trước nếu có
-                if fruit and getgenv().config["Collect Fruit"] then
-                    SetStatus("Collecting Fruit", Color3.fromRGB(255, 255, 255))
-                    _G.FramChest = false
-                    Tween(fruit.CFrame)
-                    task.wait(1)
-                    return -- Dừng lại, không chạy code collect chest bên dưới
-                end
-                
-                -- Nếu không có fruit hoặc không bật collect fruit, thì mới collect chest
-                _G.FramChest = true
-                
-                local X = (Z:GetPivot()).Position
-                local C = e:GetTagged("_ChestTagged")
-                local v, o = math.huge, nil
-                
-                for e = 1, #C, 1 do
-                    local A = C[e]
-                    local u = ((A:GetPivot()).Position - X).Magnitude
-                    if not SelectedIsland or A:IsDescendantOf(SelectedIsland) then
-                        if not A:GetAttribute("IsDisabled") and u < v then
-                            v = u
-                            o = A
+                pcall(function()
+                    local e = game:GetService("CollectionService")
+                    local C = e:GetTagged("_ChestTagged")
+                    local char = getCharacter()
+                    if not char then return end
+                    
+                    local X = char:GetPivot().Position
+                    local v, o = math.huge, nil
+                    
+                    for i = 1, #C do
+                        local chest = C[i]
+                        local dist = ((chest:GetPivot()).Position - X).Magnitude
+                        if not chest:GetAttribute("IsDisabled") and dist < v then
+                            v = dist
+                            o = chest
                         end
                     end
-                end
-                
-                if o then
-                    local tweenResult = Tween(o:GetPivot())
                     
-                    -- Chờ tween hoàn thành rồi nhảy
-                    if tweenResult and tweenResult.Completed then
-                        tweenResult.Completed:Wait()
-                    else
-                        wait(v / 100) 
+                    if o then
+                        local tweenResult = Tween(o:GetPivot())
+                        if tweenResult and tweenResult.Completed then
+                            tweenResult.Completed:Wait()
+                        else
+                            wait(v / 100)
+                        end
+                        char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
                     end
-                    Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end)
-
-            if getgenv().config["Stop when got item"] and getgenv().config["Mode"] == "Normal" then
-                if GetBP("Fist of Darkness") or GetBP("God's Chalice") then
-                    _G.FramChest = false
-                    if World2 then
-                        Tween(CFrame.new(-380.47927856445, 77.220390319824, 255.82550048828))
-                    elseif World3 then
-                        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
-                            "requestEntrance",
-                            Vector3.new(-12471.17, 374.94, -7551.68)
-                        )
-                    end
-                end
+                end)
             end
         end
-    end
-end)
-
--- ========== DARK BEARD MODE ==========
-task.spawn(function()
-    if getgenv().config["Mode"] == "DarkBeard" then
-        _G.DarkBeard = true
         
-        while task.wait(0.1) do
-            if _G.DarkBeard then
-                if not workspace.Enemies:FindFirstChild("Darkbeard") and GetBP("Fist of Darkness") then
-                    SetStatus("Summon Dark Beard", Color3.fromRGB(255, 255, 255))
-                    _G.FramChest = false
-                    EquipWeapon("Fist of Darkness")
-                    Tween(CFrame.new(3775.789551, 14.910309, -3499.971191, 0.125780, 0.000000, -0.992058, 0.000000, 1.000000, 0.000000, 0.992058, -0.000000, 0.125780))
-                    wait(.5)
-                    Tween(CFrame.new(3776.124756, 14.910310, -3500.035645, 0.135788, 0.000000, 0.990738, 0.000000, 1.000000, -0.000000, 0.990738, -0.000000, -0.135788))
-                    
-                elseif GetConnectionEnemies("Darkbeard") or workspace.Enemies:FindFirstChild("Darkbeard") then
-                    SetStatus("Attack Dark Beard", Color3.fromRGB(255, 255, 255))
-                    _G.FramChest = false
-                    local e = GetConnectionEnemies("Darkbeard")
-                    if e then
-                        repeat
-                            wait()
-                            O.Kill(e, _G.DarkBeard)
-                        until _G.DarkBeard == false or not e.Parent or e.Humanoid.Health <= 0
-                    end
-                    
-                elseif not GetBP("Fist of Darkness") and not GetConnectionEnemies("Darkbeard") then
-                    _G.FramChest = true
+        -- STOP CONDITION
+        if getgenv().config["Stop when got item"] and getgenv().config["Mode"] ~= "DarkBeard" then
+            if GetBP("Fist of Darkness") or GetBP("God's Chalice") then
+                _G.CurrentMode = Mode.IDLE
+                SetStatus("Got Item! Stopping...", Color3.fromRGB(0, 255, 0))
+                if World2 then
+                    Tween(CFrame.new(-380.47927856445, 77.220390319824, 255.82550048828))
+                elseif World3 then
+                    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+                        "requestEntrance",
+                        Vector3.new(-12471.17, 374.94, -7551.68)
+                    )
                 end
+                break
             end
         end
-    else
-        _G.FramChest = true
     end
 end)
 
-task.spawn(function()
-    if getgenv().config["Attacking"]["Factory"] then
-        _G.Factory = true
-        while task.wait(.1) do
-            pcall(function()
-                if _G.Factory then
-                    local e = GetConnectionEnemies("Core");
-                    if e then
-                        _G.FramChest = false
-                        SetStatus("Attack Factory", Color3.fromRGB(255, 255, 255))
-                        repeat
-                            wait();
-                            Tween(CFrame.new(448.46756, 199.356781, -441.389252));
-                        until e.Humanoid.Health <= 0 or _G.Factory == false;
-                    else
-                        _G.FramChest = true
-                    end;
-                end;
-            end);     
-       end
-    end
-end)
 -- ========== RANDOM FRUIT ==========
 spawn(function()
     while wait(5) do
@@ -611,7 +608,7 @@ end)
 -- ========== AUTO HOP SERVER ==========
 task.delay(150, function()
     while task.wait(5) do
-        if _G.FramChest then
+        if _G.CurrentMode == Mode.FRAM_CHEST then
             ShowBlackScreen()
             task.wait(3)
             HopServerModule:Teleport()

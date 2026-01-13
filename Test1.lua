@@ -327,51 +327,67 @@ BringEnemy = function(Target, MaxDistance)
 end
 
 O.Kill = function(e, A)
-    if not e or not A then return end
-    
-    local humanoidRootPart = e.HumanoidRootPart
-    if not humanoidRootPart then return end
-    
-    -- Chỉ lưu vị trí nếu chưa khóa
-    if not e:GetAttribute("Locked") then
-        e:SetAttribute("Locked", humanoidRootPart.CFrame)
-    end
-    
-    PosMon = e:GetAttribute("Locked").Position
-    EquipWeapon(_G.SelectWeapon)
-    
-    local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-    if not tool then return end
-    
-    local toolTip = tool.ToolTip
-    
-    -- Teleport đến vị trí đầu tiên
-    local initialOffset = CFrame.new(0, toolTip == "Blox Fruit" and 10 or 30, 0)
-    local initialRotation = CFrame.Angles(0, math.rad(toolTip == "Blox Fruit" and 90 or 180), 0)
-    _tp(humanoidRootPart.CFrame * initialOffset * initialRotation)
-    
-    -- Chỉ chạy RandomCFrame nếu cần thiết và với delay hợp lý hơn
-    if RandomCFrame then
-        task.wait(0.2) -- Tăng thời gian chờ
-        
-        -- Sử dụng một vòng lặp duy nhất thay vì nhiều wait riêng lẻ
-        local offsets = {
-            Vector3.new(0, 30, 30),
-            Vector3.new(30, 30, 0),
-            Vector3.new(0, 30, 30),
-            Vector3.new(-30, 30, 0)
-        }
-        
-        for _, offset in ipairs(offsets) do
-            -- Kiểm tra nếu NPC vẫn tồn tại
-            if not e or not e.Parent then break end
-            if not humanoidRootPart then break end
-            
-            _tp(humanoidRootPart.CFrame * CFrame.new(offset))
-            task.wait(0.15) -- Tăng thời gian chờ giữa các lần teleport
-        end
-    end
+	if not e or not A then return end
+
+	local humanoidRootPart = e:FindFirstChild("HumanoidRootPart")
+	if not humanoidRootPart then return end
+
+	-- Chỉ lưu vị trí nếu chưa khóa
+	if not e:GetAttribute("Locked") then
+		e:SetAttribute("Locked", humanoidRootPart.CFrame)
+	end
+
+	PosMon = e:GetAttribute("Locked").Position
+	EquipWeapon(_G.SelectWeapon)
+
+	local char = game.Players.LocalPlayer.Character
+	if not char then return end
+
+	local tool = char:FindFirstChildOfClass("Tool")
+	if not tool then return end
+
+	local toolTip = tool.ToolTip
+
+	-- =========================
+	-- FIX TELEPORT (KHÔNG XOAY)
+	-- =========================
+	local height = (toolTip == "Blox Fruit") and 10 or 30
+	local pos = humanoidRootPart.Position
+
+	_tp(
+		CFrame.new(pos.X, pos.Y + height, pos.Z)
+		* CFrame.Angles(0, math.rad(toolTip == "Blox Fruit" and 90 or 180), 0)
+	)
+
+	-- =========================
+	-- RANDOM CFrame (FIX XOAY)
+	-- =========================
+	if RandomCFrame then
+		task.wait(0.2)
+
+		local offsets = {
+			Vector3.new(0, 30, 30),
+			Vector3.new(30, 30, 0),
+			Vector3.new(0, 30, -30),
+			Vector3.new(-30, 30, 0)
+		}
+
+		for _, offset in ipairs(offsets) do
+			if not e or not e.Parent then break end
+			if not humanoidRootPart.Parent then break end
+
+			local newPos = humanoidRootPart.Position + offset
+
+			_tp(
+				CFrame.new(newPos)
+				* CFrame.Angles(0, math.rad(180), 0)
+			)
+
+			task.wait(0.15)
+		end
+	end
 end
+
 
 
 O.KillRaid = function(e, A)

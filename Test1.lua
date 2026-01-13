@@ -2045,7 +2045,7 @@ local function GetEnemyByName(name)
 		end
 	end
 end
-local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/hiuvc-patch-2/TestUi.lua")))();
+local e = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/TestUi.lua")))();
 ---Tab----------------
 local x = e:NewWindow();
 local sv = x:T("Tab Server");

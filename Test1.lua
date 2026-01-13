@@ -262,46 +262,65 @@ local function GetMobBaseName(name)
 	return string.match(name, "^(.-)%s*%[") or name
 end
 
-BringEnemy = function(Target, Distance)
-	if not _B or not Target then return end
-	Distance = Distance or 200
-	
-	local rootTarget = Target:FindFirstChild("HumanoidRootPart")
-	if not rootTarget then return end
-	
-	local PosMon = rootTarget.Position
-	local TargetName = GetMobBaseName(Target.Name)
-	
-	-- Chỉ set SimulationRadius một lần
-	if plr.SimulationRadius ~= math.huge then
+local ZERO_VEC = Vector3.zero
+local STATE_PHYSICS = Enum.HumanoidStateType.Physics
+
+BringEnemy = function(Target, MaxDistance)
+	if not (_B and Target) then return end
+	MaxDistance = MaxDistance or 200
+
+	local targetRoot = Target:FindFirstChild("HumanoidRootPart")
+	if not targetRoot then return end
+
+	local targetPos = targetRoot.Position
+	local targetName = GetMobBaseName(Target.Name)
+
+	-- Set SimulationRadius 1 lần
+	if plr.SimulationRadius < 1e6 then
 		plr.SimulationRadius = math.huge
 	end
-	
-	-- Cache để tránh gọi FindFirstChild nhiều lần
-	local enemies = workspace.Enemies:GetChildren()
-	
-	for _, Enemy in pairs(enemies) do
-		-- Kiểm tra tên trước để tránh xử lý không cần thiết
-		if GetMobBaseName(Enemy.Name) == TargetName then
-			local root = Enemy:FindFirstChild("HumanoidRootPart")
-			local hum = Enemy:FindFirstChildOfClass("Humanoid")
-			
-			if root and hum and hum.Health > 0 then
-				local distance = (root.Position - PosMon).Magnitude
-				
-				if distance <= Distance then
-					-- Tối ưu: chỉ cập nhật khi cần thiết
-					if distance > 5 then -- Chỉ bring khi còn xa
-						root.CFrame = CFrame.new(PosMon)
-					end
-					
-					-- Gộp các thiết lập lại với nhau
-					root.Velocity = Vector3.zero
-					root.RotVelocity = Vector3.zero
-					root.CanCollide = false
-					
-					hum:ChangeState(11)
-				end
+
+	for _, enemy in ipairs(workspace.Enemies:GetChildren()) do
+		if GetMobBaseName(enemy.Name) ~= targetName then
+			continue
+		end
+
+		local root = enemy:FindFirstChild("HumanoidRootPart")
+		local hum = enemy:FindFirstChildWhichIsA("Humanoid")
+
+		if not (root and hum and hum.Health > 0) then
+			continue
+		end
+
+		local offset = root.Position - targetPos
+		local distSq = offset.X * offset.X + offset.Y * offset.Y + offset.Z * offset.Z
+
+		-- Dùng distance^2 (nhanh hơn Magnitude)
+		if distSq <= (MaxDistance * MaxDistance) then
+
+			-- Bring mượt (tránh teleport cứng)
+			if distSq > 25 then -- >5 studs
+				root.CFrame = CFrame.new(
+					targetPos + Vector3.new(
+						math.random(-2,2),
+						0,
+						math.random(-2,2)
+					)
+				)
+			end
+
+			-- Freeze mob
+			if root.Velocity ~= ZERO_VEC then
+				root.Velocity = ZERO_VEC
+				root.RotVelocity = ZERO_VEC
+			end
+
+			if root.CanCollide then
+				root.CanCollide = false
+			end
+
+			if hum:GetState() ~= STATE_PHYSICS then
+				hum:ChangeState(STATE_PHYSICS)
 			end
 		end
 	end

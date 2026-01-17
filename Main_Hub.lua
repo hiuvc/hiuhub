@@ -3164,6 +3164,55 @@ function CancelTween23()
     NoClip = false
     return Tween23(plr.Character.HumanoidRootPart.CFrame)
 end
+local function GetMobBaseName(name)
+  return string.match(name, "^(.-)%s*%[") or name
+end
+_B = true
+BringEnemy = function(Target, Distance)
+  if not _B or not Target then return end
+  Distance = Distance or 250
+  
+  local rootTarget = Target:FindFirstChild("HumanoidRootPart")
+  if not rootTarget then return end
+  
+  local PosMon = rootTarget.Position
+  local TargetName = GetMobBaseName(Target.Name)
+  
+  -- Chỉ set SimulationRadius một lần
+  if game.Players.LocalPlayer.SimulationRadius ~= math.huge then
+    game.Players.LocalPlayer.SimulationRadius = math.huge
+  end
+  
+  -- Cache để tránh gọi FindFirstChild nhiều lần
+  local enemies = workspace.Enemies:GetChildren()
+  
+  for _, Enemy in pairs(enemies) do
+    -- Kiểm tra tên trước để tránh xử lý không cần thiết
+    if GetMobBaseName(Enemy.Name) == TargetName then
+      local root = Enemy:FindFirstChild("HumanoidRootPart")
+      local hum = Enemy:FindFirstChildOfClass("Humanoid")
+      
+      if root and hum and hum.Health > 0 then
+        local distance = (root.Position - PosMon).Magnitude
+        
+        if distance <= Distance then
+          -- Tối ưu: chỉ cập nhật khi cần thiết
+          if distance > 5 then -- Chỉ bring khi còn xa
+            root.CFrame = CFrame.new(PosMon)
+          end
+          
+          -- Gộp các thiết lập lại với nhau
+          root.Velocity = Vector3.zero
+          root.RotVelocity = Vector3.zero
+          root.CanCollide = false
+          
+          hum:ChangeState(11)
+        end
+      end
+    end
+  end
+end
+
 function KillMob(v373, v374)
     pcall(function()
         thismob = DetectMob2(v373)
@@ -4578,24 +4627,13 @@ task.spawn(function()
                                     EquipWeapon(_G.SelectWeapon)
                                     v615.HumanoidRootPart.CanCollide = false
                                     v615.Humanoid.WalkSpeed = 0
-                                    StartBring = true
                                     v615.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
                                     PosMon = v615.HumanoidRootPart.CFrame
                                     MonFarm = v615.Name
                                     v615.Head.CanCollide = false
                                     topos(v615.HumanoidRootPart.CFrame * CFrame.new(0, 30, 0))
                                     NeedAttacking = true
-                                    if v615.Name ~= "Cookie Crafter" then
-                                        if v615.Name == "Cake Guard" then
-                                            Bring(v615.Name, CFrame.new(-1693.98047, 35.2188225, -12436.8438, -0.716115236, 0, -0.697982132, 0, 1, 0, 0.697982132, 0, -0.716115236))
-                                        elseif v615.Name == "Baking Staff" then
-                                            Bring(v615.Name, CFrame.new(-1980.4375, 34.6653099, -12983.8408, -0.254338264, 0, -0.967115223, 0, 1, 0, 0.967115223, 0, -0.254338264))
-                                        elseif v615.Name == "Head Baker" then
-                                            Bring(v615.Name, CFrame.new(-2151.37793, 51.0095749, -13033.3975, -0.996587753, 0, 0.0825396702, 0, 1, 0, -0.0825396702, 0, -0.996587753))
-                                        end
-                                    else
-                                        Bring(v615.Name, CFrame.new(-2212.88965, 37.0051041, -11969.2568, 0.458114207, 0, -0.888893366, 0, 1, 0, 0.888893366, 0, 0.458114207))
-                                    end
+                                    BringEnemy(v615)
                                 until not _G.FarmCake or not v615.Parent or v615.Humanoid.Health <= 0 or game:GetService("Workspace").Map.CakeLoaf.BigMirror.Other.Transparency == 0 or game:GetService("ReplicatedStorage"):FindFirstChild("Cake Prince [Lv. 2300] [Raid Boss]") or game:GetService("Workspace").Enemies:FindFirstChild("Cake Prince [Lv. 2300] [Raid Boss]")
                                 DamageAura = false
                             end

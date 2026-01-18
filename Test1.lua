@@ -2262,7 +2262,7 @@ function AttackNoCoolDown()
   end
   if not tool then return end
 
-  local targets = pw(char, 21)
+  local targets = pw(char, 25)
   if #targets == 0 then return end
 
   local modules = ReplicatedStorage:FindFirstChild("Modules")

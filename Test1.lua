@@ -2208,7 +2208,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.25
+local FastAttackDelay = 0.3
 local LastFastAttack = 0
 
 --// Check alive
@@ -2262,7 +2262,7 @@ function AttackNoCoolDown()
   end
   if not tool then return end
 
-  local targets = pw(char, 45)
+  local targets = pw(char, 35)
   if #targets == 0 then return end
 
   local modules = ReplicatedStorage:FindFirstChild("Modules")
@@ -3053,35 +3053,33 @@ task.spawn(function()
                         }
                         CommF:InvokeServer(unpack(questList[math.random(1, #questList)]))
                     end
-
                     -- Kill Enemy Loop
+                    local brought = false
                     repeat
-                        task.wait()
+                      task.wait()
 
-                        if not enemy
-                           or not enemy.Parent
-                           or enemy.Humanoid.Health <= 0 then
-                            break
-                        end
+                      if not enemy or not enemy.Parent or enemy.Humanoid.Health <= 0 then
+                          break
+                      end
 
-                        EquipWeapon(_G.SelectWeapon)
+                      EquipWeapon(_G.SelectWeapon)
 
-                        local root = enemy.HumanoidRootPart
-                        local mobPos = root.Position
+                      local root = enemy.HumanoidRootPart
+                      local mobPos = root.Position
 
-                        _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
+                      _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
 
-                        if (mobPos - HRP.Position).Magnitude <= 30 then
-                            BringEnemy(enemy)
-                        end
+                      if not brought and (mobPos - HRP.Position).Magnitude <= 30 then
+                          BringEnemy(enemy)
+                          brought = true
+                      end
 
-                    until not _G.AutoFarm_Bone
-                       or enemy.Humanoid.Health <= 0
-                       or not enemy.Parent
-                       or (_G.AcceptQuestC and not QuestGui.Visible)
+                  until not _G.AutoFarm_Bone
+                     or enemy.Humanoid.Health <= 0
+                     or not enemy.Parent
+                     or (_G.AcceptQuestC and not QuestGui.Visible)
                 end
             end
-
             _tp(CFrame.new(-9495.68, 453.58, 5977.34))
         end)
     end

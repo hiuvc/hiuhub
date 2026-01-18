@@ -264,7 +264,7 @@ local function GetMobBaseName(name)
   return string.match(name, "^(.-)%s*%[") or name
 end
 BringEnemy = function(Target, Distance)
-  --[[
+  
     if not _B or not Target then return end
     Distance = Distance or 200
 
@@ -307,8 +307,6 @@ BringEnemy = function(Target, Distance)
             end
         end
     end
-    ]]
-    print("skibidi")
 end
 
 
@@ -3056,8 +3054,12 @@ spawn(function()
                     -- Kill enemy
                     repeat
                         task.wait()
-                        O.Kill(enemy, true)
-                        BringEnemy(enemy)
+                        EquipWeapon(_G.SelectWeapon)
+                        _tp(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 25, 0))
+                        PosMon = enemy.HumanoidRootPart.CFrame
+                        if (enemy.HumanoidRootPart.Position - HRP.Position).Magnitude <= 50 then
+                            BringEnemy(enemy)
+                        end
                     until not _G.AutoFarm_Bone or enemy.Humanoid.Health <= 0 or not enemy.Parent 
                         or (_G.AcceptQuestC and not QuestGui.Visible)
                 end

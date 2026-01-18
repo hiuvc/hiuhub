@@ -3055,7 +3055,9 @@ spawn(function()
                     repeat
                         task.wait()
                         EquipWeapon(_G.SelectWeapon)
-                        _tp(enemy.HumanoidRootPart.CFrame * CFrame.new(0, 25, 0))
+                        local root = enemy.HumanoidRootPart
+                        local targetPos = CFrame.new(root.Position + Vector3.new(0, 25, 0))
+                        _tp(targetPos)
                         PosMon = enemy.HumanoidRootPart.CFrame
                         if (enemy.HumanoidRootPart.Position - HRP.Position).Magnitude <= 50 then
                             BringEnemy(enemy)

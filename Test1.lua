@@ -264,6 +264,7 @@ local function GetMobBaseName(name)
   return string.match(name, "^(.-)%s*%[") or name
 end
 BringEnemy = function(Target, Distance)
+  --[[
     if not _B or not Target then return end
     Distance = Distance or 200
 
@@ -306,6 +307,8 @@ BringEnemy = function(Target, Distance)
             end
         end
     end
+    ]]
+    print("skibidi")
 end
 
 

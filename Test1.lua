@@ -2244,7 +2244,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.3
+local FastAttackDelay = 0.5
 local LastFastAttack = 0
 
 --// Check alive
@@ -2298,7 +2298,7 @@ function AttackNoCoolDown()
   end
   if not tool then return end
 
-  local targets = pw(char, 40)
+  local targets = pw(char, 35)
   if #targets == 0 then return end
 
   local modules = ReplicatedStorage:FindFirstChild("Modules")
@@ -3106,7 +3106,7 @@ task.spawn(function()
                       _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
 
                       if not brought and (mobPos - HRP.Position).Magnitude <= 30 then
-                          task.wait(0.2)
+                          task.wait(0.1)
                           BringEnemy(enemy)
                           brought = true
                       end

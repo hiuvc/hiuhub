@@ -38,7 +38,7 @@ do
   Brazier1 = false;
   Brazier2 = false;
   Brazier3 = false;
-  Sec = 0.2;
+  Sec = 0.5;
   ClickState = 0;
   Num_self = 25;
 end;
@@ -3070,6 +3070,7 @@ task.spawn(function()
                       _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
 
                       if not brought and (mobPos - HRP.Position).Magnitude <= 30 then
+                          task.wait(0.2)
                           BringEnemy(enemy)
                           brought = true
                       end

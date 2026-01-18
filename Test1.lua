@@ -263,8 +263,38 @@ O.DistH = function(e, A)
 local function GetMobBaseName(name)
   return string.match(name, "^(.-)%s*%[") or name
 end
+local EnemyCache = {}
+
+local function IndexEnemies()
+    table.clear(EnemyCache)
+    for _, e in ipairs(workspace.Enemies:GetChildren()) do
+        local base = GetMobBaseName(e.Name)
+        EnemyCache[base] = EnemyCache[base] or {}
+        table.insert(EnemyCache[base], e)
+    end
+end
+
+IndexEnemies()
+
+workspace.Enemies.ChildAdded:Connect(function(e)
+    local base = GetMobBaseName(e.Name)
+    EnemyCache[base] = EnemyCache[base] or {}
+    table.insert(EnemyCache[base], e)
+end)
+
+workspace.Enemies.ChildRemoved:Connect(function(e)
+    local base = GetMobBaseName(e.Name)
+    local list = EnemyCache[base]
+    if not list then return end
+    for i = #list, 1, -1 do
+        if list[i] == e then
+            table.remove(list, i)
+            break
+        end
+    end
+end)
+
 BringEnemy = function(Target, Distance)
-  
     if not _B or not Target then return end
     Distance = Distance or 200
 
@@ -272,43 +302,49 @@ BringEnemy = function(Target, Distance)
     if not rootTarget then return end
 
     local PosMon = rootTarget.Position
-    local TargetName = GetMobBaseName(Target.Name)
+    local TargetBase = GetMobBaseName(Target.Name)
 
     if plr.SimulationRadius ~= math.huge then
         plr.SimulationRadius = math.huge
     end
 
-    for _, Enemy in pairs(workspace.Enemies:GetChildren()) do
-        if GetMobBaseName(Enemy.Name) == TargetName then
-            local root = Enemy:FindFirstChild("HumanoidRootPart")
-            local hum = Enemy:FindFirstChildOfClass("Humanoid")
+    local list = EnemyCache[TargetBase]
+    if not list then return end
 
-            if root and hum and hum.Health > 0 then
-                local dist = (root.Position - PosMon).Magnitude
-                if dist <= Distance then
+    for i = #list, 1, -1 do
+        local Enemy = list[i]
+        if not Enemy or not Enemy.Parent then
+            table.remove(list, i)
+            continue
+        end
 
-                    -- Disable physics
-                    root.CanCollide = false
-                    hum:ChangeState(Enum.HumanoidStateType.Physics)
+        local root = Enemy:FindFirstChild("HumanoidRootPart")
+        local hum = Enemy:FindFirstChildOfClass("Humanoid")
+        if not root or not hum or hum.Health <= 0 then
+            continue
+        end
 
-                    -- Tạo BodyPosition 1 lần
-                    local bp = root:FindFirstChild("EnemyFlyPosition")
-                    if not bp then
-                        bp = Instance.new("BodyPosition")
-                        bp.Name = "EnemyFlyPosition"
-                        bp.MaxForce = Vector3.new(1e7, 1e7, 1e7)
-                        bp.P = 4000
-                        bp.D = 200
-                        bp.Parent = root
-                    end
-
-                    bp.Position = PosMon
-                end
+        if (root.Position - PosMon).Magnitude <= Distance then
+            -- Setup physics 1 lần
+            if hum:GetState() ~= Enum.HumanoidStateType.Physics then
+                hum:ChangeState(Enum.HumanoidStateType.Physics)
             end
+            root.CanCollide = false
+
+            local bp = root:FindFirstChild("EnemyFlyPosition")
+            if not bp then
+                bp = Instance.new("BodyPosition")
+                bp.Name = "EnemyFlyPosition"
+                bp.MaxForce = Vector3.new(1e7, 1e7, 1e7)
+                bp.P = 3500
+                bp.D = 150
+                bp.Parent = root
+            end
+
+            bp.Position = PosMon
         end
     end
 end
-
 
 O.Kill = function(e, A)
   if not e or not A then return end

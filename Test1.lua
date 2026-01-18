@@ -3005,9 +3005,6 @@ task.spawn(function()
                 end
             end
 
-            -- ===============================
-            -- 4️⃣ KHÔNG CÓ MOB → ĐỨNG CHỜ
-            -- ===============================
             if not FoundMinion then
                 if (HRP.Position - WAIT_POS.Position).Magnitude > 30 then
                     _tp(WAIT_POS)
@@ -3021,27 +3018,33 @@ end)
 -- Farm Bone Logic
 local BoneEnemies = {"Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"}
 
-spawn(function()
+--// FARM BONE THREAD
+task.spawn(function()
     while task.wait(Sec) do
         if not _G.AutoFarm_Bone then continue end
-        
+
         pcall(function()
             local Character = plr.Character
-            local HRP = Character and Character.HumanoidRootPart
+            local HRP = Character and Character:FindFirstChild("HumanoidRootPart")
             local QuestGui = plr.PlayerGui.Main.Quest
             if not HRP then return end
-            
+
+            -- LOOP THEO THỨ TỰ TABLE
             for _, enemyName in ipairs(BoneEnemies) do
                 if not _G.AutoFarm_Bone then break end
-                
-                local enemy = GetEnemyByName(enemyName)
-                if enemy then
-                    -- Accept quest if needed
+
+                -- GIẾT HẾT QUÁI CÙNG TÊN
+                while _G.AutoFarm_Bone do
+                    local enemy = GetEnemyByName(enemyName)
+                    if not enemy then
+                        break -- Hết quái tên này → sang tên tiếp
+                    end
+
                     if _G.AcceptQuestC and not QuestGui.Visible then
-                        local questPos = CFrame.new(-9516.99316, 172.017181, 6078.46533, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                        local questPos = CFrame.new(-9516.99316, 172.017181, 6078.46533)
                         _tp(questPos)
                         repeat task.wait(0.2) until (questPos.Position - HRP.Position).Magnitude < 50
-                        
+
                         local questList = {
                             {"StartQuest", "HauntedQuest2", 2},
                             {"StartQuest", "HauntedQuest2", 1},
@@ -3050,28 +3053,40 @@ spawn(function()
                         }
                         CommF:InvokeServer(unpack(questList[math.random(1, #questList)]))
                     end
-                    
-                    -- Kill enemy
+
+                    -- Kill Enemy Loop
                     repeat
                         task.wait()
+
+                        if not enemy
+                           or not enemy.Parent
+                           or enemy.Humanoid.Health <= 0 then
+                            break
+                        end
+
                         EquipWeapon(_G.SelectWeapon)
+
                         local root = enemy.HumanoidRootPart
-                        local targetPos = CFrame.new(root.Position + Vector3.new(0, 25, 0))
-                        _tp(targetPos)
-                        PosMon = enemy.HumanoidRootPart.CFrame
-                        if (enemy.HumanoidRootPart.Position - HRP.Position).Magnitude <= 50 then
+                        local mobPos = root.Position
+
+                        _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
+
+                        if (mobPos - HRP.Position).Magnitude <= 30 then
                             BringEnemy(enemy)
                         end
-                    until not _G.AutoFarm_Bone or enemy.Humanoid.Health <= 0 or not enemy.Parent 
-                        or (_G.AcceptQuestC and not QuestGui.Visible)
+
+                    until not _G.AutoFarm_Bone
+                       or enemy.Humanoid.Health <= 0
+                       or not enemy.Parent
+                       or (_G.AcceptQuestC and not QuestGui.Visible)
                 end
             end
-            
-            -- Default position
+
             _tp(CFrame.new(-9495.68, 453.58, 5977.34))
         end)
     end
 end)
+
 
 local PhaBinhPoints = {
     CFrame.new(-16332.526, 158.072, 1440.325),

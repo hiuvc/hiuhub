@@ -2208,7 +2208,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.5
+local FastAttackDelay = 0.25
 local LastFastAttack = 0
 
 --// Check alive

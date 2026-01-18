@@ -2262,7 +2262,7 @@ function AttackNoCoolDown()
   end
   if not tool then return end
 
-  local targets = pw(char, 30)
+  local targets = pw(char, 45)
   if #targets == 0 then return end
 
   local modules = ReplicatedStorage:FindFirstChild("Modules")
@@ -3086,7 +3086,6 @@ task.spawn(function()
         end)
     end
 end)
-
 
 local PhaBinhPoints = {
     CFrame.new(-16332.526, 158.072, 1440.325),

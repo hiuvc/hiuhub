@@ -1,4 +1,3 @@
-
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -263,7 +262,9 @@ O.DistH = function(e, A)
 local function GetMobBaseName(name)
   return string.match(name, "^(.-)%s*%[") or name
 end
+
 local EnemyCache = {}
+local ActiveBodyPositions = {} -- Cache BodyPosition instances
 
 local function IndexEnemies()
     table.clear(EnemyCache)
@@ -286,6 +287,17 @@ workspace.Enemies.ChildRemoved:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     local list = EnemyCache[base]
     if not list then return end
+    
+    -- Cleanup BodyPosition nếu có
+    local root = e:FindFirstChild("HumanoidRootPart")
+    if root then
+        local bp = root:FindFirstChild("EnemyFlyPosition")
+        if bp then 
+            bp:Destroy()
+            ActiveBodyPositions[root] = nil
+        end
+    end
+    
     for i = #list, 1, -1 do
         if list[i] == e then
             table.remove(list, i)
@@ -294,57 +306,57 @@ workspace.Enemies.ChildRemoved:Connect(function(e)
     end
 end)
 
+-- Set SimulationRadius 1 lần khi script load
+if plr.SimulationRadius ~= math.huge then
+    plr.SimulationRadius = math.huge
+end
+
 BringEnemy = function(Target, Distance)
     if not _B or not Target then return end
     Distance = Distance or 250
-
+    
     local rootTarget = Target:FindFirstChild("HumanoidRootPart")
     if not rootTarget then return end
-
+    
     local PosMon = rootTarget.Position
     local TargetBase = GetMobBaseName(Target.Name)
-
-    if plr.SimulationRadius ~= math.huge then
-        plr.SimulationRadius = math.huge
-    end
-
     local list = EnemyCache[TargetBase]
     if not list then return end
-
+    
+    local DistSq = Distance * Distance -- So sánh bình phương để tránh sqrt
+    
     for i = #list, 1, -1 do
         local Enemy = list[i]
         if not Enemy or not Enemy.Parent then
             table.remove(list, i)
             continue
         end
-
+        
         local root = Enemy:FindFirstChild("HumanoidRootPart")
         local hum = Enemy:FindFirstChildOfClass("Humanoid")
+        
         if not root or not hum or hum.Health <= 0 then
             continue
         end
-
-        if (root.Position - PosMon).Magnitude <= Distance then
-            -- Setup physics 1 lần
-            if hum:GetState() ~= Enum.HumanoidStateType.Physics then
-                hum:ChangeState(Enum.HumanoidStateType.Physics)
-            end
-            if hum:FindFirstChild("Animator") then 
-                hum.Animator:Destroy()
-            end
-            root.CanCollide = false
-
-            local bp = root:FindFirstChild("EnemyFlyPosition")
-            if not bp then
-                bp = Instance.new("BodyPosition")
+        
+        local offset = root.Position - PosMon
+        if offset.X*offset.X + offset.Y*offset.Y + offset.Z*offset.Z <= DistSq then
+            -- Chỉ setup physics nếu chưa setup
+            if not ActiveBodyPositions[root] then
+                if hum:GetState() ~= Enum.HumanoidStateType.Physics then
+                    hum:ChangeState(Enum.HumanoidStateType.Physics)
+                end               
+                root.CanCollide = false
+                
+                local bp = Instance.new("BodyPosition")
                 bp.Name = "EnemyFlyPosition"
                 bp.MaxForce = Vector3.new(1e7, 1e7, 1e7)
                 bp.P = 3500
                 bp.D = 150
-                bp.Parent = root
+                bp.Parent = root               
+                ActiveBodyPositions[root] = bp
             end
-
-            bp.Position = PosMon
+            ActiveBodyPositions[root].Position = PosMon
         end
     end
 end
@@ -2078,6 +2090,7 @@ local function GetEnemyByName(name)
     end
   end
 end
+
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -2088,7 +2101,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.25
+local FastAttackDelay = 0.15
 local LastFastAttack = 0
 
 --// Check alive
@@ -2142,7 +2155,7 @@ function AttackNoCoolDown()
   end
   if not tool then return end
 
-  local targets = pw(char, 35)
+  local targets = pw(char, 60)
   if #targets == 0 then return end
 
   local modules = ReplicatedStorage:FindFirstChild("Modules")
@@ -2275,6 +2288,7 @@ task.spawn(function()
     end)
   end)
 end)
+
 
 local UiHub = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
@@ -2783,17 +2797,9 @@ spawn(function()
 end)
 
 local QUEST_POS = CFrame.new(-1927.92, 37.8, -12842.54)
-local WAIT_POS  = CFrame.new(-2091.91, 70.01, -12142.84)
 local MIRROR_TP = CFrame.new(-2151.82, 149.32, -12404.91)
 
-
-local Minions = {
-    ["Cookie Crafter"] = true,
-    ["Cake Guard"] = true,
-    ["Baking Staff"] = true,
-    ["Head Baker"] = true
-}
-
+local Minions = {"Cookie Crafter","Cake Guard","Baking Staff","Head Baker"}
 -- ===== COOLDOWN =====
 local LastSpawner = 0
 local SpawnerCD = 10
@@ -2814,15 +2820,11 @@ task.spawn(function()
             local Enemies = Workspace:FindFirstChild("Enemies")
             if not Enemies then return end
 
-            -- ===============================
-            -- 1️⃣ ƯU TIÊN CAKE PRINCE
-            -- ===============================
             for _, enemy in ipairs(Enemies:GetChildren()) do
                 if enemy.Name == "Cake Prince"
                 and enemy:FindFirstChild("Humanoid")
                 and enemy.Humanoid.Health > 0 then
-                    O.Kill2(enemy, true)
-                    BringEnemy(enemy)
+                    O.Kill(enemy, true)
                     return
                 end
             end
@@ -2841,19 +2843,13 @@ task.spawn(function()
                     return
                 end
             end
-
-            -- ===============================
-            -- 3️⃣ FARM MINION
-            -- ===============================
-            local FoundMinion = false
-
-            for _, enemy in ipairs(Enemies:GetChildren()) do
-                if Minions[enemy.Name]
-                and enemy:FindFirstChild("Humanoid")
-                and enemy.Humanoid.Health > 0 then
-                    FoundMinion = true
-
-                    -- Nhận quest nếu cần
+            for _, enemyName in ipairs(Minions) do
+              while  _G.Auto_Cake_Prince do
+                    local enemy = GetEnemyByName(enemyName)
+                    if not enemy then
+                        break 
+                    end
+ 
                     if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
                         if (HRP.Position - QUEST_POS.Position).Magnitude > 50 then
                             _tp(QUEST_POS)
@@ -2863,7 +2859,6 @@ task.spawn(function()
                         return
                     end
 
-                    -- Spawn Cake Prince (cooldown)
                     if tick() - LastSpawner > SpawnerCD then
                         local res = CommF:InvokeServer("CakePrinceSpawner")
                         local num = tonumber(string.match(res or "", "%d+"))
@@ -2873,20 +2868,42 @@ task.spawn(function()
                         LastSpawner = tick()
                     end
 
-                    O.Kill(enemy, true)
-                    BringEnemy(enemy)
-                    return
-                end
-            end
+                    local brought = false
 
-            if not FoundMinion then
-                if (HRP.Position - WAIT_POS.Position).Magnitude > 30 then
-                    _tp(WAIT_POS)
+                    repeat
+                        task.wait()
+
+                        if not _G.Auto_Cake_Prince then break end
+                        if not enemy or not enemy.Parent then break end
+                        if enemy.Humanoid.Health <= 0 then break end
+
+                        EquipWeapon(_G.SelectWeapon)
+
+                        local root = enemy:FindFirstChild("HumanoidRootPart")
+                        if not root then break end
+
+                        local mobPos = root.Position
+                        _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
+
+                        -- Bring đúng 1 lần, KHÔNG đổi target
+                        if not brought and (mobPos - HRP.Position).Magnitude <= 25 then
+                            task.wait(0.15)
+                            BringEnemy(enemy)
+                            brought = true
+                        end
+
+                    until enemy.Humanoid.Health <= 0
+                        or not enemy.Parent
+                        or not _G.Auto_Cake_Prince
+                        or (_G.AcceptQuestC and not QuestGui.Visible)
+                    repeat task.wait() until not enemy.Parent or enemy.Humanoid.Health <= 0
                 end
             end
+            _tp(CFrame.new(-2091.91, 70.01, -12142.84))
         end)
     end
 end)
+
 -- Farm Bone Logic
 local BoneEnemies = {"Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"}
 
@@ -2901,7 +2918,6 @@ task.spawn(function()
             local QuestGui = plr.PlayerGui.Main.Quest
             if not HRP then return end
 
-            -- LOOP THEO THỨ TỰ TABLE
             for _, enemyName in ipairs(BoneEnemies) do
                 if not _G.AutoFarm_Bone then break end
 
@@ -2927,7 +2943,7 @@ task.spawn(function()
                         CommF:InvokeServer(unpack(questList[math.random(1, #questList)]))
                     end
 
-                    -- 🔒 LOCK enemy instance
+             
                     local brought = false
 
                     repeat
@@ -2947,7 +2963,7 @@ task.spawn(function()
 
                         -- Bring đúng 1 lần, KHÔNG đổi target
                         if not brought and (mobPos - HRP.Position).Magnitude <= 25 then
-                            task.wait(0.3)
+                            task.wait(0.15)
                             BringEnemy(enemy)
                             brought = true
                         end
@@ -2956,13 +2972,9 @@ task.spawn(function()
                         or not enemy.Parent
                         or not _G.AutoFarm_Bone
                         or (_G.AcceptQuestC and not QuestGui.Visible)
-
-                    -- Đợi chết hẳn rồi mới tìm enemy khác
                     repeat task.wait() until not enemy.Parent or enemy.Humanoid.Health <= 0
                 end
             end
-
-            -- Tele về chỗ an toàn sau khi clear
             _tp(CFrame.new(-9495.68, 453.58, 5977.34))
         end)
     end

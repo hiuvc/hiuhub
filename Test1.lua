@@ -1,4 +1,3 @@
-
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -263,7 +262,9 @@ O.DistH = function(e, A)
 local function GetMobBaseName(name)
   return string.match(name, "^(.-)%s*%[") or name
 end
+
 local EnemyCache = {}
+local ActiveBodyPositions = {} -- Cache BodyPosition instances
 
 local function IndexEnemies()
     table.clear(EnemyCache)
@@ -286,6 +287,17 @@ workspace.Enemies.ChildRemoved:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     local list = EnemyCache[base]
     if not list then return end
+    
+    -- Cleanup BodyPosition nếu có
+    local root = e:FindFirstChild("HumanoidRootPart")
+    if root then
+        local bp = root:FindFirstChild("EnemyFlyPosition")
+        if bp then 
+            bp:Destroy()
+            ActiveBodyPositions[root] = nil
+        end
+    end
+    
     for i = #list, 1, -1 do
         if list[i] == e then
             table.remove(list, i)
@@ -294,54 +306,57 @@ workspace.Enemies.ChildRemoved:Connect(function(e)
     end
 end)
 
+-- Set SimulationRadius 1 lần khi script load
+if plr.SimulationRadius ~= math.huge then
+    plr.SimulationRadius = math.huge
+end
+
 BringEnemy = function(Target, Distance)
     if not _B or not Target then return end
     Distance = Distance or 200
-
+    
     local rootTarget = Target:FindFirstChild("HumanoidRootPart")
     if not rootTarget then return end
-
+    
     local PosMon = rootTarget.Position
     local TargetBase = GetMobBaseName(Target.Name)
-
-    if plr.SimulationRadius ~= math.huge then
-        plr.SimulationRadius = math.huge
-    end
-
     local list = EnemyCache[TargetBase]
     if not list then return end
-
+    
+    local DistSq = Distance * Distance -- So sánh bình phương để tránh sqrt
+    
     for i = #list, 1, -1 do
         local Enemy = list[i]
         if not Enemy or not Enemy.Parent then
             table.remove(list, i)
             continue
         end
-
+        
         local root = Enemy:FindFirstChild("HumanoidRootPart")
         local hum = Enemy:FindFirstChildOfClass("Humanoid")
+        
         if not root or not hum or hum.Health <= 0 then
             continue
         end
-
-        if (root.Position - PosMon).Magnitude <= Distance then
-            -- Setup physics 1 lần
-            if hum:GetState() ~= Enum.HumanoidStateType.Physics then
-                hum:ChangeState(Enum.HumanoidStateType.Physics)
-            end
-            root.CanCollide = false
-
-            local bp = root:FindFirstChild("EnemyFlyPosition")
-            if not bp then
-                bp = Instance.new("BodyPosition")
+        
+        local offset = root.Position - PosMon
+        if offset.X*offset.X + offset.Y*offset.Y + offset.Z*offset.Z <= DistSq then
+            -- Chỉ setup physics nếu chưa setup
+            if not ActiveBodyPositions[root] then
+                if hum:GetState() ~= Enum.HumanoidStateType.Physics then
+                    hum:ChangeState(Enum.HumanoidStateType.Physics)
+                end               
+                root.CanCollide = false
+                
+                local bp = Instance.new("BodyPosition")
                 bp.Name = "EnemyFlyPosition"
                 bp.MaxForce = Vector3.new(1e7, 1e7, 1e7)
                 bp.P = 3500
                 bp.D = 150
-                bp.Parent = root
+                bp.Parent = root               
+                ActiveBodyPositions[root] = bp
             end
-
-            bp.Position = PosMon
+            ActiveBodyPositions[root].Position = PosMon
         end
     end
 end
@@ -893,396 +908,237 @@ getInfinity_Ability = function(e, A)
 Hop = function()
     HopServerModule:Teleport()
   end;
-
-local IsTeleporting = false
-local Players = game:GetService("Players")
+local plr = game.Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
--- =========================
--- HÀM CHỜ HRP
--- =========================
-local function GetHRP(player)
-    if not player then return nil end
-    return player.Character:WaitForChild("HumanoidRootPart", 9)
+-- // 1. TẠO PART ĐIỀU KHIỂN //
+local c = Instance.new("Part", workspace)
+c.Size = Vector3.new(1, 1, 1)
+c.Name = "Rip_Indra"
+c.Anchored = true
+c.CanCollide = false
+c.CanTouch = false
+c.Transparency = 1
+
+-- Xóa part cũ
+local oldPart = workspace:FindFirstChild(c.Name)
+if oldPart and oldPart ~= c then
+    oldPart:Destroy()
 end
 
--- =========================
--- DANH SÁCH TELEPORTER THEO MAP
--- =========================
-local function GetTeleporters()
+
+-- // 3. LOGIC FARM & LOOP GIỮ NHÂN VẬT //
+task.spawn(function()
+    while task.wait() do
+        if c and c.Parent == workspace then
+            getgenv().OnFarm = shouldTween
+        else
+            getgenv().OnFarm = false
+        end
+    end
+end)
+
+task.spawn(function()
+    repeat task.wait() until plr.Character and plr.Character.PrimaryPart
+    c.CFrame = plr.Character.PrimaryPart.CFrame
+
+    while task.wait() do
+        pcall(function()
+            local char = plr.Character
+            if not char or not char.PrimaryPart then return end
+
+            if getgenv().OnFarm then
+                if c and c.Parent == workspace then
+                    local root = char.PrimaryPart
+                    -- Nếu nhân vật bị lệch quá xa (>200) do lag, kéo Part về lại nhân vật
+                    if (root.Position - c.Position).Magnitude > 200 then
+                        c.CFrame = root.CFrame
+                    else
+                        -- Bình thường: Kéo nhân vật theo Part
+                        root.CFrame = c.CFrame
+                    end
+                end
+                
+                -- Tắt va chạm để không bị kẹt tường
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") then v.CanCollide = false end
+                end
+            else
+                -- Bật lại va chạm khi dừng farm
+                for _, v in pairs(char:GetChildren()) do
+                    if v:IsA("BasePart") then v.CanCollide = true end
+                end
+            end
+        end)
+    end
+end)
+
+-- // 4. HÀM TÌM CỔNG TELE (SEA 1, 2, 3) //
+local function CheckNearestTeleporter(targetCF)
     local placeId = game.PlaceId
+    local targetPos = targetCF.Position
+    local teleList = {}
 
-    if placeId == 100117331123089 then -- Sea 3
-        return {
-            FloatingTurtle = Vector3.new(-12462, 375, -7552),
-            HydraIsland = Vector3.new(5658, 1013, -335),
-            Mansion = Vector3.new(-12462, 375, -7552),
-            Castle = Vector3.new(-5036, 315, -3179),
-            DimensionalShift = Vector3.new(-2097, 4776, -15013),
-            BeautifulPirate = Vector3.new(5319, 23, -93),
-            TempleOfTime = Vector3.new(28286, 14897, 103)
-        }
-
-    elseif placeId == 79091703265657 then -- Sea 2
-        return {
-            SwanMansion = Vector3.new(-390, 332, 673),
-            SwanRoom = Vector3.new(2285, 15, 905),
-            CursedShip = Vector3.new(923, 126, 32852),
-            ZombieIsland = Vector3.new(-6509, 83, -133)
-        }
-
-    elseif placeId == 85211729168715 then -- Sea 1
-        return {
+    if placeId == 2753915549 then -- Sea 1
+        teleList = {
             Sky3 = Vector3.new(-7894, 5547, -380),
             Sky3Exit = Vector3.new(-4607, 874, -1667),
             UnderWater = Vector3.new(61163, 11, 1819),
-            UnderwaterCity = Vector3.new(61165, 0, 1897),
-            PirateVillage = Vector3.new(-1242, 4, 3901),
             UnderwaterExit = Vector3.new(4050, -1, -1814)
+        }
+    elseif placeId == 4442272183 then -- Sea 2
+        teleList = {
+            ["Swan Mansion"] = Vector3.new(-390, 332, 673),
+            ["Swan Room"] = Vector3.new(2285, 15, 905),
+            ["Cursed Ship"] = Vector3.new(923, 126, 32852),
+            ["Zombie Island"] = Vector3.new(-6509, 83, -133)
+        }
+    elseif placeId == 7449423635 then -- Sea 3
+        teleList = {
+            ["Floating Turtle"] = Vector3.new(-12462, 375, -7552),
+            ["Hydra Island"] = Vector3.new(5745, 610, -267),
+            Mansion = Vector3.new(-12462, 375, -7552),
+            Castle = Vector3.new(-5036, 315, -3179),
+            ["Beautiful Pirate"] = Vector3.new(5319, 23, -93),
+            ["Beautiful Room"] = Vector3.new(5314.58, 22.53, -125.94),
+            ["Temple of Time"] = Vector3.new(28286, 14897, 103)
         }
     end
 
-    return {}
-end
-
--- =========================
--- TÌM TELEPORTER GẦN NHẤT
--- =========================
-local function GetNearestTeleporter(targetCFrame)
-    local teleporters = GetTeleporters()
-    local targetPos = targetCFrame.Position
-
-    local nearest, shortest = nil, math.huge
-
-    for _, pos in pairs(teleporters) do
+    local nearest, minDist = nil, math.huge
+    for _, pos in pairs(teleList) do
         local dist = (pos - targetPos).Magnitude
-        if dist < shortest then
-            shortest = dist
+        if dist < minDist then
+            minDist = dist
             nearest = pos
         end
     end
 
-    if not nearest then return nil end
-
-    local hrp = GetHRP(LocalPlayer)
-    if not hrp then return nil end
-
-    if shortest <= (targetPos - hrp.Position).Magnitude then
-        return nearest
+    local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local distToTarget = (targetPos - hrp.Position).Magnitude
+        if minDist < 2000 and distToTarget > 3000 then
+            return nearest
+        end
     end
-
     return nil
 end
 
--- =========================
--- REQUEST TELEPORTER
--- =========================
 local function RequestEntrance(pos)
-    game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", pos)
-    local hrp = GetHRP(LocalPlayer)
-    if hrp then
-        hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
-    end
-    task.wait(0.5)
+    pcall(function()
+        game.ReplicatedStorage.Remotes.CommF_:InvokeServer("requestEntrance", pos)
+    end)
 end
 
--- =========================
--- DỪNG TELEPORT
--- =========================
-local function StopTeleport()
-    IsTeleporting = false
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("PartTele") then
-        LocalPlayer.Character.PartTele:Destroy()
-    end
-end
-
--- =========================
--- TELEPORT CHÍNH (TOPOS)
--- =========================
-function topos(targetCFrame)
-    local char = LocalPlayer.Character
-    if not char or char.Humanoid.Health <= 0 then return end
-
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    local distance = (targetCFrame.Position - hrp.Position).Magnitude
-
-    -- dùng teleporter nếu có
-    local telePos = GetNearestTeleporter(targetCFrame)
-    if telePos then
-        RequestEntrance(telePos)
+-- // 5. HÀM _tp ĐÃ FIX LỖI //
+_tp = function(target)
+    local char = plr.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    
+    local targetCF = target
+    if typeof(target) == "Vector3" then
+        targetCF = CFrame.new(target)
     end
 
-    -- tạo PartTele
-    if not char:FindFirstChild("PartTele") then
-        local part = Instance.new("Part")
-        part.Name = "PartTele"
-        part.Size = Vector3.new(10, 1, 10)
-        part.Anchored = true
-        part.Transparency = 1
-        part.CanCollide = true
-        part.CFrame = hrp.CFrame
-        part.Parent = char
+    c.CFrame = char.HumanoidRootPart.CFrame
+    task.wait() 
 
-        part:GetPropertyChangedSignal("CFrame"):Connect(function()
-            if IsTeleporting and char:FindFirstChild("HumanoidRootPart") then
-                hrp.CFrame = part.CFrame
-            end
-        end)
+    -- BƯỚC 1: Thử tìm cổng dịch chuyển
+    local bestPortal = CheckNearestTeleporter(targetCF)
+    if bestPortal then
+        RequestEntrance(bestPortal)
+        task.wait(0.5) -- Chờ server load map
+        -- Sau khi qua cổng, CẬP NHẬT LẠI vị trí Part c theo nhân vật ở đảo mới
+        if char.PrimaryPart then
+            c.CFrame = char.PrimaryPart.CFrame
+        end
     end
 
-    IsTeleporting = true
+    -- BƯỚC 2: Bay thường (Tween) đến đích (Dù có dùng cổng hay không vẫn chạy đoạn này để đi nốt quãng đường còn lại)
+    local currentPos = c.Position
+    local finalPos = targetCF.Position
+    local distance = (finalPos - currentPos).Magnitude
 
-    local tween = TweenService:Create(
-        char.PartTele,
-        TweenInfo.new(distance / 360, Enum.EasingStyle.Linear),
-        {CFrame = targetCFrame}
-    )
+    -- Nếu khoảng cách quá gần (< 10 studs) thì không cần tween nữa
+    if distance < 10 then 
+        c.CFrame = targetCF
+        return 
+    end
+    local speed = 350
+    if distance < 250 then speed = 350 end 
+
+    local tweenInfo = TweenInfo.new(distance / speed, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(c, tweenInfo, { CFrame = targetCF })
 
     tween:Play()
-    tween.Completed:Connect(function(state)
-        if state == Enum.PlaybackState.Completed then
-            StopTeleport()
+
+    -- Sử dụng Heartbeat thay vì Loop để mượt hơn và tránh treo script
+    local connection
+    connection = RunService.Heartbeat:Connect(function()
+        if tween.PlaybackState ~= Enum.PlaybackState.Playing then
+            connection:Disconnect()
+            return
+        end
+        
+        -- Nếu tắt tool farm hoặc Part bị mất -> Hủy tween
+        if not shouldTween or not c or c.Parent ~= workspace then
+            tween:Cancel()
+            connection:Disconnect()
         end
     end)
 end
 
--- =========================
--- AUTO STOP KHI LỆCH
--- =========================
-task.spawn(function()
-    while task.wait() do
-        if IsTeleporting and LocalPlayer.Character then
-            local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            local part = LocalPlayer.Character:FindFirstChild("PartTele")
-            if hrp and part and (hrp.Position - part.Position).Magnitude >= 100 then
-                StopTeleport()
-            end
-        end
-    end
-end)
-
--- =========================
--- STOP KHI CHẾT
--- =========================
-LocalPlayer.CharacterAdded:Connect(function(char)
-    char:WaitForChild("Humanoid").Died:Connect(StopTeleport)
-end)
-
--- =========================
--- HÀM GỌI NGOÀI
--- =========================
-function _tp(cf)
-    topos(cf)
-end
-
--- Danh sách các flag bật Tween
-local TweenFlags = {
-  "_G.SailBoat_Hydra",
-  "_G.WardenBoss",
-  "_G.AutoFactory",
-  "_G.HighestMirage",
-  "_G.HCM",
-  "_G.PGB",
-  "_G.Leviathan1",
-  "_G.UPGDrago",
-  "_G.Complete_Trials",
-  "_G.TpDrago_Prehis",
-  "_G.BuyDrago",
-  "_G.AutoFireFlowers",
-  "_G.DT_Uzoth",
-  "_G.AutoBerry",
-  "_G.Prehis_Find",
-  "_G.Prehis_Skills",
-  "_G.Prehis_DB",
-  "_G.Prehis_DE",
-  "_G.FarmBlazeEM",
-  "_G.Dojoo",
-  "_G.CollectPresent",
-  "_G.AutoLawKak",
-  "_G.TpLab",
-  "_G.AutoPhoenixF",
-  "_G.AutoFarmChest",
-  "_G.AutoHytHallow",
-  "_G.LongsWord",
-  "_G.BlackSpikey",
-  "_G.AutoHolyTorch",
-  "_G.TrainDrago",
-  "_G.AutoSaber",
-  "_G.FarmMastery_Dev",
-  "_G.CitizenQuest",
-  "_G.AutoEctoplasm",
-  "_G.KeysRen",
-  "_G.Auto_Rainbow_Haki",
-  "_G.obsFarm",
-  "_G.AutoBigmom",
-  "_G.Doughv2",
-  "_G.AuraBoss",
-  "_G.Raiding",
-  "_G.Auto_Cavender",
-  "_G.TpPly",
-  "_G.Bartilo_Quest",
-  "_G.Level",
-  "_G.FarmEliteHunt",
-  "_G.AutoZou",
-  "_G.AutoFarm_Bone",
-  "_G.AutoMaterial",
-  "_G.CraftVM",
-  "_G.FrozenTP",
-  "_G.TPDoor",
-  "_G.AcientOne",
-  "_G.AutoFarmNear",
-  "_G.AutoRaidCastle",
-  "_G.DarkBladev3",
-  "_G.AutoFarmRaid",
-  "_G.Auto_Cake_Prince",
-  "_G.Addealer",
-  "_G.TPNpc",
-  "_G.TwinHook",
-  "_G.FindMirage",
-  "_G.FarmChestM",
-  "_G.Shark",
-  "_G.TerrorShark",
-  "_G.Piranha",
-  "_G.MobCrew",
-  "_G.SeaBeast1",
-  "_G.FishBoat",
-  "_G.AutoPole",
-  "_G.AutoPoleV2",
-  "_G.Auto_SuperHuman",
-  "_G.AutoDeathStep",
-  "_G.Auto_SharkMan_Karate",
-  "_G.Auto_Electric_Claw",
-  "_G.AutoDragonTalon",
-  "_G.Auto_Def_DarkCoat",
-  "_G.Auto_God_Human",
-  "_G.Auto_Tushita",
-  "_G.AutoMatSoul",
-  "_G.AutoKenVTWO",
-  "_G.AutoSerpentBow",
-  "_G.AutoFMon",
-  "_G.Auto_Soul_Guitar",
-  "_G.TPGEAR",
-  "_G.AutoSaw",
-  "_G.AutoTridentW2",
-  "_G.Auto_StartRaid",
-  "_G.AutoEvoRace",
-  "_G.AutoGetQuestBounty",
-  "_G.MarinesCoat",
-  "_G.TravelDres",
-  "_G.Defeating",
-  "_G.DummyMan",
-  "_G.Auto_Yama",
-  "_G.Auto_SwanGG",
-  "_G.SwanCoat",
-  "_G.AutoEcBoss",
-  "_G.Auto_Mink",
-  "_G.Auto_Human",
-  "_G.Auto_Skypiea",
-  "_G.Auto_Fish",
-  "_G.CDK_TS",
-  "_G.CDK_YM",
-  "_G.CDK",
-  "_G.AutoFarmGodChalice",
-  "_G.AutoFistDarkness",
-  "_G.AutoMiror",
-  "_G.Teleport",
-  "_G.AutoKilo",
-  "_G.AutoGetUsoap",
-  "_G.Praying",
-  "_G.TryLucky",
-  "_G.AutoColShad",
-  "_G.AutoUnHaki",
-  "_G.Auto_DonAcces",
-  "_G.AutoRipIngay",
-  "_G.DragoV3",
-  "_G.DragoV1",
-  "_G.SailBoats",
-  "NextIs",
-  "_G.FarmGodChalice",
-  "_G.IceBossRen",
-  "senth",
-  "senth2",
-  "_G.Lvthan",
-  "_G.beasthunter",
-  "_G.DangerLV",
-  "_G.Relic123",
-  "_G.tweenKitsune",
-  "_G.Collect_Ember",
-  "_G.AutofindKitIs",
-  "_G.snaguine",
-  "_G.TwFruits",
-  "_G.tweenKitShrine",
-  "_G.Tp_LgS",
-  "_G.Tp_MasterA",
-  "_G.tweenShrine",
-  "_G.FarmMastery_G",
-  "_G.FarmMastery_S",
-  "_G.FarmTyrant"
-}
-
-local function IsTweenEnabled()
-  for _, v in ipairs(TweenFlags) do
-    local ok, result = pcall(function()
-      return loadstring("return " .. v)()
-    end)
-    if ok and result then
-      return true
-    end
-  end
-  return false
-end
+TeleportToTarget = function(e)
+    if (e.Position - plr.Character.HumanoidRootPart.Position).Magnitude > 1000 then
+      _tp(e);
+    else
+      _tp(e);
+    end;
+  end;
+notween = function(e)
+    plr.Character.HumanoidRootPart.CFrame = e;
+  end;
 
 spawn(function()
   while task.wait() do
     pcall(function()
-      if not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then
-        return
-      end
-
-      if IsTweenEnabled() then
-        IsTeleporting = true
-
+      if _G.StartFram then
+        shouldTween = true;
         if not plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
-          local bv = Instance.new("BodyVelocity")
-          bv.Name = "BodyClip"
-          bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-          bv.Velocity = Vector3.zero
-          bv.Parent = plr.Character.HumanoidRootPart
-        end
-
+          local e = Instance.new("BodyVelocity");
+          e.Name = "BodyClip";
+          e.Parent = plr.Character.HumanoidRootPart;
+          e.MaxForce = Vector3.new(100000, 100000, 100000);
+          e.Velocity = Vector3.new(0, 0, 0);
+        end;
         if not plr.Character:FindFirstChild("highlight") then
-          local hl = Instance.new("Highlight")
-          hl.Name = "highlight"
-          hl.FillColor = Color3.fromRGB(2, 197, 60)
-          hl.OutlineColor = Color3.new(1, 1, 1)
-          hl.FillTransparency = 0.5
-          hl.OutlineTransparency = 0.2
-          hl.Parent = plr.Character
-        end
-
-        for _, part in ipairs(plr.Character:GetDescendants()) do
-          if part:IsA("BasePart") then
-            part.CanCollide = false
-          end
-        end
+          local e = Instance.new("Highlight");
+          e.Name = "highlight";
+          e.Enabled = true;
+          e.FillColor = Color3.fromRGB(2, 197, 60);
+          e.OutlineColor = Color3.fromRGB(255, 255, 255);
+          e.FillTransparency = .5;
+          e.OutlineTransparency = .2;
+          e.Parent = plr.Character;
+        end;
+        for e, A in pairs(plr.Character:GetDescendants()) do
+          if A:IsA("BasePart") then
+            A.CanCollide = false;
+          end;
+        end;
       else
-        IsTeleporting = false
-
-        local hrp = plr.Character.HumanoidRootPart
-        if hrp:FindFirstChild("BodyClip") then
-          hrp.BodyClip:Destroy()
-        end
-
+        shouldTween = false;
+        if plr.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
+          (plr.Character.HumanoidRootPart:FindFirstChild("BodyClip")):Destroy();
+        end;
         if plr.Character:FindFirstChild("highlight") then
-          plr.Character.highlight:Destroy()
-        end
-      end
-    end)
-  end
-end)
+          (plr.Character:FindFirstChild("highlight")):Destroy();
+        end;
+      end;
+    end);
+  end;
+end);
 
 QuestB = function()
     if World1 then
@@ -2234,6 +2090,7 @@ local function GetEnemyByName(name)
     end
   end
 end
+
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -2244,7 +2101,7 @@ local plr = Players.LocalPlayer
 local xw = plr
 
 --// FastAttack throttle
-local FastAttackDelay = 0.25
+local FastAttackDelay = 0.15
 local LastFastAttack = 0
 
 --// Check alive
@@ -2298,7 +2155,7 @@ function AttackNoCoolDown()
   end
   if not tool then return end
 
-  local targets = pw(char, 35)
+  local targets = pw(char, 60)
   if #targets == 0 then return end
 
   local modules = ReplicatedStorage:FindFirstChild("Modules")
@@ -2432,22 +2289,17 @@ task.spawn(function()
   end)
 end)
 
-local UiHub = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/hiuvc-patch-1/TestUi.lua", true)))();
+
+local UiHub = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = UiHub:CreateWindow({
-    Title = "HiuHub | Blox Kid\nBy Minhieu_.",
-    TitleIcon = "",
-    Image = "",
-    Search = true,
-    Icon = "",
-    TabWidth = 150,
-    Theme = "Darker",
-    Acrylic = false,
-    Size = UDim2.fromOffset(550, 400),
-    MinimizeKey = Enum.KeyCode.End,
-    BackgroundImage = "rbxassetid://76095220558443",
-    BackgroundTransparency = 0,
-    DropdownsOutsideWindow = true,
+    Title = "Ziris Hub",
+    SubTitle = "by Minhieu_.",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(550, 350),
+    Acrylic = true, 
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl 
   });
 
 local screenGui = Instance.new("ScreenGui")
@@ -2503,7 +2355,7 @@ toggleButton.InputBegan:Connect(function(input)
         dragStart = input.Position
         startPos = toggleButton.Position
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
+            if input.UserInputState == Enum.UserInputState.LeftControl then
                 dragging = false
             end
         end)
@@ -2945,17 +2797,9 @@ spawn(function()
 end)
 
 local QUEST_POS = CFrame.new(-1927.92, 37.8, -12842.54)
-local WAIT_POS  = CFrame.new(-2091.91, 70.01, -12142.84)
 local MIRROR_TP = CFrame.new(-2151.82, 149.32, -12404.91)
 
-
-local Minions = {
-    ["Cookie Crafter"] = true,
-    ["Cake Guard"] = true,
-    ["Baking Staff"] = true,
-    ["Head Baker"] = true
-}
-
+local Minions = {"Cookie Crafter","Cake Guard","Baking Staff","Head Baker"}
 -- ===== COOLDOWN =====
 local LastSpawner = 0
 local SpawnerCD = 10
@@ -2976,15 +2820,11 @@ task.spawn(function()
             local Enemies = Workspace:FindFirstChild("Enemies")
             if not Enemies then return end
 
-            -- ===============================
-            -- 1️⃣ ƯU TIÊN CAKE PRINCE
-            -- ===============================
             for _, enemy in ipairs(Enemies:GetChildren()) do
                 if enemy.Name == "Cake Prince"
                 and enemy:FindFirstChild("Humanoid")
                 and enemy.Humanoid.Health > 0 then
-                    O.Kill2(enemy, true)
-                    BringEnemy(enemy)
+                    O.Kill(enemy, true)
                     return
                 end
             end
@@ -3003,19 +2843,13 @@ task.spawn(function()
                     return
                 end
             end
-
-            -- ===============================
-            -- 3️⃣ FARM MINION
-            -- ===============================
-            local FoundMinion = false
-
-            for _, enemy in ipairs(Enemies:GetChildren()) do
-                if Minions[enemy.Name]
-                and enemy:FindFirstChild("Humanoid")
-                and enemy.Humanoid.Health > 0 then
-                    FoundMinion = true
-
-                    -- Nhận quest nếu cần
+            for _, enemyName in ipairs(Minions) do
+              while  _G.Auto_Cake_Prince do
+                    local enemy = GetEnemyByName(enemyName)
+                    if not enemy then
+                        break 
+                    end
+ 
                     if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
                         if (HRP.Position - QUEST_POS.Position).Magnitude > 50 then
                             _tp(QUEST_POS)
@@ -3025,7 +2859,6 @@ task.spawn(function()
                         return
                     end
 
-                    -- Spawn Cake Prince (cooldown)
                     if tick() - LastSpawner > SpawnerCD then
                         local res = CommF:InvokeServer("CakePrinceSpawner")
                         local num = tonumber(string.match(res or "", "%d+"))
@@ -3035,21 +2868,38 @@ task.spawn(function()
                         LastSpawner = tick()
                     end
 
-                    O.Kill(enemy, true)
-                    BringEnemy(enemy)
-                    return
-                end
-            end
+                    repeat
+                        task.wait()
 
-            if not FoundMinion then
-                if (HRP.Position - WAIT_POS.Position).Magnitude > 30 then
-                    _tp(WAIT_POS)
+                        if not _G.Auto_Cake_Prince then break end
+                        if not enemy or not enemy.Parent then break end
+                        if enemy.Humanoid.Health <= 0 then break end
+
+                        EquipWeapon(_G.SelectWeapon)
+
+                        local root = enemy:FindFirstChild("HumanoidRootPart")
+                        if not root then break end
+
+                        local mobPos = root.Position
+                        _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
+
+                        -- Bring đúng 1 lần, KHÔNG đổi target
+                        if not brought and (mobPos - HRP.Position).Magnitude <= 25 then
+                            task.wait(0.15)
+                            BringEnemy(enemy)
+                        end
+
+                    until enemy.Humanoid.Health <= 0
+                        or not enemy.Parent
+                        or not _G.Auto_Cake_Prince
+                        or (_G.AcceptQuestC and not QuestGui.Visible)
+                    repeat task.wait() until not enemy.Parent or enemy.Humanoid.Health <= 0
                 end
             end
+            _tp(CFrame.new(-2091.91, 70.01, -12142.84))
         end)
     end
 end)
-
 
 -- Farm Bone Logic
 local BoneEnemies = {"Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"}
@@ -3065,17 +2915,17 @@ task.spawn(function()
             local QuestGui = plr.PlayerGui.Main.Quest
             if not HRP then return end
 
-            -- LOOP THEO THỨ TỰ TABLE
             for _, enemyName in ipairs(BoneEnemies) do
                 if not _G.AutoFarm_Bone then break end
 
-                -- GIẾT HẾT QUÁI CÙNG TÊN
+                -- CHỈ LẤY 1 ENEMY → GIẾT XONG → MỚI LẤY ENEMY KHÁC
                 while _G.AutoFarm_Bone do
                     local enemy = GetEnemyByName(enemyName)
                     if not enemy then
                         break -- Hết quái tên này → sang tên tiếp
                     end
 
+                    -- Accept Quest nếu cần
                     if _G.AcceptQuestC and not QuestGui.Visible then
                         local questPos = CFrame.new(-9516.99316, 172.017181, 6078.46533)
                         _tp(questPos)
@@ -3089,38 +2939,44 @@ task.spawn(function()
                         }
                         CommF:InvokeServer(unpack(questList[math.random(1, #questList)]))
                     end
-                    -- Kill Enemy Loop
+
+             
                     local brought = false
+
                     repeat
-                      task.wait()
+                        task.wait()
 
-                      if not enemy or not enemy.Parent or enemy.Humanoid.Health <= 0 then
-                          break
-                      end
+                        if not _G.AutoFarm_Bone then break end
+                        if not enemy or not enemy.Parent then break end
+                        if enemy.Humanoid.Health <= 0 then break end
 
-                      EquipWeapon(_G.SelectWeapon)
+                        EquipWeapon(_G.SelectWeapon)
 
-                      local root = enemy.HumanoidRootPart
-                      local mobPos = root.Position
+                        local root = enemy:FindFirstChild("HumanoidRootPart")
+                        if not root then break end
 
-                      _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
+                        local mobPos = root.Position
+                        _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
 
-                      if not brought and (mobPos - HRP.Position).Magnitude <= 30 then
-                          task.wait(0.1)
-                          BringEnemy(enemy)
-                          brought = true
-                      end
+                        -- Bring đúng 1 lần, KHÔNG đổi target
+                        if not brought and (mobPos - HRP.Position).Magnitude <= 25 then
+                            task.wait(0.15)
+                            BringEnemy(enemy)
+                            brought = true
+                        end
 
-                  until not _G.AutoFarm_Bone
-                     or enemy.Humanoid.Health <= 0
-                     or not enemy.Parent
-                     or (_G.AcceptQuestC and not QuestGui.Visible)
+                    until enemy.Humanoid.Health <= 0
+                        or not enemy.Parent
+                        or not _G.AutoFarm_Bone
+                        or (_G.AcceptQuestC and not QuestGui.Visible)
+                    repeat task.wait() until not enemy.Parent or enemy.Humanoid.Health <= 0
                 end
             end
             _tp(CFrame.new(-9495.68, 453.58, 5977.34))
         end)
     end
 end)
+
 
 local PhaBinhPoints = {
     CFrame.new(-16332.526, 158.072, 1440.325),

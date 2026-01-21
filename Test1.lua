@@ -262,10 +262,7 @@ O.DistH = function(e, A)
 local function GetMobBaseName(name)
   return string.match(name, "^(.-)%s*%[") or name
 end
-
 local EnemyCache = {}
-local ActiveBodyPositions = {} -- Cache BodyPosition instances
-
 local function IndexEnemies()
     table.clear(EnemyCache)
     for _, e in ipairs(workspace.Enemies:GetChildren()) do
@@ -274,30 +271,16 @@ local function IndexEnemies()
         table.insert(EnemyCache[base], e)
     end
 end
-
 IndexEnemies()
-
 workspace.Enemies.ChildAdded:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     EnemyCache[base] = EnemyCache[base] or {}
     table.insert(EnemyCache[base], e)
 end)
-
 workspace.Enemies.ChildRemoved:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     local list = EnemyCache[base]
     if not list then return end
-    
-    -- Cleanup BodyPosition nếu có
-    local root = e:FindFirstChild("HumanoidRootPart")
-    if root then
-        local bp = root:FindFirstChild("EnemyFlyPosition")
-        if bp then 
-            bp:Destroy()
-            ActiveBodyPositions[root] = nil
-        end
-    end
-    
     for i = #list, 1, -1 do
         if list[i] == e then
             table.remove(list, i)
@@ -305,62 +288,51 @@ workspace.Enemies.ChildRemoved:Connect(function(e)
         end
     end
 end)
-
--- Set SimulationRadius 1 lần khi script load
-if plr.SimulationRadius ~= math.huge then
-    plr.SimulationRadius = math.huge
-end
-
 BringEnemy = function(Target, Distance)
     if not _B or not Target then return end
     Distance = Distance or 250
-    
     local rootTarget = Target:FindFirstChild("HumanoidRootPart")
     if not rootTarget then return end
-    
     local PosMon = rootTarget.Position
     local TargetBase = GetMobBaseName(Target.Name)
+    if plr.SimulationRadius ~= math.huge then
+        plr.SimulationRadius = math.huge
+    end
     local list = EnemyCache[TargetBase]
     if not list then return end
-    
-    local DistSq = Distance * Distance -- So sánh bình phương để tránh sqrt
-    
     for i = #list, 1, -1 do
         local Enemy = list[i]
         if not Enemy or not Enemy.Parent then
             table.remove(list, i)
             continue
         end
-        
         local root = Enemy:FindFirstChild("HumanoidRootPart")
         local hum = Enemy:FindFirstChildOfClass("Humanoid")
-        
         if not root or not hum or hum.Health <= 0 then
             continue
         end
-        
-        local offset = root.Position - PosMon
-        if offset.X*offset.X + offset.Y*offset.Y + offset.Z*offset.Z <= DistSq then
-            -- Chỉ setup physics nếu chưa setup
-            if not ActiveBodyPositions[root] then
-                if hum:GetState() ~= Enum.HumanoidStateType.Physics then
-                    hum:ChangeState(Enum.HumanoidStateType.Physics)
-                end               
-                root.CanCollide = false
-                
-                local bp = Instance.new("BodyPosition")
+        if (root.Position - PosMon).Magnitude <= Distance then
+            -- Setup physics 1 lần
+            if hum:GetState() ~= Enum.HumanoidStateType.Physics then
+                hum:ChangeState(Enum.HumanoidStateType.Physics)
+            end
+            if hum:FindFirstChild("Animator") then 
+                hum.Animator:Destroy()
+            end
+            root.CanCollide = false
+            local bp = root:FindFirstChild("EnemyFlyPosition")
+            if not bp then
+                bp = Instance.new("BodyPosition")
                 bp.Name = "EnemyFlyPosition"
                 bp.MaxForce = Vector3.new(1e7, 1e7, 1e7)
                 bp.P = 3500
                 bp.D = 150
-                bp.Parent = root               
-                ActiveBodyPositions[root] = bp
+                bp.Parent = root
             end
-            ActiveBodyPositions[root].Position = PosMon
+            bp.Position = PosMon
         end
     end
 end
-
 O.Kill = function(e, A)
   if not e or not A then return end
 
@@ -2868,8 +2840,6 @@ task.spawn(function()
                         LastSpawner = tick()
                     end
 
-                    local brought = false
-
                     repeat
                         task.wait()
 
@@ -2889,7 +2859,6 @@ task.spawn(function()
                         if not brought and (mobPos - HRP.Position).Magnitude <= 25 then
                             task.wait(0.15)
                             BringEnemy(enemy)
-                            brought = true
                         end
 
                     until enemy.Humanoid.Health <= 0

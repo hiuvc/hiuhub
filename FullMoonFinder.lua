@@ -1,9 +1,11 @@
+
 if queue_on_teleport then
-	queue_on_teleport([[
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Auto_Chest.lua"))()
-	]])
+    queue_on_teleport([[
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/FullMoonFinder.lua"))()
+    ]])
 end
 LinkHook = "https://discord.com/api/webhooks/1464531093863665766/GVkjs4gAiRuoarqOPQGFQe1zZL1vkjSmnl0pdV19eBASJr1IGbUyRYv70VuBN4lskYBj" -- webhook to send the moon status
+
 local Moon = {
 ['8'] = "http://www.roblox.com/asset/?id=9709149431", -- 🌕
 ['7'] = "http://www.roblox.com/asset/?id=9709149052", -- 🌖

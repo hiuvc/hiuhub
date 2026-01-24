@@ -133,9 +133,10 @@ end
 
 local minutesLeft = PredictMinutes(index)
 
--- SEND ONLY IF FULL MOON OR CLOSE
 if minutesLeft <= 20 then
     SendWebhook(moonData, minutesLeft)
+    wait(1)
+    Hop()
 else
     Hop()
 end

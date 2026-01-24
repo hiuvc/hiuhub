@@ -4,7 +4,7 @@ if queue_on_teleport then
         loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/FullMoonFinder.lua"))()
     ]])
 end
-
+local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 --// SERVICES
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
@@ -80,7 +80,7 @@ local function SendWebhook(moonData, minutes)
                     ["inline"] = true
                 },
                 {
-                    ["name"] = "🚪 Join Server",
+                    ["name"] = "🚪 Script ",
                     ["value"] = "```"..JoinCode.."```",
                     ["inline"] = false
                 },
@@ -111,23 +111,13 @@ local Visited = {}
 local PlaceID = game.PlaceId
 
 local function Hop()
-    local servers = HttpService:JSONDecode(
-        game:HttpGet("https://games.roblox.com/v1/games/"..PlaceID.."/servers/Public?sortOrder=Asc&limit=100")
-    )
-
-    for _,v in pairs(servers.data) do
-        if v.playing < v.maxPlayers and not Visited[v.id] then
-            Visited[v.id] = true
-            TeleportService:TeleportToPlaceInstance(PlaceID, v.id, LocalPlayer)
-            task.wait(4)
-        end
-    end
+    HopServerModule:Teleport()
 end
 
 --// MAIN
 local index, moonData = GetMoonIndex()
 if not index then
-    Hop()
+        Hop()
     return
 end
 

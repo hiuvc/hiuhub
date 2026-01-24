@@ -262,10 +262,7 @@ O.DistH = function(e, A)
 local function GetMobBaseName(name)
   return string.match(name, "^(.-)%s*%[") or name
 end
-
 local EnemyCache = {}
-local ActiveBodyPositions = {} -- Cache BodyPosition instances
-
 local function IndexEnemies()
     table.clear(EnemyCache)
     for _, e in ipairs(workspace.Enemies:GetChildren()) do
@@ -274,30 +271,16 @@ local function IndexEnemies()
         table.insert(EnemyCache[base], e)
     end
 end
-
 IndexEnemies()
-
 workspace.Enemies.ChildAdded:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     EnemyCache[base] = EnemyCache[base] or {}
     table.insert(EnemyCache[base], e)
 end)
-
 workspace.Enemies.ChildRemoved:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     local list = EnemyCache[base]
     if not list then return end
-    
-    -- Cleanup BodyPosition nếu có
-    local root = e:FindFirstChild("HumanoidRootPart")
-    if root then
-        local bp = root:FindFirstChild("EnemyFlyPosition")
-        if bp then 
-            bp:Destroy()
-            ActiveBodyPositions[root] = nil
-        end
-    end
-    
     for i = #list, 1, -1 do
         if list[i] == e then
             table.remove(list, i)
@@ -305,62 +288,93 @@ workspace.Enemies.ChildRemoved:Connect(function(e)
         end
     end
 end)
-
--- Set SimulationRadius 1 lần khi script load
-if plr.SimulationRadius ~= math.huge then
-    plr.SimulationRadius = math.huge
-end
-
+local MAX_BRING = 2
 BringEnemy = function(Target, Distance)
     if not _B or not Target then return end
-    Distance = Distance or 200
-    
+
+    local Char = plr.Character
+    local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
+    if not HRP then return end
+
     local rootTarget = Target:FindFirstChild("HumanoidRootPart")
     if not rootTarget then return end
-    
+
+    -- Chỉ bring khi mob gần player
+    if (rootTarget.Position - HRP.Position).Magnitude > 25 then
+        return
+    end
+
+    Distance = Distance or 250
     local PosMon = rootTarget.Position
     local TargetBase = GetMobBaseName(Target.Name)
+
+    if plr.SimulationRadius ~= math.huge then
+        plr.SimulationRadius = math.huge
+    end
+
     local list = EnemyCache[TargetBase]
     if not list then return end
-    
-    local DistSq = Distance * Distance -- So sánh bình phương để tránh sqrt
-    
+
+    local brought = 0 -- 👈 đếm số mob đã bring trong đợt này
+
     for i = #list, 1, -1 do
+        if brought >= MAX_BRING then break end -- 🚫 đủ 2 thì dừng
+
         local Enemy = list[i]
         if not Enemy or not Enemy.Parent then
             table.remove(list, i)
             continue
         end
-        
+
         local root = Enemy:FindFirstChild("HumanoidRootPart")
         local hum = Enemy:FindFirstChildOfClass("Humanoid")
-        
         if not root or not hum or hum.Health <= 0 then
             continue
         end
-        
-        local offset = root.Position - PosMon
-        if offset.X*offset.X + offset.Y*offset.Y + offset.Z*offset.Z <= DistSq then
-            -- Chỉ setup physics nếu chưa setup
-            if not ActiveBodyPositions[root] then
-                if hum:GetState() ~= Enum.HumanoidStateType.Physics then
-                    hum:ChangeState(Enum.HumanoidStateType.Physics)
-                end               
-                root.CanCollide = false
-                
-                local bp = Instance.new("BodyPosition")
+
+        -- ❌ Đã bị bring trước đó thì bỏ qua
+        if Enemy:FindFirstChild("IsBrought") then
+            continue
+        end
+
+        if (root.Position - PosMon).Magnitude <= Distance then
+            -- Đánh dấu mob này đã được bring
+            local tag = Instance.new("BoolValue")
+            tag.Name = "IsBrought"
+            tag.Parent = Enemy
+
+            brought += 1
+
+            -- Physics
+            if hum:GetState() ~= Enum.HumanoidStateType.Physics then
+                hum:ChangeState(Enum.HumanoidStateType.Physics)
+            end
+
+            if hum:FindFirstChild("Animator") then
+                hum.Animator:Destroy()
+            end
+
+            root.CanCollide = false
+
+            local bp = root:FindFirstChild("EnemyFlyPosition")
+            if not bp then
+                bp = Instance.new("BodyPosition")
                 bp.Name = "EnemyFlyPosition"
-                bp.MaxForce = Vector3.new(1e7, 1e7, 1e7)
+                bp.MaxForce = Vector3.new(1e9, 1e9, 1e9)
                 bp.P = 3500
                 bp.D = 150
-                bp.Parent = root               
-                ActiveBodyPositions[root] = bp
+                bp.Parent = root
             end
-            ActiveBodyPositions[root].Position = PosMon
+
+            bp.Position = PosMon
+
+            -- 🧹 Khi mob chết → cho phép đợt mới
+            hum.Died:Once(function()
+                if tag then tag:Destroy() end
+            end)
         end
     end
 end
-
 O.Kill = function(e, A)
   if not e or not A then return end
 
@@ -2869,26 +2883,9 @@ task.spawn(function()
                     end
 
                     repeat
-                        task.wait()
-
-                        if not _G.Auto_Cake_Prince then break end
-                        if not enemy or not enemy.Parent then break end
-                        if enemy.Humanoid.Health <= 0 then break end
-
-                        EquipWeapon(_G.SelectWeapon)
-
-                        local root = enemy:FindFirstChild("HumanoidRootPart")
-                        if not root then break end
-
-                        local mobPos = root.Position
-                        _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
-
-                        -- Bring đúng 1 lần, KHÔNG đổi target
-                        if not brought and (mobPos - HRP.Position).Magnitude <= 25 then
-                            task.wait(0.15)
-                            BringEnemy(enemy)
-                        end
-
+                      task.wait()
+                      O.Kill(enemy,true)
+                      BringEnemy(enemy)
                     until enemy.Humanoid.Health <= 0
                         or not enemy.Parent
                         or not _G.Auto_Cake_Prince
@@ -2944,27 +2941,9 @@ task.spawn(function()
                     local brought = false
 
                     repeat
-                        task.wait()
-
-                        if not _G.AutoFarm_Bone then break end
-                        if not enemy or not enemy.Parent then break end
-                        if enemy.Humanoid.Health <= 0 then break end
-
-                        EquipWeapon(_G.SelectWeapon)
-
-                        local root = enemy:FindFirstChild("HumanoidRootPart")
-                        if not root then break end
-
-                        local mobPos = root.Position
-                        _tp(CFrame.new(mobPos + Vector3.new(0, 25, 0)))
-
-                        -- Bring đúng 1 lần, KHÔNG đổi target
-                        if not brought and (mobPos - HRP.Position).Magnitude <= 25 then
-                            task.wait(0.15)
-                            BringEnemy(enemy)
-                            brought = true
-                        end
-
+                      task.wait()
+                      O.Kill(enemy,true)
+                      BringEnemy(enemy)
                     until enemy.Humanoid.Health <= 0
                         or not enemy.Parent
                         or not _G.AutoFarm_Bone
@@ -3446,4 +3425,3 @@ spawn(function()
     end)
   end
 end)
-

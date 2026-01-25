@@ -1,3 +1,4 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Fastattack.lua"))()
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -6,7 +7,6 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
         task.wait(5)
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
-loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/e9c206fd76482ee2"))()
 local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 do
   ply = game.Players;
@@ -38,7 +38,7 @@ do
   Brazier1 = false;
   Brazier2 = false;
   Brazier3 = false;
-  Sec = 0.5;
+  Sec = 0.1;
   ClickState = 0;
   Num_self = 25;
 end;
@@ -242,6 +242,8 @@ local q = workspace:FindFirstChild("Rocks");
 if q then
   q:Destroy();
 end;
+
+
 local O = {};
 O.__index = O;
 O.Alive = function(e)
@@ -432,76 +434,6 @@ O.Kill = function(e, A)
   end
 end
 
-
-O.KillRaid = function(e, A)
-  if e and A then
-    if not e:GetAttribute("Locked") then
-      e:SetAttribute("Locked", e.HumanoidRootPart.CFrame)
-    end
-    PosMon = e:GetAttribute("Locked").Position
-    EquipWeapon(_G.SelectWeapon)
-    local tool = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
-    local toolTip = tool.ToolTip
-
-    if toolTip == "Blox Fruit" then
-      _tp(
-        (e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) *
-        CFrame.Angles(0, math.rad(90), 0)
-      )
-    else
-      _tp(
-        (e.HumanoidRootPart.CFrame * CFrame.new(0, 40, 0)) *
-        CFrame.Angles(0, math.rad(180), 0)
-      )
-    end
-
-    if RandomCFrame then
-      wait(0.1)
-      _tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 40, 40))
-
-      wait(0.1)
-      _tp(e.HumanoidRootPart.CFrame * CFrame.new(40, 40, 0))
-
-      wait(0.1)
-      _tp(e.HumanoidRootPart.CFrame * CFrame.new(40, 40, 0))
-
-      wait(0.1)
-      _tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 40, 40))
-
-      wait(0.2)
-      _tp(e.HumanoidRootPart.CFrame * CFrame.new(-35, 35, 0))
-    end
-  end
-end
-
-O.Kill2 = function(e, A)
-    if e and A then
-      if not e:GetAttribute("Locked") then
-        e:SetAttribute("Locked", e.HumanoidRootPart.CFrame);
-      end;
-      PosMon = (e:GetAttribute("Locked")).Position;
-      EquipWeapon(_G.SelectWeapon);
-      local A = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool");
-      local u = A.ToolTip;
-      if u == "Blox Fruit" then
-        _tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 10, 0)) * CFrame.Angles(0, math.rad(90), 0));
-      else
-        _tp((e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 8)) * CFrame.Angles(0, math.rad(180), 0));
-      end;
-      if RandomCFrame then
-        wait(.1);
-        _tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
-        wait(.1);
-        _tp(e.HumanoidRootPart.CFrame * CFrame.new(25, 30, 0));
-        wait(.1);
-        _tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
-        wait(.1);
-        _tp(e.HumanoidRootPart.CFrame * CFrame.new(0, 30, 25));
-        wait(.1);
-        _tp(e.HumanoidRootPart.CFrame * CFrame.new(-25, 30, 0));
-      end;
-    end;
-  end;
 O.KillSea = function(e, A)
     if e and A then
       if not e:GetAttribute("Locked") then
@@ -942,8 +874,6 @@ if oldPart and oldPart ~= c then
     oldPart:Destroy()
 end
 
-
--- // 3. LOGIC FARM & LOOP GIỮ NHÂN VẬT //
 task.spawn(function()
     while task.wait() do
         if c and c.Parent == workspace then
@@ -2106,203 +2036,6 @@ local function GetEnemyByName(name)
   end
 end
 
---// Services
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-
-local plr = Players.LocalPlayer
-local xw = plr
-
---// FastAttack throttle
-local FastAttackDelay = 0.15
-local LastFastAttack = 0
-
---// Check alive
-local function Ww(e)
-  if not e then return false end
-  local hum = e:FindFirstChild("Humanoid")
-  return hum and hum.Health > 0
-end
-
---// Get targets in range
-local function pw(char, range)
-  local enemies = Workspace.Enemies:GetChildren()
-  local players = Players:GetPlayers()
-  local results = {}
-  local pos = char:GetPivot().Position
-
-  for _, mob in ipairs(enemies) do
-    local hrp = mob:FindFirstChild("HumanoidRootPart")
-    if hrp and Ww(mob) then
-      if (hrp.Position - pos).Magnitude <= range then
-        table.insert(results, mob)
-      end
-    end
-  end
-
-  for _, p in ipairs(players) do
-    if p ~= xw and p.Character then
-      local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-      if hrp and Ww(p.Character) then
-        if (hrp.Position - pos).Magnitude <= range then
-          table.insert(results, p.Character)
-        end
-      end
-    end
-  end
-
-  return results
-end
-
---// Attack without cooldown (server side)
-function AttackNoCoolDown()
-  local char = plr.Character
-  if not char then return end
-
-  local tool
-  for _, v in ipairs(char:GetChildren()) do
-    if v:IsA("Tool") then
-      tool = v
-      break
-    end
-  end
-  if not tool then return end
-
-  local targets = pw(char, 60)
-  if #targets == 0 then return end
-
-  local modules = ReplicatedStorage:FindFirstChild("Modules")
-  if not modules then return end
-
-  local net = modules:FindFirstChild("Net")
-  if not net then return end
-
-  local RegisterAttack = net:FindFirstChild("RE/RegisterAttack")
-  local RegisterHit = net:FindFirstChild("RE/RegisterHit")
-  if not RegisterAttack or not RegisterHit then return end
-
-  local hitList = {}
-  local lastPart = nil
-
-  for _, mob in ipairs(targets) do
-    if not mob:GetAttribute("IsBoat") then
-      local parts = {
-        "RightLowerArm","RightUpperArm",
-        "LeftLowerArm","LeftUpperArm",
-        "RightHand","LeftHand"
-      }
-      local part = mob:FindFirstChild(parts[math.random(#parts)]) or mob.PrimaryPart
-      if part then
-        table.insert(hitList, {mob, part})
-        lastPart = part
-      end
-    end
-  end
-  if not lastPart then return end
-
-  RegisterAttack:FireServer(0)
-
-  local ps = plr:FindFirstChild("PlayerScripts")
-  if not ps then return end
-
-  local localscript = ps:FindFirstChildOfClass("LocalScript")
-  while not localscript do
-    ps.ChildAdded:Wait()
-    localscript = ps:FindFirstChildOfClass("LocalScript")
-  end
-
-  local SendHits
-  if getsenv then
-    local ok, env = pcall(getsenv, localscript)
-    if ok and env then
-      SendHits = env._G.SendHitsToServer
-    end
-  end
-
-  local ok2, useThread = pcall(function()
-    return require(modules.Flags).COMBAT_REMOTE_THREAD or false
-  end)
-
-  if ok2 and useThread and SendHits then
-    SendHits(lastPart, hitList)
-  else
-    RegisterHit:FireServer(lastPart, hitList)
-  end
-end
-
---// Disable camera shake
-local CameraShakerR = require(ReplicatedStorage.Util.CameraShaker)
-CameraShakerR:Stop()
-
---// Detect nearby monster
-get_Monster = function()
-  for _, mob in pairs(Workspace.Enemies:GetChildren()) do
-    local torso = mob:FindFirstChild("UpperTorso") or mob:FindFirstChild("Head")
-    if mob:FindFirstChild("HumanoidRootPart", true) and torso then
-      if (mob.Head.Position - plr.Character.HumanoidRootPart.Position).Magnitude <= 50 then
-        return true, torso.Position
-      end
-    end
-  end
-
-  for _, sb in pairs(Workspace.SeaBeasts:GetChildren()) do
-    if sb:FindFirstChild("HumanoidRootPart")
-    and sb:FindFirstChild("Health")
-    and sb.Health.Value > 0 then
-      return true, sb.HumanoidRootPart.Position
-    end
-  end
-
-  for _, boat in pairs(Workspace.Enemies:GetChildren()) do
-    if boat:FindFirstChild("Health")
-    and boat.Health.Value > 0
-    and boat:FindFirstChild("VehicleSeat") then
-      return true, boat.Engine.Position
-    end
-  end
-end
-
---// Trigger tool connections
-Actived = function()
-  local tool = plr.Character:FindFirstChildOfClass("Tool")
-  if not tool then return end
-  for _, c in next, getconnections(tool.Activated) do
-    if typeof(c.Function) == "function" then
-      getupvalues(c.Function)
-    end
-  end
-end
-
-task.spawn(function()
-  RunService.Heartbeat:Connect(function()
-    pcall(function()
-      if not _G.Seriality then return end
-
-      -- FastAttack throttle
-      if tick() - LastFastAttack >= FastAttackDelay then
-        LastFastAttack = tick()
-        AttackNoCoolDown()
-      end
-
-      local tool = plr.Character and plr.Character:FindFirstChildOfClass("Tool")
-      if not tool then return end
-
-      if tool.ToolTip == "Blox Fruit" then
-        local found = get_Monster()
-        if found then
-          local remote = tool:FindFirstChild("LeftClickRemote")
-          if remote then
-            Actived()
-            remote:FireServer(Vector3.new(.01, -500, .01), 1, true)
-            remote:FireServer(false)
-          end
-        end
-      end
-    end)
-  end)
-end)
 
 
 local UiHub = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
@@ -2317,87 +2050,6 @@ local Window = UiHub:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl 
   });
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "ControlGUI"
-screenGui.Parent = game.CoreGui
-
-local toggleButton = Instance.new("ImageButton")
-toggleButton.Size = UDim2.new(0, 50, 0, 50)
-toggleButton.Position = UDim2.new(0.15, 0, 0.15, 0)
-toggleButton.Image = "rbxassetid://133979080007875"
-toggleButton.BackgroundTransparency = 1
-toggleButton.Parent = screenGui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0.25, 0)
-corner.Parent = toggleButton
-
-local stroke = Instance.new("UIStroke")
-stroke.Thickness = 2
-stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-stroke.Parent = toggleButton
-
-local colors = {
-    Color3.fromRGB(255, 255, 255), -- trắng
-    Color3.fromRGB(0, 0, 0),       -- đen
-}
-
-task.spawn(function()
-    local i = 1
-    while true do
-        stroke.Color = colors[i]
-        i = (i % #colors) + 1
-        task.wait(0.5) -- thời gian đổi màu
-    end
-end)
-local isFluentVisible = true
-
-local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    toggleButton.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
-end
-
-toggleButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = toggleButton.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.LeftControl then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-toggleButton.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        update(input)
-    end
-end)
-
-toggleButton.MouseButton1Click:Connect(function()
-    isFluentVisible = not isFluentVisible
-
-    if isFluentVisible then
-        Window:Minimize(false) -- Mở lại cửa sổ
-    else
-        Window:Minimize(true) -- Thu nhỏ cửa sổ
-    end
-end)
 local Tabs = {
   Server = Window:AddTab({Title = "Tab Server", Icon = ""}),
   Main = Window:AddTab({Title = "Tab Farming", Icon = ""}),

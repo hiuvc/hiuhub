@@ -296,7 +296,7 @@ BringEnemy = function(Target, Distance)
         return
     end
 
-    Distance = Distance or 250
+    Distance = Distance or 350
     local PosMon = rootTarget.Position
     local TargetBase = GetMobBaseName(Target.Name)
 

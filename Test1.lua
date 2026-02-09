@@ -99,7 +99,7 @@ local Modules = {
         ["Part9"] = "Really black",
         ["Part10"] = "Storm blue",
     },
-    Library = loadstring(game:HttpGet("https://luacrack.site/index.php/HieuThuDam/raw/NightUi.luau"))(),
+    Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/WhiteX1208/NightUI/refs/heads/main/Source.lua"))(),
     MeleeRemotes = {
         ["Black Leg"] = {"BuyBlackLeg"},
         ["Electro"] = {"BuyElectro"},
@@ -1808,11 +1808,7 @@ function Modules:AddFeature(TAB, TYPE, CONFIG)
     return AddChildFeature(TAB, TYPE, CONFIG)
 end
 function Modules:BuildUI()
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local hookfunc = (hookfunction or function(...) end)
-    local require = (require or function(...) end)
-    hookfunc(require(ReplicatedStorage.Effect.Container.Death), function() return end)
-    hookfunc(require(ReplicatedStorage.Effect.Container.Respawn), function() return end)
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/HoangNguyenk8/Roblox/refs/heads/main/Hookfunction.luau'))()
     self["Window"] = self["Library"]:NewWindow({
         Title = "Night Hub [Freemium]",
         Description = "by @_luongminhnghia | discord.gg/NightHub",

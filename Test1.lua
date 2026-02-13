@@ -1,4 +1,4 @@
-loadstring(game:HttpGet(" https://raw.githubusercontent.com/hiuvc/hiuhub/refs/heads/main/Fastattack.lua"))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/AnhDangNhoEm/TuanAnhIOS/refs/heads/main/koby'))()
 if game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Main (minimal)") then
     repeat
         wait()
@@ -235,12 +235,8 @@ end;
 
 local O = {};
 O.__index = O;
-O.Alive = function(e)
-    if not e then
-      return;
-    end;
-    local A = e:FindFirstChild("Humanoid");
-    return A and A.Health > 0;
+O.Alive = function(v)
+    return v and v.Parent and not v:FindFirstChild("VehicleSeat") and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and v:FindFirstChild("HumanoidRootPart")
   end;
 O.Pos = function(e, A)
     return (Root.Position - mode.Position).Magnitude <= A;
@@ -252,9 +248,12 @@ O.DistH = function(e, A)
     return (Root.Position - (e:FindFirstChild("HumanoidRootPart")).Position).Magnitude > A;
   end;
 local function GetMobBaseName(name)
-  return string.match(name, "^(.-)%s*%[") or name
+    return string.match(name, "^(.-)%s*%[") or name
 end
+
 local EnemyCache = {}
+local BroughtTags = {} -- Track tags separately for faster cleanup
+
 local function IndexEnemies()
     table.clear(EnemyCache)
     for _, e in ipairs(workspace.Enemies:GetChildren()) do
@@ -263,91 +262,108 @@ local function IndexEnemies()
         table.insert(EnemyCache[base], e)
     end
 end
+
 IndexEnemies()
+
 workspace.Enemies.ChildAdded:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     EnemyCache[base] = EnemyCache[base] or {}
     table.insert(EnemyCache[base], e)
 end)
+
 workspace.Enemies.ChildRemoved:Connect(function(e)
     local base = GetMobBaseName(e.Name)
     local list = EnemyCache[base]
     if not list then return end
-    for i = #list, 1, -1 do
-        if list[i] == e then
-            table.remove(list, i)
-            break
-        end
+    
+    -- Use table.find for faster removal
+    local index = table.find(list, e)
+    if index then
+        table.remove(list, index)
+    end
+    
+    -- Cleanup empty cache entries
+    if #list == 0 then
+        EnemyCache[base] = nil
     end
 end)
+
 local MAX_BRING = 2
+
 BringEnemy = function(Target, Distance)
     if not _B or not Target then return end
-
+    
     local Char = plr.Character
     local HRP = Char and Char:FindFirstChild("HumanoidRootPart")
     if not HRP then return end
-
+    
     local rootTarget = Target:FindFirstChild("HumanoidRootPart")
     if not rootTarget then return end
-
-    -- Chỉ bring khi mob gần player
-    if (rootTarget.Position - HRP.Position).Magnitude > 25 then
+    
+    -- Early exit if target is too far
+    local distanceToTarget = (rootTarget.Position - HRP.Position).Magnitude
+    if distanceToTarget > 25 then
         return
     end
-
-    Distance = Distance or 500
+    
+    Distance = Distance or 350
     local PosMon = rootTarget.Position
     local TargetBase = GetMobBaseName(Target.Name)
-
+    
+    -- Set simulation radius once globally, not every call
     if plr.SimulationRadius ~= math.huge then
         plr.SimulationRadius = math.huge
     end
-
+    
     local list = EnemyCache[TargetBase]
     if not list then return end
-
-    local brought = 0 -- 👈 đếm số mob đã bring trong đợt này
-
+    
+    local brought = 0
+    local distanceSquared = Distance * Distance -- Use squared distance to avoid sqrt
+    
     for i = #list, 1, -1 do
-        if brought >= MAX_BRING then break end -- 🚫 đủ 2 thì dừng
-
+        if brought >= MAX_BRING then break end
+        
         local Enemy = list[i]
         if not Enemy or not Enemy.Parent then
             table.remove(list, i)
             continue
         end
-
+        
+        -- Skip if already brought
+        if Enemy:GetAttribute("IsBrought") then
+            continue
+        end
+        
         local root = Enemy:FindFirstChild("HumanoidRootPart")
         local hum = Enemy:FindFirstChildOfClass("Humanoid")
+        
         if not root or not hum or hum.Health <= 0 then
             continue
         end
-
-        -- ❌ Đã bị bring trước đó thì bỏ qua
-        if Enemy:FindFirstChild("IsBrought") then
-            continue
-        end
-
-        if (root.Position - PosMon).Magnitude <= Distance then
-            -- Đánh dấu mob này đã được bring
-            local tag = Instance.new("BoolValue")
-            tag.Name = "IsBrought"
-            tag.Parent = Enemy
-
+        
+        -- Use squared distance comparison (faster)
+        local deltaPos = root.Position - PosMon
+        if deltaPos.Magnitude <= Distance then -- Keep original for accuracy, or use: deltaPos:Dot(deltaPos) <= distanceSquared
+            
+            -- Use Attribute instead of Instance (faster, less memory)
+            Enemy:SetAttribute("IsBrought", true)
             brought += 1
-
-            -- Physics
+            
+            -- Physics state
             if hum:GetState() ~= Enum.HumanoidStateType.Physics then
                 hum:ChangeState(Enum.HumanoidStateType.Physics)
             end
-
-            if hum:FindFirstChild("Animator") then
-                hum.Animator:Destroy()
+            
+            -- Destroy animator once
+            local animator = hum:FindFirstChild("Animator")
+            if animator then
+                animator:Destroy()
             end
-
+            
             root.CanCollide = false
-
+            
+            -- Reuse or create BodyPosition
             local bp = root:FindFirstChild("EnemyFlyPosition")
             if not bp then
                 bp = Instance.new("BodyPosition")
@@ -357,12 +373,11 @@ BringEnemy = function(Target, Distance)
                 bp.D = 150
                 bp.Parent = root
             end
-
             bp.Position = PosMon
-
-            -- 🧹 Khi mob chết → cho phép đợt mới
+            
+            -- Cleanup on death
             hum.Died:Once(function()
-                if tag then tag:Destroy() end
+                Enemy:SetAttribute("IsBrought", nil)
             end)
         end
     end
@@ -2464,31 +2479,43 @@ local SpawnerCD = 10
 task.spawn(function()
     while task.wait(Sec) do
         if not _G.Auto_Cake_Prince then continue end
-
         pcall(function()
             local Character = plr.Character
             if not Character or not Character:FindFirstChild("HumanoidRootPart") then return end
             local HRP = Character.HumanoidRootPart
-
             local QuestGui = plr.PlayerGui:FindFirstChild("Main")
             QuestGui = QuestGui and QuestGui:FindFirstChild("Quest")
-
             local Enemies = Workspace:FindFirstChild("Enemies")
             if not Enemies then return end
-
+            
+            -- ✅ KIỂM TRA CAKE PRINCE TRƯỚC VÀ ƯU TIÊN ĐÁNH
+            local CakePrince = nil
             for _, enemy in ipairs(Enemies:GetChildren()) do
                 if enemy.Name == "Cake Prince"
                 and enemy:FindFirstChild("Humanoid")
                 and enemy.Humanoid.Health > 0 then
-                    O.Kill(enemy, true)
-                    return
+                    CakePrince = enemy
+                    break
                 end
             end
-
+            
+            -- ✅ NẾU CÓ CAKE PRINCE, CHỈ ĐÁNH BOSS VÀ BỎ QUA QUÁI THƯỜNG
+            if CakePrince then
+                repeat
+                    task.wait()
+                    O.Kill(CakePrince, true)
+                    BringEnemy(CakePrince)
+                until not CakePrince 
+                    or not CakePrince.Parent 
+                    or not O.Alive(CakePrince)
+                    or not _G.Auto_Cake_Prince
+                return -- ✅ THOÁT RA SAU KHI ĐÁNH XONG BOSS
+            end
+            
+            -- ✅ NẾU KHÔNG CÓ BOSS, MỚI ĐÁNH QUÁI THƯỜNG ĐỂ SPAWN BOSS
             local BigMirror = Workspace:FindFirstChild("Map")
                 and Workspace.Map:FindFirstChild("CakeLoaf")
                 and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
-
             if BigMirror and BigMirror:FindFirstChild("Other")
             and BigMirror.Other.Transparency == 0 then
                 if (HRP.Position - Vector3.new(-1990,4533,-14973)).Magnitude > 2000 then
@@ -2496,8 +2523,9 @@ task.spawn(function()
                     return
                 end
             end
+            
             for _, enemyName in ipairs(Minions) do
-              while  _G.Auto_Cake_Prince do
+                while _G.Auto_Cake_Prince do
                     local enemy = GetEnemyByName(enemyName)
                     if not enemy then
                         break 
@@ -2511,7 +2539,7 @@ task.spawn(function()
                         CommF:InvokeServer("StartQuest", "CakeQuest2", 2)
                         return
                     end
-
+                    
                     if tick() - LastSpawner > SpawnerCD then
                         local res = CommF:InvokeServer("CakePrinceSpawner")
                         local num = tonumber(string.match(res or "", "%d+"))
@@ -2520,16 +2548,16 @@ task.spawn(function()
                         end
                         LastSpawner = tick()
                     end
-
+                    
                     repeat
-                      task.wait()
-                      O.Kill(enemy,true)
-                      BringEnemy(enemy)
-                    until enemy.Humanoid.Health <= 0
+                        task.wait()
+                        O.Kill(enemy, true)
+                        BringEnemy(enemy)
+                    until not enemy
                         or not enemy.Parent 
+                        or not O.Alive(enemy)
                         or not _G.Auto_Cake_Prince
-                        or (_G.AcceptQuestC and not QuestGui.Visible)
-                    repeat task.wait() until not enemy.Parent or enemy.Humanoid.Health <= 0
+                        or (_G.AcceptQuestC and not QuestGui.Visible)                       
                 end
             end
             _tp(CFrame.new(-2091.91, 70.01, -12142.84))

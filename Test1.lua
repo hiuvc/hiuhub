@@ -382,60 +382,138 @@ BringEnemy = function(Target, Distance)
         end
     end
 end
-O.Kill = function(e, A)
-  if not e or not A then return end
+function Convert_CFrame(x)
+    if not x then return nil end
 
-  local humanoidRootPart = e:FindFirstChild("HumanoidRootPart")
-  if not humanoidRootPart then return end
+    local t = typeof(x)
 
-  -- Chỉ lưu vị trí nếu chưa khóa
-  if not e:GetAttribute("Locked") then
-    e:SetAttribute("Locked", humanoidRootPart.CFrame)
-  end
+    if t == "Vector3" then
+        return CFrame.new(x)
 
-  PosMon = e:GetAttribute("Locked").Position
-  EquipWeapon(_G.SelectWeapon)
+    elseif t == "CFrame" then
+        return x
 
-  local char = game.Players.LocalPlayer.Character
-  if not char then return end
-
-  local tool = char:FindFirstChildOfClass("Tool")
-  if not tool then return end
-
-  local toolTip = tool.ToolTip
-
-  local height = (toolTip == "Blox Fruit") and 10 or 20
-  local pos = humanoidRootPart.Position
-
-  _tp(
-    CFrame.new(pos.X, pos.Y + height, pos.Z)
-    * CFrame.Angles(0, math.rad(toolTip == "Blox Fruit" and 90 or 180), 0)
-  )
-
-  if RandomCFrame then
-    task.wait(0.2)
-
-    local offsets = {
-      Vector3.new(0, 20, 20),
-      Vector3.new(20, 20, 0),
-      Vector3.new(0, 20, -20),
-      Vector3.new(-20, 20, 0)
-    }
-
-    for _, offset in ipairs(offsets) do
-      if not e or not e.Parent then break end
-      if not humanoidRootPart.Parent then break end
-
-      local newPos = humanoidRootPart.Position + offset
-
-      _tp(
-        CFrame.new(newPos)
-        * CFrame.Angles(0, math.rad(180), 0)
-      )
-
-      task.wait(0.15)
+    elseif t == "Instance" then
+        if x:IsA("Model") then
+            return x:GetPivot()
+        elseif x:IsA("BasePart") then
+            return x.CFrame
+        end
     end
-  end
+
+    return nil
+end
+
+
+function GetDistance(POS_1, POS_2, NO_Y)
+    if not POS_1 then return math.huge end
+
+    local char = plr.Character
+    if not char then return math.huge end
+
+    local hum = char:FindFirstChild("Humanoid")
+    local root = char:FindFirstChild("HumanoidRootPart")
+
+    if not hum or hum.Health <= 0 or not root then
+        return math.huge
+    end
+
+    local cf1 = Convert_CFrame(POS_1)
+    if not cf1 then return math.huge end
+
+    local cf2 = Convert_CFrame(POS_2 or root)
+    if not cf2 then return math.huge end
+
+    local v1 = cf1.Position
+    local v2 = cf2.Position
+
+    if NO_Y then
+        v1 = Vector3.new(v1.X, 0, v1.Z)
+        v2 = Vector3.new(v2.X, 0, v2.Z)
+    end
+
+    return (v1 - v2).Magnitude
+end
+
+
+function CheckCakePrinceSkill()
+    for _,v in next, workspace._WorldOrigin:GetChildren() do
+        if v.Name == "Ring" or v.Name == "Fist" then
+            if GetDistance(v) <= 400 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+O.Kill = function(e)
+    if not e or not e.Parent then return end
+
+    local humanoidRootPart = e:FindFirstChild("HumanoidRootPart")
+    local humanoid = e:FindFirstChildOfClass("Humanoid")
+
+    if not humanoidRootPart or not humanoid or humanoid.Health <= 0 then
+        return
+    end
+
+    -- lock vị trí
+    if not e:GetAttribute("Locked") then
+        e:SetAttribute("Locked", humanoidRootPart.Position)
+    end
+
+    PosMon = e:GetAttribute("Locked")
+
+    EquipWeapon(_G.SelectWeapon)
+
+    local char = game.Players.LocalPlayer.Character
+    if not char then return end
+
+    local tool = char:FindFirstChildOfClass("Tool")
+    if not tool then return end
+
+    local toolTip = tool.ToolTip or ""
+    local height = (toolTip == "Blox Fruit") and 10 or 20
+    local pos = humanoidRootPart.Position
+
+
+    -- né skill Cake Prince
+    if CheckCakePrinceSkill() then
+        _tp(humanoidRootPart.CFrame * CFrame.new(0,300,0))
+        return
+    end
+
+    -- TP chính
+    _tp(
+        CFrame.new(pos.X, pos.Y + height, pos.Z)
+        * CFrame.Angles(0, math.rad(toolTip == "Blox Fruit" and 90 or 180), 0)
+    )
+
+
+    -- random vị trí anti detection
+    if RandomCFrame then
+        task.wait(0.2)
+
+        local offsets = {
+            Vector3.new(0,20,20),
+            Vector3.new(20,20,0),
+            Vector3.new(0,20,-20),
+            Vector3.new(-20,20,0)
+        }
+
+        for _, offset in ipairs(offsets) do
+            if not e.Parent or humanoid.Health <= 0 then break end
+
+            local newPos = humanoidRootPart.Position + offset
+
+            _tp(
+                CFrame.new(newPos)
+                * CFrame.Angles(0, math.rad(180), 0)
+            )
+
+            task.wait(0.15)
+        end
+    end
 end
 
 O.KillSea = function(e, A)

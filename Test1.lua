@@ -2545,103 +2545,98 @@ spawn(function()
     end
 end)
 
-local QUEST_POS = CFrame.new(-1927.92, 37.8, -12842.54)
-local MIRROR_TP = CFrame.new(-2151.82, 149.32, -12404.91)
-
-local Minions = {"Cookie Crafter","Cake Guard","Baking Staff","Head Baker"}
--- ===== COOLDOWN =====
-local LastSpawner = 0
-local SpawnerCD = 10
-
--- ===== MAIN LOOP =====
+local QUEST_POS = CFrame.new(-1927.92, 37.8, -12842.54);
+local MIRROR_TP = CFrame.new(-2151.82, 149.32, -12404.91);
+local Minions = {
+    "Cookie Crafter",
+    "Cake Guard",
+    "Baking Staff",
+    "Head Baker",
+  };
+local LastSpawner = 0;
+local SpawnerCD = 10;
+local function GetBoss()
+  local e = Workspace:FindFirstChild("Enemies");
+  if not e then
+    return;
+  end;
+  for _, v in pairs(e:GetChildren()) do
+    if v.Name == "Cake Prince" and (v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0) then
+      return v;
+    end;
+  end;
+end;
 task.spawn(function()
-    while task.wait(Sec) do
-        if not _G.Auto_Cake_Prince then continue end
-        pcall(function()
-            local Character = plr.Character
-            if not Character or not Character:FindFirstChild("HumanoidRootPart") then return end
-            local HRP = Character.HumanoidRootPart
-            local QuestGui = plr.PlayerGui:FindFirstChild("Main")
-            QuestGui = QuestGui and QuestGui:FindFirstChild("Quest")
-            local Enemies = Workspace:FindFirstChild("Enemies")
-            if not Enemies then return end
-            
-            -- ✅ KIỂM TRA CAKE PRINCE TRƯỚC VÀ ƯU TIÊN ĐÁNH
-            local CakePrince = nil
-            for _, enemy in ipairs(Enemies:GetChildren()) do
-                if enemy.Name == "Cake Prince"
-                and enemy:FindFirstChild("Humanoid")
-                and enemy.Humanoid.Health > 0 then
-                    CakePrince = enemy
-                    break
-                end
-            end
-            
-            -- ✅ NẾU CÓ CAKE PRINCE, CHỈ ĐÁNH BOSS VÀ BỎ QUA QUÁI THƯỜNG
-            if CakePrince then
-                repeat
-                    task.wait()
-                    O.Kill(CakePrince, true)
-                    BringEnemy(CakePrince)
-                until not CakePrince 
-                    or not CakePrince.Parent 
-                    or not O.Alive(CakePrince)
-                    or not _G.Auto_Cake_Prince
-                return -- ✅ THOÁT RA SAU KHI ĐÁNH XONG BOSS
-            end
-            
-            -- ✅ NẾU KHÔNG CÓ BOSS, MỚI ĐÁNH QUÁI THƯỜNG ĐỂ SPAWN BOSS
-            local BigMirror = Workspace:FindFirstChild("Map")
-                and Workspace.Map:FindFirstChild("CakeLoaf")
-                and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror")
-            if BigMirror and BigMirror:FindFirstChild("Other")
-            and BigMirror.Other.Transparency == 0 then
-                if (HRP.Position - Vector3.new(-1990,4533,-14973)).Magnitude > 2000 then
-                    _tp(MIRROR_TP)
-                    return
-                end
-            end
-            
-            for _, enemyName in ipairs(Minions) do
-                while _G.Auto_Cake_Prince do
-                    local enemy = GetEnemyByName(enemyName)
-                    if not enemy then
-                        break 
-                    end
- 
-                    if _G.AcceptQuestC and QuestGui and not QuestGui.Visible then
-                        if (HRP.Position - QUEST_POS.Position).Magnitude > 50 then
-                            _tp(QUEST_POS)
-                            return
-                        end
-                        CommF:InvokeServer("StartQuest", "CakeQuest2", 2)
-                        return
-                    end
-                    
-                    if tick() - LastSpawner > SpawnerCD then
-                        local res = CommF:InvokeServer("CakePrinceSpawner")
-                        local num = tonumber(string.match(res or "", "%d+"))
-                        if num == 0 then
-                            CommF:InvokeServer("CakePrinceSpawner", true)
-                        end
-                        LastSpawner = tick()
-                    end
-                    
-                    repeat
-                        task.wait()
-                        O.Kill(enemy, true)
-                        BringEnemy(enemy)
-                    until not enemy
-                        or not enemy.Parent 
-                        or not O.Alive(enemy)
-                        or not _G.Auto_Cake_Prince
-                        or (_G.AcceptQuestC and not QuestGui.Visible)                       
-                end
-            end
-            _tp(CFrame.new(-2091.91, 70.01, -12142.84))
-        end)
-    end
-end)
+  while task.wait(.15) do
+    if not _G.Auto_Cake_Prince then
+      continue;
+    end;
+    pcall(function()
+      local Char = plr.Character;
+      if not Char then
+        return;
+      end;
+      local HRP = Char:FindFirstChild("HumanoidRootPart");
+      if not HRP then
+        return;
+      end;
+      local QuestGui = plr.PlayerGui:FindFirstChild("Main");
+      QuestGui = QuestGui and QuestGui:FindFirstChild("Quest");
+      local Enemies = Workspace:FindFirstChild("Enemies");
+      if not Enemies then
+        return;
+      end;
+      local boss = GetBoss();
+      if boss then
+        repeat
+          task.wait();
+          O.Kill(boss, true);
+          BringEnemy(boss);
+        until not boss or not boss.Parent or not O.Alive(boss) or not _G.Auto_Cake_Prince;
+        return;
+      end;
+      local BigMirror = Workspace:FindFirstChild("Map") and (Workspace.Map:FindFirstChild("CakeLoaf") and Workspace.Map.CakeLoaf:FindFirstChild("BigMirror"));
+      if BigMirror and (BigMirror:FindFirstChild("Other") and BigMirror.Other.Transparency == 0) then
+        if (HRP.Position - Vector3.new(-1990, 4533, -14973)).Magnitude > 2000 then
+          _tp(MIRROR_TP);
+          return;
+        end;
+      end;
+      if _G.AcceptQuestC and (QuestGui and not QuestGui.Visible) then
+        if (HRP.Position - QUEST_POS.Position).Magnitude > 50 then
+          _tp(QUEST_POS);
+          return;
+        end;
+        CommF:InvokeServer("StartQuest", "CakeQuest2", 2);
+        return;
+      end;
+      if tick() - LastSpawner > SpawnerCD then
+        local res = CommF:InvokeServer("CakePrinceSpawner");
+        local num = tonumber(string.match(res or "", "%d+"));
+        if num == 0 then
+          CommF:InvokeServer("CakePrinceSpawner", true);
+        end;
+        LastSpawner = tick();
+      end;
+      for _, name in ipairs(Minions) do
+        local enemy = GetEnemyByName(name);
+        if not enemy then
+          continue;
+        end;
+        repeat
+          task.wait();
+          local bossCheck = GetBoss();
+          if bossCheck then
+            return;
+          end;
+          O.Kill(enemy, true);
+          BringEnemy(enemy);
+        until not enemy or not enemy.Parent or not O.Alive(enemy) or not _G.Auto_Cake_Prince;
+      end;
+      _tp(CFrame.new(-2091.91, 70.01, -12142.84));
+    end);
+  end;
+end);
 
 -- Farm Bone Logic
 local BoneEnemies = {"Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy"}

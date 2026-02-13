@@ -473,7 +473,7 @@ O.Kill = function(e)
     if not tool then return end
 
     local toolTip = tool.ToolTip or ""
-    local height = (toolTip == "Blox Fruit") and 10 or 20
+    local height = (toolTip == "Blox Fruit") and 10 or 25
     local pos = humanoidRootPart.Position
 
 
